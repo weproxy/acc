@@ -1,0 +1,142 @@
+//
+// weproxy@foxmail.com 2022/10/03
+//
+
+#pragma once
+
+#include <atomic>
+#include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <tuple>
+
+#include "def.h"
+#include "R.h"
+#include "go.h"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+namespace gx {
+
+namespace xx {
+// chan ...
+template <typename T>
+struct chan {
+    std::queue<T> q_;
+    size_t N_;
+    std::mutex mu_;
+    std::condition_variable cv_;
+    std::atomic<bool> closed_;
+
+   public:
+    explicit chan(size_t N = 1) : N_(N), closed_(false) {}
+    ~chan() { Close(); }
+
+    // Close ...
+    void Close() {
+        if (!closed_) {
+            closed_ = true;
+            cv_.notify_all();
+        }
+    }
+
+    // << ...
+    error operator<<(const T& t) {
+        std::unique_lock<std::mutex> l(mu_);
+
+        if (N_ > 0 && !closed_) {
+            cv_.wait(l, [&] { return q_.size() < N_ || closed_; });
+        }
+
+        if (closed_) {
+            return strerr_t::New("closed");
+        }
+
+        q_.emplace(t);
+
+        cv_.notify_all();
+
+        return nil;
+    }
+
+    // >> ...
+    error operator>>(T& t) {
+        std::unique_lock<std::mutex> l(mu_);
+
+        if (!closed_) {
+            cv_.wait(l, [&] { return q_.size() > 0 || closed_; });
+        }
+
+        if (closed_) {
+            return strerr_t::New("closed");
+        }
+
+        t = q_.front();
+        q_.pop();
+
+        cv_.notify_all();
+
+        return nil;
+    }
+};
+
+}  // namespace xx
+
+// chan ...
+template <typename T>
+struct chan {
+    typedef std::shared_ptr<xx::chan<T>> ptr_t;
+    ptr_t ptr_;
+
+    explicit chan(size_t N = 1) : ptr_(ptr_t(new xx::chan<T>(N))) {}
+    ~chan() { Close(); }
+
+    // <<, >>
+    error operator<<(const T& t) const { return (*ptr_) << t; }
+    error operator>>(T& t) const { return (*ptr_) >> t; }
+
+    // ()
+    R<T, error> operator()() const {
+        T t;
+        auto e = this->operator>>(t);
+        return {t, e};
+    }
+
+    // bool() ...
+    operator bool() const { return !!ptr_; }
+
+    // Close
+    void Close() { ptr_->Close(); }
+};
+
+// makechan ...
+template <typename T>
+chan<T> makechan(size_t N = 1) {
+    return chan<T>(N);
+}
+
+}  // namespace gx
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+namespace gx {
+namespace unitest {
+// test_chan ...
+inline void test_chan() {
+    auto c = makechan<string>(10);
+
+    gx::go([c] {
+        c << "A";
+        c << "B";
+    });
+
+    string a, b;
+    c >> a;
+    c >> b;
+    std::cout << "a=" << a << ", b=" << b << std::endl;
+}
+
+}  // namespace unitest
+}  // namespace gx

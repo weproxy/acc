@@ -1,0 +1,301 @@
+//
+// weproxy@foxmail.com 2022/10/03
+//
+
+#include "core.h"
+
+#include "co/os.h"
+#include "conf/conf.h"
+#include "logx/logx.h"
+#include "server/server.h"
+#include "gx/os/signal/signal.h"
+
+namespace app {
+namespace core {
+
+// global ...
+static struct global {
+    std::list<io::Closer> closers_;
+
+    ~global() { Close(); }
+
+    void Append(io::Closer c) { closers_.push_front(c); }
+
+    void Close() {
+        for (auto& c : closers_) {
+            c->Close();
+        }
+        closers_.clear();
+    }
+} _g;
+
+struct Test00 {
+    char s[256];
+    Test00() { strcpy(s, "Test00"); }
+    char* String() { return s; }
+};
+
+struct Test0 {
+    const char* String() const { return "Test0"; }
+};
+struct Test1 {
+    std::string String() const { return "Test1"; }
+    R<size_t, error> Read(void*, size_t) {
+        LOGX_D("Test1::Read");
+        return {0, errors::New("fail")};
+    }
+    R<size_t, error> Write(const void*, size_t) {
+        LOGX_D("Test1::Write");
+        return {0, nil};
+    }
+    void Close() { LOGX_D("Test1::Close"); }
+};
+struct Test2 {
+    const std::string String() const { return "Test2"; }
+    R<size_t, error> Read(void*, size_t) {
+        LOGX_D("Test2::Read");
+        return {0, errors::New("fail")};
+    }
+    R<size_t, error> Write(const void*, size_t) {
+        LOGX_D("Test2::Write");
+        return {0, nil};
+    }
+    bool Close() {
+        LOGX_D("Test2::Close");
+        return true;
+    }
+};
+struct Test3 {
+    std::string s;
+    Test3() : s("Test3") {}
+    const std::string& String() const { return s; }
+};
+
+struct Obj {
+    Obj(const char* s) : s_(s) { std::cout << s << "()" << std::endl; }
+    ~Obj() { std::cout << "~" << s_ << "()" << std::endl; }
+    const char* s_;
+};
+
+class Object {
+   public:
+    // 用于在运行时获取对象的真实类型名称
+    virtual std::string String() const {
+#ifdef _MSC_VER
+        return typeid(*this).name() + 6;
+#else
+        const char* name = typeid(*this).name();
+
+        // while (*name >= '0' && *name <= '9') name++;
+
+        return name;
+#endif
+    }
+};
+
+struct strerr_t : public err_t {
+    string s_;
+    strerr_t(const string& s) : s_(s) {}
+    virtual string String() const { return s_; };
+    ~strerr_t() { println("~strerr_t()"); }
+};
+
+// Main ...
+int Main(int argc, char* argv[]) {
+    LOGX_I("[app] cpunum =", os::cpunum());
+
+    flag::init(argc, argv);
+
+    {
+        gx::unitest::testDefer();
+        gx::unitest::test_chan();
+    }
+
+    {
+        error err = std::shared_ptr<err_t>(new strerr_t("hello"));
+        println(err);
+    }
+
+    {
+        auto s0 = make<string>();
+        auto s1 = append(s0, "AA", "BB", "CC", "DD");
+        auto s2 = make<string>("a", "b");
+        auto s3 = append(s2, "c", "d");
+        s2[0] = "H";
+
+        // auto s4 = s1.Sub(1,3);
+        auto s4 = s1(1, 3);
+
+        // auto s0 = Make<int>();
+        // auto s1 = Append(s0, 1, 2, 3, 4);
+
+        // s1.Append('A').Append('B');
+
+        LOGS_D("s0 =" << s0);
+        LOGX_D("s1 =", s1);
+        LOGX_D("s2 =", s2);
+        LOGX_D("s3 =", s3);
+        LOGX_D("s4 =", s4);
+        // LOGX_D("s2 =", s2);
+        //  LOGX_D("s1 = [", s1[0], s1[1], "]");
+    }
+
+    {
+        conf::xx::conf_t c;
+
+        c.server.auth.s5 = "s5user:s5pass";
+        c.server.auth.ss = "ssuser:sspass";
+
+        c.server.tcp.push_back("s5://1.2.3.4");
+        c.server.geo["cn"].push_back("s5://1.2.3.4");
+        c.server.geo["us"].push_back("s5://1.2.3.4");
+
+        conf::xx::rule_t r;
+        r.host.push_back("a.com");
+        r.serv.push_back("default");
+        c.rules.push_back(r);
+
+        LOGX_D(&c);
+
+        auto rv = conf::NewFromJSON(c);
+        auto err = GetR<1>(rv);
+        if (err) {
+            LOGX_E(err);
+        } else {
+            LOGX_W(GetR<0>(rv));
+        }
+    }
+
+    {
+        Object o;
+        LOGX_D(o);
+    }
+
+    {
+        Obj o1("Obj1");
+        Obj o2("Obj2");
+        return 0;
+    }
+
+    // go::WaitGroup wg(10);
+    // for (int i = 0; i < 10; i++) {
+    //     go::go(
+    //         [&wg](int i) {
+    //             wg.done();
+    //             COUT << color::blue << i << " hello";
+    //             // fa();
+    //         },
+    //         i);
+    // }
+    // wg.wait();
+
+    std::shared_ptr<Test00> t00(new Test00());
+    Test0* t0 = new Test0();
+    // Test0 t00;
+    Test1 t1;
+    const Test1* pt1 = &t1;
+    Test2 t2;
+    Test3 t3;
+
+    println("t00 =", t00);
+    println("t0 =", t0);
+    println("t1 =", t1);
+    println("pt1 =", pt1);
+    println("t2 =", t2);
+    println("t3 =", t3);
+
+    // LOGX_D("t00 =", t00);
+    // LOGX_D("t0 =", t0);
+    // LOGX_D("t1 =", t1);
+    // LOGX_D("pt1 =", pt1);
+    // LOGX_D("t2 =", t2);
+    // LOGX_D("t3 =", t3);
+
+    // io::Copy(&t1, &t2);
+    io::Relay(&t1, &t2);
+
+    // auto [svr, err] = server::Start();
+    // if (err) {
+    //     LOGX_E("[server] Start() err =", err);
+    //     return -1;
+    // } else if (svr) {
+    //     _g.Append(svr);
+    // }
+
+    gx::go([]() {
+        AUTO_R(c, err, net::Dial("www.baidu.com:80"));
+        if (err) {
+            LOGX_E(err);
+            return;
+        }
+
+        {
+            const char* s = "GET / HTTP/1.0\r\nHost: www.baidu.com\r\n\r\n";
+            AUTO_R(_, err, c->Write(s, strlen(s)));
+            if (err) {
+                LOGX_E(err);
+                return;
+            }
+        }
+
+        char* buf = (char*)co::alloc(32 * 1024);
+        DEFER(co::free(buf, 32 * 1024));
+
+        for (;;) {
+            AUTO_R(n, err, c->Read(buf, sizeof(buf)));
+            if (n > 0) {
+                buf[n] = 0;
+                LOGX_D((char*)buf);
+            }
+
+            if (err) {
+                if (err != net::ErrClosed) {
+                    LOGX_E(err);
+                }
+                break;
+            }
+        }
+    });
+
+    gx::go([]() {
+        DEFER(LOGX_D("s closed"));
+
+        AUTO_R(ln, err, net::Listen("127.0.0.1:11223"));
+        if (err) {
+            LOGX_E(err);
+            return;
+        }
+
+        for (;;) {
+            AUTO_R(c, err, ln->Accept());
+            if (err) {
+                LOGX_E(err);
+                break;
+            }
+
+            gx::go([c = c]() {
+                DEFER(println(c, "closed"));
+                io::Copy(c, c);
+            });
+        }
+    });
+
+    gx::go([] {
+        for (int i = 0; ; i++) {
+            LOGX_D(i, "hello");
+            time::Sleep(time::Second);
+        }
+    });
+
+    // Wait Ctrl+C or kill -x
+    signal::WaitNotify(
+        [](int sig) {
+            LOGS_W("[signal] got sig = " << sig);
+        },
+        SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/, SIGKILL /*kill -9*/, SIGTERM /*kill -15*/);
+
+    return 0;
+}
+
+}  // namespace core
+}  // namespace app
