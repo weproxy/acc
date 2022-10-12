@@ -23,10 +23,10 @@ if not os.exists(CMDDIR) then
 end
 
 -- SRCDIR
-local SRCDIR = APPDIR.."/src"
+local SRCDIR = APPDIR.."/internal"
 
 -- include dir
-add_includedirs(APPDIR.."/src")
+add_includedirs(APPDIR.."/internal")
 
 -- target
 target(NAME)
