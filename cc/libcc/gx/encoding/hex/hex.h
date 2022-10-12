@@ -4,8 +4,25 @@
 
 #pragma once
 
+#include "builtin/builtin.h"
+
 namespace gx {
 namespace hex {
 
+// EncodeToString ...
+string EncodeToString(const void* src, size_t len);
+
+// EncodeToString ...
+inline string EncodeToString(const string& s) { return EncodeToString(s.data(), s.length()); }
+
+// DecodeString ...
+R<Vec<byte>, error> DecodeString(const string& s);
+
 }  // namespace hex
+}  // namespace gx
+
+namespace gx {
+namespace unitest {
+void test_hex();
+}  // namespace unitest
 }  // namespace gx

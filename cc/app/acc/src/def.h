@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "libcc.h"
+#include "gx/gx.h"
 
 #define NS_APP_BEG namespace app {
 #define NS_APP_END }

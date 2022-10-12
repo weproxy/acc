@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "libcc.h"
+#include "gx/gx.h"
 
 namespace app {
 using namespace gx;

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../def.h"
+#include "../proto.h"
 
 namespace app {
 namespace proto {

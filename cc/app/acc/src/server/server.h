@@ -4,13 +4,15 @@
 
 #pragma once
 
-#include "def.h"
+#include "../def.h"
+#include "gx/io/io.h"
+#include "gx/errors/errors.h"
 
 namespace app {
 namespace server {
 
 // Start ...
-std::tuple<io::Closer, error> Start();
+R<io::Closer, error> Start();
 
 }  // namespace server
 }  // namespace app

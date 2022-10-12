@@ -5,7 +5,8 @@
 #pragma once
 
 #include "../def.h"
-#include "gx/json/json.h"
+#include "gx/io/io.h"
+#include "gx/encoding/json/json.h"
 
 namespace app {
 namespace proto {

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "def.h"
 #include "xx.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,3 +63,86 @@ void println(T&&... t) {
     std::cout << ss.str();
 }
 }  // namespace gx
+
+namespace std {
+// override std::ostream <<
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::Vec<T>& t) {
+    int i = 0;
+    s << "{";
+    for (auto& c : t) {
+        if (i++) {
+            s << ", ";
+        }
+        s << c;
+    }
+    s << "}";
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::VecPtr<T>& t) {
+    s << *t;
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::Set<T>& t) {
+    int i = 0;
+    s << "{";
+    for (auto& c : t) {
+        if (i++) {
+            s << ", ";
+        }
+        s << c;
+    }
+    s << "}";
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::SetPtr<T>& t) {
+    s << *t;
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::List<T>& t) {
+    int i = 0;
+    s << "{";
+    for (auto& c : t) {
+        if (i++) {
+            s << ", ";
+        }
+        s << c;
+    }
+    s << "}";
+    return s;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& s, const gx::ListPtr<T>& t) {
+    s << *t;
+    return s;
+}
+
+template <typename K, typename V>
+std::ostream& operator<<(std::ostream& s, const gx::Map<K, V>& t) {
+    int i = 0;
+    s << "{";
+    for (auto& c : t) {
+        if (i++) {
+            s << ", ";
+        }
+        s << c.first << "=" << c.second;
+    }
+    s << "}";
+    return s;
+}
+
+template <typename K, typename V>
+std::ostream& operator<<(std::ostream& s, const gx::MapPtr<K, V>& t) {
+    s << *t;
+    return s;
+}
+}  // namespace std

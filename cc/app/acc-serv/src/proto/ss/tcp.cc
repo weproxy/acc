@@ -6,6 +6,7 @@
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
+#include "nx/nx.h"
 #include "nx/socks/socks.h"
 #include "nx/stats/stats.h"
 #include "ss.h"

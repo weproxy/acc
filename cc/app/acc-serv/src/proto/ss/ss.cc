@@ -5,6 +5,7 @@
 #include "ss.h"
 
 #include "../proto.h"
+#include "gx/net/net.h"
 #include "logx/logx.h"
 
 NAMESPACE_BEG_SS
@@ -25,11 +26,11 @@ static error handleConn(net::Conn c) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server ...
 struct Server : public proto::IServer {
-    std::string addr_;
+    string addr_;
     net::Listener ln_;
     net::PacketConn pc_;
 
-    Server(const std::string& addr) : addr_(addr) {}
+    Server(const string& addr) : addr_(addr) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...

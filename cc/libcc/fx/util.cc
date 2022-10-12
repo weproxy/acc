@@ -2,8 +2,6 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#pragma once
-
 #include "util.h"
 
 #define KB(n) (1024 * int64_t(n))

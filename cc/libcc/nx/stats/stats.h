@@ -6,8 +6,9 @@
 
 #include <atomic>
 
-#include "../def.h"
+#include "gx/io/io.h"
 #include "gx/time/time.h"
+#include "gx/x/time/rate/rate.h"
 
 namespace nx {
 namespace stats {
@@ -291,13 +292,13 @@ struct stats_t {
 typedef std::shared_ptr<xx::stats_t> Stats;
 
 // NewStats ...
-inline Stats NewStats(Type typ, const std::string& tag, bool tcp) { return Stats(new xx::stats_t(typ, tag, tcp)); }
+inline Stats NewStats(Type typ, const string& tag, bool tcp) { return Stats(new xx::stats_t(typ, tag, tcp)); }
 
 // NewTCPStats ...
-inline Stats NewTCPStats(Type typ, const std::string& tag) { return NewStats(typ, tag, true); }
+inline Stats NewTCPStats(Type typ, const string& tag) { return NewStats(typ, tag, true); }
 
 // NewUDPStats ...
-inline Stats NewUDPStats(Type typ, const std::string& tag) { return NewStats(typ, tag, false); }
+inline Stats NewUDPStats(Type typ, const string& tag) { return NewStats(typ, tag, false); }
 
 // NewRelayOption ...
 inline io::RelayOption NewRelayOption(Stats sta, rate::Limiter readLimit = nil, rate::Limiter writeLimit = nil) {

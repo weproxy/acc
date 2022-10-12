@@ -4,10 +4,13 @@
 
 #include "s5.h"
 
+#include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
+#include "nx/socks/socks.h"
 
 NAMESPACE_BEG_S5
+using namespace nx;
 
 namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,10 +134,10 @@ static error handleConn(net::Conn c) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server ...
 struct Server : public proto::IServer {
-    std::string addr_;
+    string addr_;
     net::Listener ln_;
 
-    Server(const std::string& addr) : addr_(addr) {}
+    Server(const string& addr) : addr_(addr) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...

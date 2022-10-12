@@ -1,18 +1,22 @@
 # WeProxy
 
-跨平台代理程序
+```
+<状态>: 开发中，尚未能工作...
+```
 
-目标运行平台：Linux/OSX/Windows PC、各路由器板子、iOS/Android
+跨平台网络代理程序
+
+游戏加速器，运行在 Linux/OSX/Windows PC、iOS/Android、路由器板子上
+
+
 
 ### /cc/
 
-* C++ 版，模拟 Golang 库
-
-* 仅采用 C++11，尽量兼容各交叉编译 toolchain，因为它们大多仅支持到这一标
-
+* C++ 版，使用 coost 协程库，模拟 Golang
+* 仅采用 C++11，尽量兼容各交叉编译 toolchain，因为它们大多仅支持到这一标准
 * TODO...
 
-  
+
 
 | 目录       |              |                           |
 | ---------- | ------------ | ------------------------- |
@@ -67,8 +71,7 @@ cmd=serv make run
 ### /rs/
 
 * Rust 版
-
 * TODO...
 
-  
+
 

@@ -35,10 +35,10 @@ extern void report(const std::string& msg);
 // out ...
 inline void out(std::ostream&) {}
 
-template <typename T, typename... Args>
-void out(std::ostream& s, T&& t, Args&&... args) {
+template <typename T, typename... X>
+void out(std::ostream& s, T&& t, X&&... x) {
     s << std::forward<T>(t) << " ";
-    out(s, std::forward<Args>(args)...);
+    out(s, std::forward<X>(x)...);
 }
 
 template <typename... T>
@@ -58,34 +58,34 @@ void logt(Level lvl, const char* file, int line, T&&... t) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-template <typename... Args>
-void V(Args&&... args) {
-    xx::logt(Level::MAX, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void V(X&&... x) {
+    xx::logt(Level::MAX, 0, 0, std::forward<X>(x)...);
 }
 
-template <typename... Args>
-void D(Args&&... args) {
-    xx::logt(Level::DBG, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void D(X&&... x) {
+    xx::logt(Level::DBG, 0, 0, std::forward<X>(x)...);
 }
 
-template <typename... Args>
-void I(Args&&... args) {
-    xx::logt(Level::MSG, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void I(X&&... x) {
+    xx::logt(Level::MSG, 0, 0, std::forward<X>(x)...);
 }
 
-template <typename... Args>
-void W(Args&&... args) {
-    xx::logt(Level::WRN, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void W(X&&... x) {
+    xx::logt(Level::WRN, 0, 0, std::forward<X>(x)...);
 }
 
-template <typename... Args>
-void E(Args&&... args) {
-    xx::logt(Level::ERR, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void E(X&&... x) {
+    xx::logt(Level::ERR, 0, 0, std::forward<X>(x)...);
 }
 
-template <typename... Args>
-void P(Args&&... args) {
-    xx::logt(Level::NONE, 0, 0, std::forward<Args>(args)...);
+template <typename... X>
+void P(X&&... x) {
+    xx::logt(Level::NONE, 0, 0, std::forward<X>(x)...);
 }
 }  // namespace logx
 

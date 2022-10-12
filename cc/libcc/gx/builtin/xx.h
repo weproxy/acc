@@ -30,10 +30,10 @@ struct is_same {
 inline void out(std::ostream&) {}
 
 // out ...
-template <typename T, typename... Args>
-void out(std::ostream& s, T&& t, Args&&... args) {
+template <typename T, typename... X>
+void out(std::ostream& s, T&& t, X&&... x) {
     s << std::forward<T>(t) << " ";
-    out(s, std::forward<Args>(args)...);
+    out(s, std::forward<X>(x)...);
 }
 
 // out ...

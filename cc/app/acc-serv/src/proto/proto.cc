@@ -50,17 +50,16 @@ error Init(const json::J& js) {
 
         auto it = _protos->find(proto);
         if (it != _protos->end() && it->second) {
-            auto rv = it->second(j);
-            auto err = GetR<1>(rv);
+            AUTO_R(svr, err, it->second(j));
             if (err) {
                 return err;
             }
 
-            auto svr = GetR<0>(rv);
             err = svr->Start();
             if (err) {
                 return err;
             }
+
             _servers[proto] = svr;
         }
     }

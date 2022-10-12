@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../def.h"
+#include "gx/gx.h"
 #include "addr.h"
 
 namespace nx {

@@ -21,8 +21,8 @@ enum ProxyMode {
     ProxyModeRAW,
 };
 
-// String ...
-inline const char* String(ProxyMode m) {
+// ToString ...
+inline const char* ToString(ProxyMode m) {
 #define CASE_PROXYMODE(x) \
     case ProxyMode##x:    \
         return #x
@@ -52,8 +52,8 @@ enum FilterType {
     FilterTypeBoth,
 };
 
-// String ...
-inline const char* String(FilterType m) {
+// ToString ...
+inline const char* ToString(FilterType m) {
 #define CASE_FILTERTYPE(x) \
     case FilterType##x:    \
         return #x

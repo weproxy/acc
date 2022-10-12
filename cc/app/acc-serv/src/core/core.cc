@@ -6,10 +6,11 @@
 
 #include "co/os.h"
 #include "conf/conf.h"
-#include "logx/logx.h"
+#include "gx/encoding/hex/hex.h"
 #include "gx/os/signal/signal.h"
+#include "gx/strings/strings.h"
+#include "logx/logx.h"
 #include "proto/proto.h"
-// #include "server/server.h"
 
 namespace app {
 namespace core {
@@ -19,6 +20,11 @@ int Main(int argc, char* argv[]) {
     // LOGX_I("[app] cpunum =", os::cpunum());
 
     // flag::init(argc, argv);
+    {
+        // gx::unitest::test_strings();
+        // gx::unitest::test_hex();
+        // return 0;
+    }
 
     AUTO_R(js, err, conf::ReadConfig());
     if (err) {
@@ -37,11 +43,8 @@ int Main(int argc, char* argv[]) {
     DEFER(proto::Deinit());
 
     // Wait Ctrl+C or kill -x
-    signal::WaitNotify(
-        [](int sig) {
-            LOGS_W("[signal] got sig = " << sig);
-        },
-        SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/, SIGKILL /*kill -9*/, SIGTERM /*kill -15*/);
+    signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,
+                       SIGKILL /*kill -9*/, SIGTERM /*kill -15*/);
 
     return 0;
 }

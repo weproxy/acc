@@ -5,6 +5,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,17 +90,17 @@ template <typename T>
 inline void append(slice<T>&) {}
 
 // append ...
-template <typename T = uint8, typename V = uint8, typename... Args>
-void append(slice<T>& s, V&& v, Args&&... args) {
+template <typename T = uint8, typename V = uint8, typename... X>
+void append(slice<T>& s, V&& v, X&&... x) {
     s.ptr_->emplace_back(std::forward<V>(v));
     s.end_++;
-    append(s, std::forward<Args>(args)...);
+    append(s, std::forward<X>(x)...);
 }
 
 // append ...
-template <typename T = uint8, typename... Args>
-void append(slice<T>& s, Args&&... args) {
-    append(s, std::forward<Args>(args)...);
+template <typename T = uint8, typename... X>
+void append(slice<T>& s, X&&... x) {
+    append(s, std::forward<X>(x)...);
 }
 }  // namespace xx
 
@@ -118,13 +119,13 @@ slice<T> make(size_t len) {
 }
 
 // make ...
-template <typename T = uint8, typename... Args>
-slice<T> make(T&& t, Args&&... args) {
-    if (sizeof...(args) > 0) {
+template <typename T = uint8, typename... X>
+slice<T> make(T&& t, X&&... x) {
+    if (sizeof...(x) > 0) {
         slice<T> s(0);
         s.ptr_->emplace_back(std::forward<T>(t));
         s.end_++;
-        xx::append<T>(s, std::forward<Args>(args)...);
+        xx::append<T>(s, std::forward<X>(x)...);
         return s;
     }
     return slice<T>{};
@@ -143,12 +144,12 @@ slice<T> append(const slice<T>& l, const slice<T>& r) {
 }
 
 // append ...
-template <typename T = uint8, typename... Args>
-slice<T> append(const slice<T>& l, Args&&... args) {
+template <typename T = uint8, typename... X>
+slice<T> append(const slice<T>& l, X&&... x) {
     slice<T> s(l);
-    if (sizeof...(args) > 0) {
+    if (sizeof...(x) > 0) {
         s.create_if_null();
-        xx::append<T>(s, std::forward<Args>(args)...);
+        xx::append<T>(s, std::forward<X>(x)...);
     }
     return s;
 }

@@ -1,0 +1,39 @@
+//
+// weproxy@foxmail.com 2022/10/03
+//
+
+#pragma once
+
+#include "../def.h"
+#include "gx/net/net.h"
+#include "nx/stack/stack.h"
+
+namespace app {
+namespace proto {
+using nx::stack::IHandler;
+using nx::stack::Handler;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TAG ...
+constexpr const char* TAG = "[proto]";
+
+// NewHandlerFn ...
+typedef std::function<R<Handler, error>(const string& servURL)> NewHandlerFn;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Register ...
+void Register(const string& proto, const NewHandlerFn& fn);
+
+// GetHandler ...
+R<Handler, error> GetHandler(const string& servURL);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Init ..
+error Init();
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Deinit ...
+void Deinit();
+
+}  // namespace proto
+}  // namespace app

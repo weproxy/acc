@@ -2,8 +2,6 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#pragma once
-
 #include "signal.h"
 
 #include "co/os.h"

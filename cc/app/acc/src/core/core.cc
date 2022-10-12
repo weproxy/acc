@@ -6,8 +6,11 @@
 
 #include "co/os.h"
 #include "conf/conf.h"
+#include "gx/fmt/fmt.h"
+#include "gx/net/net.h"
 #include "gx/os/signal/signal.h"
 #include "logx/logx.h"
+#include "proto/proto.h"
 #include "server/server.h"
 
 namespace app {
@@ -29,37 +32,7 @@ namespace core {
 //     }
 // } _g;
 
-// Main ...
-int Main(int argc, char* argv[]) {
-    LOGX_I("[app] cpunum =", os::cpunum());
-
-    flag::init(argc, argv);
-
-    {
-        conf::xx::conf_t c;
-
-        c.server.auth.s5 = "s5user:s5pass";
-        c.server.auth.ss = "ssuser:sspass";
-
-        c.server.tcp.push_back("s5://1.2.3.4");
-        c.server.geo["cn"].push_back("s5://1.2.3.4");
-        c.server.geo["us"].push_back("s5://1.2.3.4");
-
-        conf::xx::rule_t r;
-        r.host.push_back("a.com");
-        r.serv.push_back("default");
-        c.rules.push_back(r);
-
-        LOGX_D(&c);
-
-        AUTO_R(cc, err, conf::NewFromJSON(c));
-        if (err) {
-            LOGX_E(err);
-        } else {
-            LOGX_W(cc);
-        }
-    }
-
+void test() {
     gx::go([]() {
         const char* host = "www.baidu.com";
         // const char* host = "www.qq.com";
@@ -128,6 +101,24 @@ int Main(int argc, char* argv[]) {
             time::Sleep(time::Second);
         }
     });
+}
+
+// Main ...
+int Main(int argc, char* argv[]) {
+    LOGX_I("[app] cpunum =", os::cpunum());
+
+    flag::init(argc, argv);
+
+    // proto init
+    auto err = proto::Init();
+    if (err) {
+        LOGS_E("[core] proto::Init(), err: " << err);
+        proto::Deinit();
+        return -1;
+    }
+
+    // proto deinit
+    DEFER(proto::Deinit());
 
     // Wait Ctrl+C or kill -x
     signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,

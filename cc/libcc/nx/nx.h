@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "def.h"
+#include "gx/gx.h"
 
 namespace nx {
+using namespace gx;
 
 // NewID ...
 uint64 NewID();

@@ -4,7 +4,7 @@
 
 #include "conf.h"
 
-#include "gx/json/json.h"
+#include "gx/encoding/json/json.h"
 
 namespace app {
 namespace conf {

@@ -12,8 +12,8 @@
 #include <thread>
 #include <tuple>
 
-#include "def.h"
 #include "R.h"
+#include "def.h"
 #include "go.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,20 +123,6 @@ chan<T> makechan(size_t N = 1) {
 //
 namespace gx {
 namespace unitest {
-// test_chan ...
-inline void test_chan() {
-    auto c = makechan<string>(10);
-
-    gx::go([c] {
-        c << "A";
-        c << "B";
-    });
-
-    string a, b;
-    c >> a;
-    c >> b;
-    std::cout << "a=" << a << ", b=" << b << std::endl;
-}
-
+void test_chan();
 }  // namespace unitest
 }  // namespace gx
