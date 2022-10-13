@@ -2,7 +2,7 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "fmt/fmt.h"
+#include "gx/fmt/fmt.h"
 #include "net.h"
 #include "xx.h"
 
@@ -22,7 +22,7 @@ string HardwareAddr::String(bool upper) const {
 namespace xx {
 // Addrs ...
 R<Vec<Addr>, error> interface_t::Addrs() { return {{}, errFuncNotImpl}; }
-} // namespace xx
+}  // namespace xx
 
 // Interfaces ...
 R<Vec<Interface>, error> Interfaces() { return {{}, errFuncNotImpl}; }

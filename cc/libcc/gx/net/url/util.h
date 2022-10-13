@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "builtin/builtin.h"
-#include "errors/errors.h"
+#include "gx/builtin/builtin.h"
+#include "gx/errors/errors.h"
 
 namespace gx {
 namespace url {

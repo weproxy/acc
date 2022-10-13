@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "time/time.h"
-#include "x/time/rate/rate.h"
+#include "gx/time/time.h"
+#include "gx/x/time/rate/rate.h"
 #include "xx.h"
 
 namespace gx {

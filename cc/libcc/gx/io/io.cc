@@ -4,7 +4,7 @@
 
 #include "io.h"
 
-#include "errors/errors.h"
+#include "gx/errors/errors.h"
 
 namespace gx {
 namespace io {

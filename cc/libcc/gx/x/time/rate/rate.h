@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "builtin/builtin.h"
-#include "time/time.h"
+#include "gx/builtin/builtin.h"
+#include "gx/time/time.h"
 
 namespace gx {
 namespace rate {

@@ -4,10 +4,9 @@
 
 #pragma once
 
+#include "gx/builtin/builtin.h"
+#include "gx/errors/errors.h"
 #include "nlohmann/json.hpp"
-
-#include "builtin/builtin.h"
-#include "errors/errors.h"
 
 namespace gx {
 namespace json {

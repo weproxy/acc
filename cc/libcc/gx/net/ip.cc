@@ -4,7 +4,7 @@
 
 #include "ip.h"
 
-#include "fmt/fmt.h"
+#include "gx/fmt/fmt.h"
 
 namespace gx {
 namespace net {

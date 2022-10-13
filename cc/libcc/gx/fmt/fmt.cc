@@ -4,7 +4,7 @@
 
 #include "fmt.h"
 
-#include "errors/errors.h"
+#include "gx/errors/errors.h"
 
 namespace gx {
 namespace fmt {

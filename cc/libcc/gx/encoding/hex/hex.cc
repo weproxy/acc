@@ -3,7 +3,8 @@
 //
 
 #include "hex.h"
-#include "errors/errors.h"
+
+#include "gx/errors/errors.h"
 
 namespace gx {
 namespace hex {
@@ -101,7 +102,7 @@ R<Vec<byte>, error> DecodeString(const string& s) {
     if (err) {
         return {{}, err};
     }
-    Vec<byte> r(dst, dst+dstLen);
+    Vec<byte> r(dst, dst + dstLen);
 
     free(dst);
 

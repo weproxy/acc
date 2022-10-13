@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "time/time.h"
+#include "gx/time/time.h"
 
 namespace gx {
 namespace net {

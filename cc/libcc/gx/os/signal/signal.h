@@ -6,7 +6,7 @@
 
 #include <functional>
 
-#include "builtin/builtin.h"
+#include "gx/builtin/builtin.h"
 
 namespace gx {
 namespace signal {

@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include "builtin/builtin.h"
-#include "errors/errors.h"
-#include "fmt/fmt.h"
-#include "io/io.h"
+#include "gx/builtin/builtin.h"
+#include "gx/errors/errors.h"
+#include "gx/fmt/fmt.h"
+#include "gx/io/io.h"
+#include "gx/time/time.h"
 #include "ip.h"
-#include "time/time.h"
 
 namespace gx {
 namespace net {
