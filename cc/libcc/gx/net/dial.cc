@@ -24,8 +24,8 @@ struct tcpCli_t : public conn_t {
     virtual string String() { return "tcpCli_t"; }
 
     // Read ...
-    virtual R<size_t, error> Read(void* b, size_t n) {
-        int l = co::recv(fd_, b, n, timeoutMs(dealine_.d, dealine_.r));
+    virtual R<int, error> Read(byte_s b) {
+        int l = co::recv(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
         if (l <= 0) {
             if (co::error() == EAGAIN) {
                 return {l, ErrClosed};
@@ -36,8 +36,8 @@ struct tcpCli_t : public conn_t {
     }
 
     // Write ...
-    virtual R<size_t, error> Write(const void* b, size_t n) {
-        int l = co::send(fd_, b, n, timeoutMs(dealine_.d, dealine_.w));
+    virtual R<int, error> Write(const byte_s b) {
+        int l = co::send(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
         if (l <= 0) {
             if (co::error() == EAGAIN) {
                 return {l, ErrClosed};

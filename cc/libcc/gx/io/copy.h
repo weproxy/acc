@@ -36,15 +36,13 @@ R<size_t /*written*/, error> Copy(ReadCloser r, WriteCloser w, CopyOption opt = 
     DEFER(r->Close());
     // DEFER(w->Close()); // ?
 
-    uint8* buf = (uint8*)co::alloc(1024 * 32);
-    DEFER(co::free(buf, 1024 * 32));
-    // auto buf = std::unique_ptr<uint8>(new uint8[1024*32]);
+    byte_s buf = make(1024 * 32);
 
     size_t witten = 0;
     error rerr;
 
     for (;;) {
-        AUTO_R(nr, err, r->Read(buf, 1024 * 32));
+        AUTO_R(nr, err, r->Read(buf));
         if (nr > 0) {
             if (opt.Limit) {
                 auto rv = opt.Limit->ReserveN(time::Now(), (int)nr);
@@ -57,7 +55,7 @@ R<size_t /*written*/, error> Copy(ReadCloser r, WriteCloser w, CopyOption opt = 
                 }
             }
 
-            AUTO_R(nw, er2, w->Write(buf, nr));
+            AUTO_R(nw, er2, w->Write(buf(0, nr)));
             if (nw > 0) {
                 witten += nw;
                 if (opt.OnCopy) {

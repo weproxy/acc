@@ -13,27 +13,28 @@ namespace io {
 namespace xx {
 
 // is_reader ...
-// ----> R<size_t, error> Read(void*, size_t)
+// ----> R<int, error> Read(void*, size_t)
 template <typename T>
 struct is_reader {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Read((void*)0, (size_t)0));
+    // static auto test(U) -> decltype(std::declval<U>()->Read((void*)0, (int)0));
+    static auto test(U) -> decltype(std::declval<U>()->Read(byte_s{}));
 
    public:
-    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<size_t, error>>::value;
+    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
 // is_writer ...
-// ----> R<size_t, error> Write(const void*, size_t)
+// ----> R<int, error> Write(const void*, size_t)
 template <typename T>
 struct is_writer {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Write((const void*)0, (size_t)0));
+    static auto test(U) -> decltype(std::declval<U>()->Write(byte_s{}));
 
    public:
-    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<size_t, error>>::value;
+    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
 // is_closer ...

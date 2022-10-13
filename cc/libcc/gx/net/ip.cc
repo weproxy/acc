@@ -15,8 +15,8 @@ static const uint8 v4InV6Prefix[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
 // IPv4 ...
 IP IPv4(uint8 a, uint8 b, uint8 c, uint8 d) {
     IP p;
-    p.L = IPv4len;
-    memcpy(p.B, v4InV6Prefix, sizeof(v4InV6Prefix));
+    p.B = make(IPv4len);
+    copy(p.B, v4InV6Prefix, sizeof(v4InV6Prefix));
     p.B[12] = a;
     p.B[13] = b;
     p.B[14] = c;
@@ -24,11 +24,11 @@ IP IPv4(uint8 a, uint8 b, uint8 c, uint8 d) {
     return p;
 }
 
-// mkIPv6 ...
-static IP mkIPv6(uint8 a0, uint8 a1, uint8 a14, uint8 a15) {
+// makeIPv6 ...
+static IP makeIPv6(uint8 a0, uint8 a1, uint8 a14, uint8 a15) {
     IP p;
-    p.L = IPv6len;
-    memset(p.B, 0, sizeof(p.B));
+    p.B = make(IPv6len);
+    memset(p.B.data(), 0, p.len());
     p.B[0] = a0;
     p.B[1] = a1;
     p.B[14] = a14;
@@ -40,6 +40,7 @@ static IP mkIPv6(uint8 a0, uint8 a1, uint8 a14, uint8 a15) {
 // IPv4 mask a.b.c.d.
 IPMask IPv4Mask(uint8 a, uint8 b, uint8 c, uint8 d) {
     IPMask p;
+    p.B = make(IPv4len);
     p.B[0] = a;
     p.B[1] = b;
     p.B[2] = c;
@@ -59,12 +60,12 @@ const IP IPv4allrouter = IPv4(224, 0, 0, 2);    // all routers
 const IP IPv4zero = IPv4(0, 0, 0, 0);           // all zeros
 
 // Well-known IPv6 addresses
-const IP IPv6zero = mkIPv6(0, 0, 0, 0);
-const IP IPv6unspecified = mkIPv6(0, 0, 0, 0);
-const IP IPv6loopback = mkIPv6(0, 0, 0, 1);
-const IP IPv6interfacelocalallnodes = mkIPv6(0xff, 0x01, 0, 0x01);
-const IP IPv6linklocalallnodes = mkIPv6(0xff, 0x02, 0, 0x01);
-const IP IPv6linklocalallrouters = mkIPv6(0xff, 0x02, 0, 0x02);
+const IP IPv6zero = makeIPv6(0, 0, 0, 0);
+const IP IPv6unspecified = makeIPv6(0, 0, 0, 0);
+const IP IPv6loopback = makeIPv6(0, 0, 0, 1);
+const IP IPv6interfacelocalallnodes = makeIPv6(0xff, 0x01, 0, 0x01);
+const IP IPv6linklocalallnodes = makeIPv6(0xff, 0x02, 0, 0x01);
+const IP IPv6linklocalallrouters = makeIPv6(0xff, 0x02, 0, 0x02);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -74,14 +75,14 @@ bool IP::Equal(const IP& x) const {
     if (&x == this) {
         return true;
     }
-    if (L == x.L) {
-        return memcmp(B, x.B, L) == 0;
+    if (len() == x.len()) {
+        return memcmp(B.data(), x.B.data(), len()) == 0;
     }
-    if (L == IPv4len && x.L == IPv6len) {
-        return memcmp(x.B, v4InV6Prefix, 12) == 0 && memcmp(B, x.B + 12, 4) == 0;
+    if (len() == IPv4len && x.len() == IPv6len) {
+        return memcmp(x.B.data(), v4InV6Prefix, 12) == 0 && memcmp(B.data(), x.B.data() + 12, 4) == 0;
     }
-    if (L == IPv6len && x.L == IPv4len) {
-        return memcmp(B, v4InV6Prefix, 12) == 0 && memcmp(x.B, B + 12, 4) == 0;
+    if (len() == IPv6len && x.len() == IPv4len) {
+        return memcmp(B.data(), v4InV6Prefix, 12) == 0 && memcmp(x.B.data(), B.data() + 12, 4) == 0;
     }
     return false;
 }
@@ -93,7 +94,7 @@ bool IP::IsUnspecified() const { return Equal(IPv4zero) || Equal(IPv6unspecified
 bool IP::IsLoopback() const {
     IP ip4 = To4();
     if (ip4) {
-        return ip4[0] == 127;
+        return ip4.B[0] == 127;
     }
     return Equal(IPv6loopback);
 }
@@ -108,7 +109,7 @@ bool IP::IsPrivate() const {
         //     10.0.0.0        -   10.255.255.255  (10/8 prefix)
         //     172.16.0.0      -   172.31.255.255  (172.16/12 prefix)
         //     192.168.0.0     -   192.168.255.255 (192.168/16 prefix)
-        return ip4[0] == 10 || (ip4[0] == 172 && (ip4[1] & 0xf0) == 16) || (ip4[0] == 192 && ip4[1] == 168);
+        return ip4.B[0] == 10 || (ip4.B[0] == 172 && (ip4.B[1] & 0xf0) == 16) || (ip4.B[0] == 192 && ip4.B[1] == 168);
     }
     // Following RFC 4193, Section 8. IANA Considerations which says:
     //   The IANA has assigned the FC00::/7 prefix to "Unique Local Unicast".
@@ -119,7 +120,7 @@ bool IP::IsPrivate() const {
 bool IP::IsMulticast() const {
     IP ip4 = To4();
     if (ip4) {
-        return (ip4[0] & 0xf0) == 0xff;
+        return (ip4.B[0] & 0xf0) == 0xff;
     }
     return len() == IPv6len && B[0] == 0xff;
 }
@@ -131,7 +132,7 @@ bool IP::IsInterfaceLocalMulticast() const { return len() == IPv6len && B[0] == 
 bool IP::IsLinkLocalMulticast() const {
     IP ip4 = To4();
     if (ip4) {
-        return ip4[0] == 224 && ip4[1] == 0 && ip4[2] == 0;
+        return ip4.B[0] == 224 && ip4.B[1] == 0 && ip4.B[2] == 0;
     }
     return len() == IPv6len && B[0] == 0xff && (B[1] & 0xf) == 0x02;
 }
@@ -140,7 +141,7 @@ bool IP::IsLinkLocalMulticast() const {
 bool IP::IsLinkLocalUnicast() const {
     IP ip4 = To4();
     if (ip4) {
-        return ip4[0] == 169 && ip4[1] == 254;
+        return ip4.B[0] == 169 && ip4.B[1] == 254;
     }
     return len() == IPv6len && B[0] == 0xfe && (B[1] & 0xc0) == 0x80;
 }

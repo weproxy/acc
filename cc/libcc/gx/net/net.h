@@ -22,10 +22,13 @@ extern const error ErrClosed;
 // addr_t ...
 namespace xx {
 struct addr_t final {
-    IP IP;
-    uint16_t Port{0};
+    addr_t() = default;
+    addr_t(const IP& ip, uint16 port) : IP(ip), Port(port) {}
 
     string String() const;
+
+    IP IP;
+    uint16 Port{0};
 };
 }  // namespace xx
 
@@ -33,12 +36,7 @@ struct addr_t final {
 typedef std::shared_ptr<xx::addr_t> Addr;
 
 // MakeAddr ...
-inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) {
-    Addr p(new xx::addr_t);
-    p->IP = ip;
-    p->Port = port;
-    return p;
-}
+inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return Addr(new xx::addr_t(ip, port)); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // conn_t ...
@@ -48,8 +46,8 @@ struct conn_t : public io::ICloser {
 
     virtual int Fd() const = 0;
 
-    virtual R<size_t, error> Read(void* b, size_t n) = 0;
-    virtual R<size_t, error> Write(const void* b, size_t n) = 0;
+    virtual R<int, error> Read(byte_s b) = 0;
+    virtual R<int, error> Write(const byte_s b) = 0;
     virtual void Close(){};
 
     virtual Addr LocalAddr() = 0;
@@ -74,8 +72,8 @@ struct packetConn_t : public io::ICloser {
 
     virtual int Fd() const = 0;
 
-    virtual R<size_t, Addr, error> ReadFrom(void* b, size_t n) = 0;
-    virtual R<size_t, error> WriteTo(const void* b, size_t n, Addr addr) = 0;
+    virtual R<int, Addr, error> ReadFrom(byte_s b) = 0;
+    virtual R<int, error> WriteTo(const byte_s b, Addr addr) = 0;
     virtual void Close(){};
 
     virtual Addr LocalAddr() = 0;

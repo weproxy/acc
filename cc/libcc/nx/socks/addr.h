@@ -31,13 +31,12 @@ enum AddrType {
 ////////////////////////////////////////////////////////////////////////////////
 namespace xx {
 struct addr_t {
-    uint8 B[MaxAddrLen];
-    size_t L;
+    byte_s B;
 
-    addr_t() : L(0) {}
-    addr_t(const void* b, size_t l) : L(l) { memcpy(B, b, l); }
+    addr_t() = default;
+    addr_t(const byte_s b) : B(b) {}
 
-    operator bool() const { return L > 0; }
+    operator bool() const { return (bool)B; }
     uint8 operator[](size_t i) const { return B[i]; }
     uint8& operator[](size_t i) { return B[i]; }
 
@@ -79,52 +78,52 @@ inline Addr FromNetAddr(net::Addr addr) {
 // ReadAddr ..
 template <typename Reader, typename std::enable_if<gx::io::xx::is_reader<Reader>::value, int>::type = 0>
 R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
-    Addr addr(new xx::addr_t());
+    byte_s B = make(256);
 
-    AUTO_R(n, err, io::ReadFull(r, addr->B, 2));
+    AUTO_R(n, err, io::ReadFull(r, B(0, 2)));
     if (err) {
         return {n, nil, err};
     }
-    addr->L += n;
+    int L = n;
 
-    switch (addr->B[0]) {
+    switch (B[0]) {
         case AddrTypeIPv4: {
             auto n = 1 + net::IPv4len;
-            AUTO_R(t, err, io::ReadFull(r, addr->B + 2, n));
-            addr->L += t > 0 ? t : 0;
+            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
+            L += t > 0 ? t : 0;
             if (err) {
-                return {addr->L, nil, err};
+                return {L, nil, err};
             }
             break;
         }
         case AddrTypeIPv6: {
             auto n = 1 + net::IPv6len;
-            AUTO_R(t, err, io::ReadFull(r, addr->B + 2, n));
-            addr->L += t > 0 ? t : 0;
+            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
+            L += t > 0 ? t : 0;
             if (err) {
-                return {addr->L, nil, err};
+                return {L, nil, err};
             }
             break;
         }
         case AddrTypeDomain: {
-            auto n = 1 + 1 + addr->B[1];
-            AUTO_R(t, err, io::ReadFull(r, addr->B + 2, n));
-            addr->L += t > 0 ? t : 0;
+            auto n = 1 + 1 + B[1];
+            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
+            L += t > 0 ? t : 0;
             if (err) {
-                return {addr->L, nil, err};
+                return {L, nil, err};
             }
             break;
         }
         default:
-            return {addr->L, nil, ErrInvalidAddrLen};
+            return {L, nil, ErrInvalidAddrLen};
     }
 
-    return {addr->L, addr, nil};
+    return {L, Addr(new xx::addr_t(B(0, L))), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
-R<Addr, error> ParseAddr(void* data, size_t len);
+R<Addr, error> ParseAddr(const byte_s buf);
 
 }  // namespace socks
 }  // namespace nx

@@ -25,8 +25,8 @@ struct tcpPeer_t : public conn_t {
     virtual string String() override { return "tcpPeer_t"; }
 
     // Read ...
-    virtual R<size_t, error> Read(void* b, size_t n) override {
-        int r = c_.recv(b, n, timeoutMs(dealine_.d, dealine_.r));
+    virtual R<int, error> Read(byte_s b) override {
+        int r = c_.recv(b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {
@@ -40,8 +40,8 @@ struct tcpPeer_t : public conn_t {
     }
 
     // Write ...
-    virtual R<size_t, error> Write(const void* b, size_t n) override {
-        int r = c_.send(b, n, timeoutMs(dealine_.d, dealine_.w));
+    virtual R<int, error> Write(const byte_s b) override {
+        int r = c_.send(b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {
@@ -125,7 +125,7 @@ struct udpConn_t : public packetConn_t {
     virtual int Fd() const { return fd_; }
 
     // ReadFrom ...
-    virtual R<size_t, Addr, error> ReadFrom(void* b, size_t n) {
+    virtual R<int, Addr, error> ReadFrom(byte_s b) {
         if (fd_ <= 0) {
             return {0, nil, ErrClosed};
         }
@@ -133,7 +133,7 @@ struct udpConn_t : public packetConn_t {
         addr_in_t addr;
         int addrlen = sizeof(addr);
 
-        int r = co::recvfrom(fd_, b, n, &addr, &addrlen, timeoutMs(dealine_.d, dealine_.r));
+        int r = co::recvfrom(fd_, b.data(), b.size(), &addr, &addrlen, timeoutMs(dealine_.d, dealine_.r));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {
@@ -148,14 +148,14 @@ struct udpConn_t : public packetConn_t {
     }
 
     // WriteTo ...
-    virtual R<size_t, error> WriteTo(const void* b, size_t n, Addr raddr) {
+    virtual R<int, error> WriteTo(const byte_s b, Addr raddr) {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
 
         AUTO_R(addr, addrlen, FromAddr(raddr));
 
-        int r = co::sendto(fd_, b, n, &addr, addrlen, timeoutMs(dealine_.d, dealine_.w));
+        int r = co::sendto(fd_, b.data(), b.size(), &addr, addrlen, timeoutMs(dealine_.d, dealine_.w));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {

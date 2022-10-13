@@ -5,13 +5,13 @@
 #include "core.h"
 
 #include "co/os.h"
-#include "conf/conf.h"
 #include "gx/fmt/fmt.h"
 #include "gx/net/net.h"
 #include "gx/os/signal/signal.h"
+#include "internal/conf/conf.h"
+#include "internal/proto/proto.h"
+#include "internal/server/server.h"
 #include "logx/logx.h"
-#include "proto/proto.h"
-#include "server/server.h"
 
 namespace app {
 namespace core {
@@ -33,7 +33,7 @@ namespace core {
 // } _g;
 
 void test() {
-    gx::go([]() {
+    gx::go([] {
         const char* host = "www.baidu.com";
         // const char* host = "www.qq.com";
         const int port = 80;
@@ -46,21 +46,21 @@ void test() {
 
         {
             auto s = fmt::Sprintf("GET / HTTP/1.0\r\nHost: %s\r\n\r\n", host);
-            AUTO_R(_, err, c->Write(s.c_str(), s.length()));
+
+            AUTO_R(_, err, c->Write(byte_s(s)));
             if (err) {
                 LOGX_E(err);
                 return;
             }
         }
 
-        char* buf = (char*)co::alloc(32 * 1024);
-        DEFER(co::free(buf, 32 * 1024));
+        byte_s buf = make(32 * 1024);
 
         for (;;) {
-            AUTO_R(n, err, c->Read(buf, 32 * 1024));
+            AUTO_R(n, err, c->Read(buf));
             if (n > 0) {
                 buf[n] = 0;
-                LOGX_D((char*)buf);
+                LOGX_D((char*)buf.data());
             }
 
             if (err) {
@@ -72,7 +72,7 @@ void test() {
         }
     });
 
-    gx::go([]() {
+    gx::go([] {
         DEFER(LOGX_D("s closed"));
 
         AUTO_R(ln, err, net::Listen("127.0.0.1:11223"));
@@ -119,6 +119,8 @@ int Main(int argc, char* argv[]) {
 
     // proto deinit
     DEFER(proto::Deinit());
+
+    test();
 
     // Wait Ctrl+C or kill -x
     signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,

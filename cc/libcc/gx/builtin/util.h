@@ -10,11 +10,34 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // override std::ostream <<
+namespace std {
+//
+inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
+    char b[8];
+    if (' ' <= c && c <= '~') {
+        ::sprintf(b, "'%c'", (char)c);
+    } else if ((c == '\n')) {
+        ::sprintf(b, "'\\n'");
+    } else if ((c == '\r')) {
+        ::sprintf(b, "'\\r'");
+    } else if ((c == '\t')) {
+        ::sprintf(b, "'\\t'");
+    } else {
+        ::sprintf(b, "%d", c);
+    }
+    s << b;
+    return s;
+};
+
+inline std::ostream& operator<<(std::ostream& s, char c) {
+    // ...
+    return operator<<(s, (unsigned char)c);
+};
+
 // if has .String()
 // if has .operator string()
 // if has ->String()
 // if has ->operator string()
-namespace std {
 template <typename T, typename std::enable_if<gx::xx::is_stringer<T>::value, int>::type = 0>
 std::ostream& operator<<(std::ostream& s, T t) {
     s << gx::xx::to_string(t);
@@ -46,6 +69,14 @@ std::ostream& operator<<(std::ostream& s, T t) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 namespace gx {
+// tostr ...
+template <typename... T>
+string tostr(T&&... t) {
+    std::ostringstream ss;
+    xx::out(ss, std::forward<T>(t)...);
+    return ss.str();
+}
+
 // print ...
 template <typename... T>
 void print(T&&... t) {
@@ -64,19 +95,20 @@ void println(T&&... t) {
 }
 }  // namespace gx
 
-namespace std {
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // override std::ostream <<
+namespace std {
 template <typename T>
 std::ostream& operator<<(std::ostream& s, const gx::Vec<T>& t) {
     int i = 0;
-    s << "{";
+    s << "[";
     for (auto& c : t) {
         if (i++) {
             s << ", ";
         }
         s << c;
     }
-    s << "}";
+    s << "]";
     return s;
 }
 
@@ -146,3 +178,11 @@ std::ostream& operator<<(std::ostream& s, const gx::MapPtr<K, V>& t) {
     return s;
 }
 }  // namespace std
+
+namespace gx {
+namespace unitest {
+void test_defer();
+void test_chan();
+void test_slice();
+}  // namespace unitest
+}  // namespace gx

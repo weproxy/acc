@@ -27,9 +27,9 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
     DEFER(c->SetDeadline(time::Time{}));
 
     socks::Command cmd = socks::Command(0);
-    uint8 buf[256];
+    byte_s buf = make(256);
 
-    AUTO_R(_1, er1, io::ReadFull(c, buf, 2));
+    AUTO_R(_1, er1, io::ReadFull(c, buf(0, 2)));
     if (er1) {
         socks::WriteReply(c, socks::ReplyAuthFailure);
         return {cmd, nil, er1};
@@ -42,7 +42,7 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         return {cmd, nil, socks::ErrInvalidSocksVersion};
     }
 
-    AUTO_R(n, er2, io::ReadFull(c, buf, methodCnt));
+    AUTO_R(n, er2, io::ReadFull(c, buf(0, methodCnt)));
     if (er2) {
         socks::WriteReply(c, socks::ReplyAuthFailure);
         return {cmd, nil, er2};
@@ -72,7 +72,7 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         return {cmd, nil, err};
     }
 
-    AUTO_R(_3, er3, io::ReadFull(c, buf, 3));
+    AUTO_R(_3, er3, io::ReadFull(c, buf(0, 3)));
     if (er3) {
         socks::WriteReply(c, socks::ReplyAddressNotSupported);
         return {cmd, nil, er3};

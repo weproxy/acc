@@ -26,7 +26,8 @@ end
 local SRCDIR = APPDIR.."/internal"
 
 -- include dir
-add_includedirs(APPDIR.."/internal")
+-- add_includedirs(APPDIR.."/internal")
+add_includedirs(APPDIR)
 
 -- target
 target(NAME)
@@ -35,5 +36,5 @@ target(NAME)
     add_files(CMDDIR.."/**.cc|**_test.cc")
     add_files(SRCDIR.."/**.cc|**_test.cc")
 
-    add_deps("cc", "co")    -- libcc libcc/3rd/coost
+    add_deps("biz", "fx", "gx", "nx", "logx", "co")
 target_end()

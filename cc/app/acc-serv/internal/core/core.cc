@@ -5,12 +5,12 @@
 #include "core.h"
 
 #include "co/os.h"
-#include "conf/conf.h"
 #include "gx/encoding/hex/hex.h"
 #include "gx/os/signal/signal.h"
 #include "gx/strings/strings.h"
+#include "internal/conf/conf.h"
+#include "internal/proto/proto.h"
 #include "logx/logx.h"
-#include "proto/proto.h"
 
 namespace app {
 namespace core {
@@ -23,6 +23,7 @@ int Main(int argc, char* argv[]) {
     {
         // gx::unitest::test_strings();
         // gx::unitest::test_hex();
+        // gx::unitest::test_slice();
         // return 0;
     }
 

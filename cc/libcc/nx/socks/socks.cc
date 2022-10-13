@@ -24,12 +24,12 @@ const error ErrInvalidAddrLen = errors::New("invalid address length");
 namespace xx {
 // IP ...
 net::IP addr_t::IP() const {
-    if (L > 0) {
+    if (B.size() > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
-                return net::IP(B + 1, net::IPv4len);
+                return net::IP(B(1, 1 + net::IPv4len));
             case AddrTypeIPv6:
-                return net::IP(B + 1, net::IPv6len);
+                return net::IP(B(1, 1 + net::IPv6len));
             default:
                 break;
         }
@@ -39,7 +39,7 @@ net::IP addr_t::IP() const {
 
 // Port ...
 int addr_t::Port() const {
-    if (L > 0) {
+    if (B.size() > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
                 return int(B[1 + net::IPv4len]) << 8 | int(B[1 + net::IPv4len + 1]);
@@ -55,37 +55,31 @@ int addr_t::Port() const {
 }
 
 // ToNetAddr ...
-net::Addr addr_t::ToNetAddr() const {
-    net::Addr r(new net::xx::addr_t());
-    r->IP = IP();
-    r->Port = Port();
-    return r;
-}
+net::Addr addr_t::ToNetAddr() const { return net::MakeAddr(IP(), Port()); }
 
 // FromNetAddr ...
 void addr_t::FromNetAddr(net::Addr addr) {
-    auto r = this;
     auto ip4 = addr->IP.To4();
     if (ip4) {
-        r->B[0] = AddrTypeIPv4;
-        memcpy(r->B + 1, ip4.B, net::IPv4len);
-        r->B[1 + net::IPv4len] = uint8(addr->Port >> 8);
-        r->B[1 + net::IPv4len + 1] = uint8(addr->Port);
-        r->L = 1 + net::IPv4len;
+        B = make(1 + net::IPv4len + 2);
+        B[0] = AddrTypeIPv4;
+        copy(B(1, 1 + net::IPv4len), ip4.B);
+        B[1 + net::IPv4len] = uint8(addr->Port >> 8);
+        B[1 + net::IPv4len + 1] = uint8(addr->Port);
         return;
     }
 
     auto ip6 = addr->IP.To16();
-    r->B[0] = AddrTypeIPv6;
-    memcpy(r->B + 1, ip6.B, net::IPv6len);
-    r->B[1 + net::IPv6len] = uint8(addr->Port >> 8);
-    r->B[1 + net::IPv6len + 1] = uint8(addr->Port);
-    r->L = 1 + net::IPv6len;
+    B = make(1 + net::IPv6len + 2);
+    B[0] = AddrTypeIPv6;
+    copy(B(1, 1 + net::IPv6len), ip6.B);
+    B[1 + net::IPv6len] = uint8(addr->Port >> 8);
+    B[1 + net::IPv6len + 1] = uint8(addr->Port);
 }
 
 // String ...
 const string addr_t::String() const {
-    if (L <= 0) {
+    if (B.size() <= 0) {
         return "<nil>";
     }
 
@@ -96,34 +90,32 @@ const string addr_t::String() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
-R<Addr, error> ParseAddr(void* data, size_t len) {
-    if (len < 1 + 1 + 1 + 2) {
+R<Addr, error> ParseAddr(const byte_s buf) {
+    if (buf.size() < 1 + 1 + 1 + 2) {
         return {nil, ErrInvalidAddrLen};
     }
-
-    uint8* buf = (uint8*)data;
 
     switch (buf[0]) {
         case AddrTypeIPv4: {
             auto n = 1 + net::IPv4len + 2;
-            if (len < n) {
+            if (buf.size() < n) {
                 return {nil, ErrInvalidAddrLen};
             }
-            return {Addr(new xx::addr_t(buf, n)), nil};
+            return {Addr(new xx::addr_t(buf(0, n))), nil};
         }
         case AddrTypeIPv6: {
             auto n = 1 + net::IPv6len + 2;
-            if (len < n) {
+            if (buf.size() < n) {
                 return {nil, ErrInvalidAddrLen};
             }
-            return {Addr(new xx::addr_t(buf, n)), nil};
+            return {Addr(new xx::addr_t(buf(0, n))), nil};
         }
         case AddrTypeDomain: {
             auto n = 1 + 1 + buf[1] + 2;
-            if (len < n) {
+            if (buf.size() < n) {
                 return {nil, ErrInvalidAddrLen};
             }
-            return {Addr(new xx::addr_t(buf, n)), nil};
+            return {Addr(new xx::addr_t(buf(0, n))), nil};
         }
         default:
             return {nil, ErrInvalidAddrType};

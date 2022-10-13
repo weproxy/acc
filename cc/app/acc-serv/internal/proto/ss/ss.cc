@@ -13,7 +13,7 @@ NAMESPACE_BEG_SS
 namespace xx {
 
 extern error handleTCP(net::Conn c, net::Addr raddr);
-extern error handleUDP(net::PacketConn pc, net::Addr caddr, const uint8* buf, size_t len);
+extern error handleUDP(net::PacketConn pc, net::Addr caddr, const byte_s buf);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
@@ -67,11 +67,10 @@ struct Server : public proto::IServer {
         });
 
         gx::go([pc = pc_] {
-            uint8* buf = new uint8[1024 * 8];
-            DEFER(delete[] buf);
+            byte_s buf = make(1024 * 8);
 
             for (;;) {
-                AUTO_R(n, caddr, err, pc->ReadFrom(buf, 1024 * 8));
+                AUTO_R(n, caddr, err, pc->ReadFrom(buf));
                 if (err) {
                     LOGS_E(TAG << " readFrom(), err: " << err);
                     break;
@@ -79,7 +78,7 @@ struct Server : public proto::IServer {
 
                 if (n > 0) {
                     LOGS_D(TAG << " recvfrom(" << caddr << ") " << n << " bytes");
-                    handleUDP(pc, caddr, buf, n);
+                    handleUDP(pc, caddr, buf(0, n));
                 }
             }
         });

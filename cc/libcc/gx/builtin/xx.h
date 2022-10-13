@@ -30,6 +30,13 @@ struct is_same {
 inline void out(std::ostream&) {}
 
 // out ...
+inline void out(std::ostream& s, int c) {
+    char b[32];
+    ::sprintf(b, "%d", c);
+    s << b;
+}
+
+// out ...
 template <typename T, typename... X>
 void out(std::ostream& s, T&& t, X&&... x) {
     s << std::forward<T>(t) << " ";

@@ -14,91 +14,141 @@ namespace gx {
 // slice ...
 template <typename T>
 struct slice {
-    VecPtr<T> ptr_;
-    size_t beg_, end_;
+    VecPtr<T> vec_{nullptr};
+    int beg_{0}, end_{0};
 
-    slice() : beg_(0), end_(0), ptr_(nullptr) {}
-    explicit slice(size_t len) : beg_(0), end_(len), ptr_(VecPtr<T>(new Vec<T>(len))) {}
-    slice(const slice& r) = default;
+    explicit slice(int len, int cap = 0) : end_(len), vec_(VecPtr<T>(new Vec<T>(len))) {
+        if (cap > len) {
+            vec_->reserve(cap);
+        }
+    }
+    slice(std::initializer_list<T> x) : slice(0, x.size()) {
+        for (const auto& e : x) {
+            vec_->emplace_back(e);
+        }
+        end_ += x.size();
+    }
+    slice() = default;
+    slice(const slice& r) : vec_(r.vec_), beg_(r.beg_), end_(r.end_) {}
+    slice(slice&& r) : vec_(r.vec_), beg_(r.beg_), end_(r.end_) { r._reset(); }
 
-    // [i] ...
-    T& operator[](size_t i) { return ptr_->operator[](beg_ + i); }
-    const T& operator[](size_t i) const { return ptr_->operator[](beg_ + i); }
+    slice(const string& s) : slice(s.length(), s.length()) { memcpy(data(), s.data(), s.length()); }
+
+    // operator [i] ...
+    T& operator[](int i) { return vec_->operator[](beg_ + i); }
+    const T& operator[](int i) const { return vec_->operator[](beg_ + i); }
 
     // Sub ...
-    slice Sub(size_t beg, size_t end) const {
-        slice r(*this);
-        r.beg_ = beg < 0 ? beg_ : beg_ + beg;
-        if (r.beg_ > end_) {
-            r.beg_ = end_;
-        }
-        r.end_ = end < 0 ? end_ : beg_ + end;
-        if (r.end_ > end_) {
-            r.end_ = end_;
+    slice Sub(int beg, int end) const {
+        slice r;
+        int begt = beg < 0 ? beg_ : (beg_ + beg);
+        int endt = end < 0 ? end_ : (beg_ + end);
+        if (begt <= endt && endt <= end_) {
+            r.beg_ = begt;
+            r.end_ = endt;
+            r.vec_ = vec_;
         }
         return r;
     }
 
-    // (beg, end)
-    slice operator()(size_t beg, size_t end) const { return Sub(beg, end); }
+    // operator (beg, end), likes golang [beg:end]
+    slice operator()(int beg, int end) const { return Sub(beg, end); }
+
+    // operator =
+    slice& operator=(const slice& r) { _assign(r); }
+
+    // operator =
+    slice& operator=(slice&& r) {
+        _assign(r);
+        r._reset();
+        return *this;
+    }
 
     // bool() ...
-    operator bool() const { return !!ptr_; }
+    operator bool() const { return !!vec_; }
 
-    // Len ...
-    size_t Len() const { return ptr_ ? end_ - beg_ : 0; }
+    // size/length ...
+    int size() const { return vec_ ? end_ - beg_ : 0; }
+    int length() const { return size(); }
 
-    // Data ...
-    T* Data() { return ptr_ ? ptr_->data() + beg_ : 0; }
-    const T* Data() const { return ptr_ ? ptr_->data() + beg_ : 0; }
+    // data ...
+    T* data() { return vec_ ? vec_->data() + beg_ : 0; }
+    const T* data() const { return vec_ ? vec_->data() + beg_ : 0; }
+
+    // T*() ...
+    operator T*() { return data(); }
+    operator const T*() const { return data(); }
+
+    int len() const { return size(); }
+    int cap() const { return vec_ ? vec_->capcity() : 0; }
 
     // String ...
     string String() const {
-        if (!operator bool()) {
-            return "<nil>";
+        if (!operator bool() || beg_ == end_) {
+            return "[]";
         }
 
         std::ostringstream ss;
         ss << "[";
-        for (size_t i = beg_; i < end_; i++) {
+        for (int i = beg_; i < end_; i++) {
             if (i != beg_) {
                 ss << " ";
             }
-            ss << ptr_->operator[](i);
+            ss << vec_->operator[](i);
         }
         ss << "]";
 
         return ss.str();
     }
 
-    // create_if_null ...
-    void create_if_null(size_t len = 0) {
-        if (!ptr_) {
-            ptr_ = VecPtr<T>(new Vec<T>(len));
+   public:
+    // _create_if_null ...
+    void _create_if_null(int len = 0) {
+        if (!vec_) {
+            vec_ = VecPtr<T>(new Vec<T>(len));
         }
+    }
+
+    // _assign ...
+    void _assign(const slice& r) {
+        vec_ = r.vec_;
+        beg_ = r.beg_;
+        end_ = r.end_;
+    }
+
+    // _reset ...
+    void _reset() {
+        vec_ = nullptr;
+        beg_ = 0;
+        end_ = 0;
     }
 };
 
-// bytesli ...
-typedef slice<uint8> bytesli;
+// byte_s ...
+typedef slice<byte> byte_s;
+
+// char_s ...
+typedef slice<char> char_s;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-namespace xx {
 // append ...
+namespace xx {
 template <typename T>
 inline void append(slice<T>&) {}
 
-// append ...
-template <typename T = uint8, typename V = uint8, typename... X>
+template <typename T = byte, typename V = byte, typename... X>
 void append(slice<T>& s, V&& v, X&&... x) {
-    s.ptr_->emplace_back(std::forward<V>(v));
+    auto it = s.vec_->begin() + s.end_;
+    if (it < s.vec_->end()) {
+        *it = std::forward<V>(v);
+    } else {
+        s.vec_->insert(it, std::forward<V>(v));
+    }
     s.end_++;
     append(s, std::forward<X>(x)...);
 }
 
-// append ...
-template <typename T = uint8, typename... X>
+template <typename T = byte, typename... X>
 void append(slice<T>& s, X&&... x) {
     append(s, std::forward<X>(x)...);
 }
@@ -107,51 +157,74 @@ void append(slice<T>& s, X&&... x) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // make ...
-template <typename T = uint8>
-slice<T> make() {
-    return slice<T>();
-}
-
-// make ...
-template <typename T = uint8>
-slice<T> make(size_t len) {
-    return slice<T>(len);
-}
-
-// make ...
-template <typename T = uint8, typename... X>
-slice<T> make(T&& t, X&&... x) {
-    if (sizeof...(x) > 0) {
-        slice<T> s(0);
-        s.ptr_->emplace_back(std::forward<T>(t));
-        s.end_++;
-        xx::append<T>(s, std::forward<X>(x)...);
-        return s;
-    }
-    return slice<T>{};
+template <typename T = byte>
+slice<T> make(int len = 0, int cap = 0) {
+    return slice<T>(len, cap);
 }
 
 // append ...
-template <typename T = uint8>
-slice<T> append(const slice<T>& l, const slice<T>& r) {
-    slice<T> s(l);
-    if (r) {
-        s.create_if_null();
-        s.ptr_->insert(s.ptr_->begin() + s.end_, r.ptr_->begin() + r.beg_, r.ptr_->begin() + r.end_);
-        s.end_ += r.Len();
-    }
-    return s;
-}
-
-// append ...
-template <typename T = uint8, typename... X>
+template <typename T = byte, typename... X>
 slice<T> append(const slice<T>& l, X&&... x) {
     slice<T> s(l);
     if (sizeof...(x) > 0) {
-        s.create_if_null();
+        s._create_if_null();
         xx::append<T>(s, std::forward<X>(x)...);
     }
     return s;
+}
+
+// append ...
+template <typename T = byte>
+slice<T> append(const slice<T>& l, const slice<T>& r) {
+    slice<T> s(l);
+    if (r) {
+        s._create_if_null();
+        s.vec_->insert(s.vec_->begin() + s.end_, r.vec_->begin() + r.beg_, r.vec_->begin() + r.end_);
+        s.end_ += r.length();
+    }
+    return s;
+}
+
+// copy ...
+template <typename T = byte>
+int copy(slice<T>& l, const slice<T>& r) {
+    int i = 0;
+    for (; i < l.size() && i < r.length(); i++) {
+        l[i] = r[i];
+    }
+    return i;
+}
+
+// copy ...
+template <typename T = byte>
+int copy(slice<T>& l, const void* b, int len) {
+    int i = 0;
+    const T* r = (const T*)b;
+    for (; i < l.size() && i < len; i++) {
+        l[i] = r[i];
+    }
+    return i;
+}
+
+// copy ...
+template <typename T = byte>
+int copy(slice<T>&& l, const slice<T>& r) {
+    int i = 0;
+    for (; i < l.size() && i < r.length(); i++) {
+        l[i] = r[i];
+    }
+    return i;
+}
+
+// copy ...
+template <typename T = byte>
+int copy(slice<T>&& l, const void* b, int len) {
+    int i = 0;
+    const T* r = (const T*)b;
+    for (; i < l.size() && i < len; i++) {
+        l[i] = r[i];
+    }
+    return i;
 }
 
 }  // namespace gx

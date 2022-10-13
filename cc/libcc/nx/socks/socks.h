@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "gx/gx.h"
 #include "addr.h"
+#include "gx/gx.h"
 
 namespace nx {
 namespace socks {
@@ -110,16 +110,16 @@ typedef std::function<error(const string& user, const string& pass)> CheckUserPa
 // ServerAuth ...
 template <typename ReadWriter, typename std::enable_if<gx::io::xx::is_read_writer<ReadWriter>::value, int>::type = 0>
 error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = {}) {
-    char buf[256];
+    byte_s buf = make(256);
 
     buf[0] = Version5;
     buf[1] = AuthMethodUserPass;
-    AUTO_R(_1, er1, c->Write(buf, 2));
+    AUTO_R(_1, er1, c->Write(buf(0, 2)));
     if (er1) {
         return er1;
     }
 
-    AUTO_R(_2, er2, io::ReadFull(c, buf, 2));
+    AUTO_R(_2, er2, io::ReadFull(c, buf(0, 2)));
     if (er2) {
         return er2;
     }
@@ -128,31 +128,31 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     }
 
     auto userLen = buf[1];
-    if (userLen > sizeof(buf) - 2) {
+    if (userLen > buf.size() - 2) {
         return ErrUserAuthFailed;
     }
-    AUTO_R(_3, er3, io::ReadFull(c, buf, userLen + 1));
+    AUTO_R(_3, er3, io::ReadFull(c, buf(0, userLen + 1)));
     if (er3) {
         return er3;
     }
-    string user(buf, userLen);
+    string user((char*)buf.data(), userLen);
 
     auto passLen = buf[userLen];
     if (passLen > sizeof(buf) - 2) {
         return ErrUserAuthFailed;
     }
-    AUTO_R(_4, er4, io::ReadFull(c, buf, passLen));
+    AUTO_R(_4, er4, io::ReadFull(c, buf(0, passLen)));
     if (er4) {
         return er4;
     }
-    string pass(buf, passLen);
+    string pass((char*)buf.data(), passLen);
 
     // check user pass
     auto err = checkUserPassFn ? checkUserPassFn(user, pass) : nil;
 
     buf[0] = UserAuthVersion;
     buf[1] = err ? ReplyAuthFailure : ReplyAuthSuccess;
-    AUTO_R(_5, er5, c->Write(buf, 2));
+    AUTO_R(_5, er5, c->Write(buf(0, 2)));
     if (er5) {
         return er5;
     }
@@ -163,7 +163,7 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
 // WriteReply ...
 template <typename Writer, typename std::enable_if<gx::io::xx::is_writer<Writer>::value, int>::type = 0>
 error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
-    uint8 buf[128];
+    byte_s buf = make(128);
     int len = 3;
 
     buf[0] = Version5;
@@ -171,7 +171,7 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
     buf[2] = resverd;
 
     if (boundAddr) {
-        uint8* B = buf + len;
+        uint8* B = buf.data() + len;
 
         auto ip4 = boundAddr->IP.To4();
         if (ip4) {
@@ -190,7 +190,7 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
         }
     }
 
-    AUTO_R(_, err, w->Write(buf, len));
+    AUTO_R(_, err, w->Write(buf(0, len)));
 
     return err;
 }

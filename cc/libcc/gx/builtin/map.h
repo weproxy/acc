@@ -10,19 +10,19 @@ namespace gx {
 // map ...
 template <typename K, typename V>
 struct map {
-    MapPtr<K, V> ptr_;
+    MapPtr<K, V> map_;
 
     // [k]
     V& operator[](const K& k) { return ptr->operator[](k); }
     const V& operator[](const K& k) const { return ptr->operator[](k); }
 
     // bool() ...
-    operator bool() const { return !!ptr_; }
+    operator bool() const { return !!map_; }
 };
 
-// make ...
+// makemap ...
 template <typename K, typename V>
-map<K, V> make() {
+map<K, V> makemap() {
     return map<K, V>();
 }
 

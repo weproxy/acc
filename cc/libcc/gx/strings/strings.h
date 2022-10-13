@@ -9,11 +9,62 @@
 namespace gx {
 namespace strings {
 
+// IndexByte ...
+inline int IndexByte(const string& s, byte c) {
+    for (int i = 0; i < s.length(); i++) {
+        if (s[i] == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 // Index ...
 inline int Index(const string& s, const string& substr) {
     int sl = s.length(), rl = substr.length();
+
+    if (rl == 0) {
+        return 0;
+    } else if (rl == 1) {
+        return IndexByte(s, substr[0]);
+    } else if (rl == sl) {
+        return s == substr ? 0 : -1;
+    }
+
     const char *a = s.c_str(), *b = substr.c_str();
     for (int i = 0; i < sl - rl; i++) {
+        if (memcmp(a + i, b, rl) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// LastIndexByte ...
+inline int LastIndexByte(const string& s, byte c) {
+    for (int i = s.length() - 1; i >= 0; i--) {
+        if (s[i] == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// LastIndex ...
+inline int LastIndex(const string& s, const string& substr) {
+    int sl = s.length(), rl = substr.length();
+
+    if (rl == 0) {
+        return 0;
+    } else if (rl == 1) {
+        return LastIndexByte(s, substr[0]);
+    } else if (rl == sl) {
+        return s == substr ? 0 : -1;
+    }
+
+    const char *a = s.c_str(), *b = substr.c_str();
+    for (int i = sl - rl; i >= 0; i--) {
         if (memcmp(a + i, b, rl) == 0) {
             return i;
         }
@@ -40,40 +91,8 @@ inline int Count(const string& s, const string& substr) {
 // Contains ...
 inline bool Contains(const string& s, const string& substr) { return Index(s, substr) >= 0; }
 
-// LastIndex ...
-inline int LastIndex(const string& s, const string& substr) {
-    int sl = s.length(), rl = substr.length();
-    const char *a = s.c_str(), *b = substr.c_str();
-    for (int i = sl - rl; i >= 0; i--) {
-        if (memcmp(a + i, b, rl) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// IndexByte ...
-inline int IndexByte(const string& s, byte c) {
-    for (int i = 0; i < s.length(); i++) {
-        if (s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 // IndexAny ...
 inline int IndexAny(const string& s, const string& chars) { return Index(s, chars); }
-
-// LastIndexByte ...
-inline int LastIndexByte(const string& s, byte c) {
-    for (int i = s.length() - 1; i >= 0; i--) {
-        if (s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 namespace xx {
 Vec<string> genSplit(const string& s, const string& sep, int sepSave, int n);
@@ -167,7 +186,7 @@ inline string TrimRight(const string& s, const string& cutset) {
         return s;
     }
     int i = xx::cutsetRightIndex(s, cutset);
-    return i >= 0 ? string(s.c_str(), i+1) : "";
+    return i >= 0 ? string(s.c_str(), i + 1) : "";
 }
 
 // TrimSpace ...

@@ -2,9 +2,9 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "core/core.h"
-#include "logx/logx.h"
 #include "gx/time/time.h"
+#include "internal/core/core.h"
+#include "logx/logx.h"
 
 using namespace gx;
 

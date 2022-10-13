@@ -17,14 +17,15 @@ const int IPv6len = 16;
 
 // IP ...
 struct IP final {
-    IP() {}
-    IP(const void* b, size_t l) : L(l) { memcpy(B, b, l); }
+    byte_s B;
 
-    uint8 len() const { return L; }
+    IP() = default;
+    IP(const byte_s b) : B(b) {}
+    IP(const IP& ip) : B(ip.B) {}
 
-    operator bool() const { return L > 0; }
-    uint8 operator[](size_t i) const { return B[i]; }
-    uint8& operator[](size_t i) { return B[i]; }
+    uint8 len() const { return B.size(); }
+
+    operator bool() const { return bool(B); }
 
     string String() const;
 
@@ -71,15 +72,11 @@ struct IP final {
 
     IP To4() const;
     IP To16() const;
-
-   public:
-    uint8 B[16];
-    uint8 L{0};
 };
 
 // IPMask ...
 struct IPMask {
-    uint8 B[4];
+    byte_s B;
 
     string String();
 };

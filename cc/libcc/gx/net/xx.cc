@@ -40,7 +40,7 @@ AddrInfoRet GetAddrInfo(const string& host, const string& port) {
 }
 
 // GetAddrInfo ...
-AddrInfoRet GetAddrInfo(const string& host, uint16_t port) {
+AddrInfoRet GetAddrInfo(const string& host, uint16 port) {
     return GetAddrInfo(host, string(str::from(port).c_str()));
 }
 
@@ -51,7 +51,7 @@ AddrInfoRet GetAddrInfo(const string& addr) {
         return {{}, err};
     }
 
-    return GetAddrInfo(host, (uint16_t)port);
+    return GetAddrInfo(host, (uint16)port);
 }
 
 // _getSockAddr  ...
