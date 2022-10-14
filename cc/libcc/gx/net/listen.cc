@@ -3,7 +3,6 @@
 //
 
 #include "co/str.h"
-#include "co/tcp.h"
 #include "net.h"
 #include "xx.h"
 
@@ -16,23 +15,26 @@ ListenConfig DefaultListenConfig;
 
 namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// tcpPeer_t ...
+// tcpPeer_t for Accept() ...
 struct tcpPeer_t : public conn_t {
-    tcpPeer_t(int fd) : c_(fd) {}
+    tcpPeer_t(SOCKET fd) : fd_(fd) {}
     virtual ~tcpPeer_t() { Close(); }
 
     // String ...
-    virtual string String() override { return "tcpPeer_t"; }
+    virtual string String() override { return GX_SS("tcpPeer_t{" << RemoteAddr() << "}"); }
 
     // Read ...
     virtual R<int, error> Read(byte_s b) override {
-        int r = c_.recv(b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
+        if (fd_ <= 0) {
+            return {0, ErrClosed};
+        }
+        int r = co::recv(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {
                 err = ErrClosed;
             } else {
-                err = errors::New(c_.strerror());
+                err = errors::New(co::strerror());
             }
             return {r, err};
         }
@@ -41,41 +43,72 @@ struct tcpPeer_t : public conn_t {
 
     // Write ...
     virtual R<int, error> Write(const byte_s b) override {
-        int r = c_.send(b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
+        if (fd_ <= 0) {
+            return {0, ErrClosed};
+        }
+        int r = co::send(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
         if (r <= 0) {
             error err;
             if (co::error() == EAGAIN) {
                 err = ErrClosed;
             } else {
-                err = errors::New(c_.strerror());
+                err = errors::New(co::strerror());
             }
             return {r, err};
         }
         return {r, nil};
     }
 
-    // Close ...
-    virtual void Close() override { c_.close(); }
+    // ReadClose ...
+    virtual void ReadClose() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'r');
+        }
+    }
 
-    virtual int Fd() const override { return c_.socket(); }
-    virtual Addr LocalAddr() override { return GetSockAddr(c_.socket()); }
-    virtual Addr RemoteAddr() override { return GetPeerAddr(c_.socket()); }
+    // CloseWrite ...
+    virtual void CloseWrite() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'w');
+        }
+    }
+
+    // Close ...
+    virtual void Close() {
+        if (fd_ > 0) {
+            co::close(fd_);
+            fd_ = INVALID_SOCKET;
+        }
+    }
+
+    virtual SOCKET Fd() const override { return fd_; }
+    virtual Addr LocalAddr() override { return GetSockAddr(fd_); }
+    virtual Addr RemoteAddr() override { return GetPeerAddr(fd_); }
 
     virtual error SetDeadline(const time::Time& t) override {
         dealine_.d = t;
+        if (t && time::Since(t) >= 0) {
+            Close();
+        }
         return nil;
     }
     virtual error SetReadDeadline(const time::Time& t) override {
         dealine_.r = t;
+        if (t && time::Since(t) >= 0) {
+            ReadClose();
+        }
         return nil;
     }
     virtual error SetWriteDeadline(const time::Time& t) override {
         dealine_.w = t;
+        if (t && time::Since(t) >= 0) {
+            CloseWrite();
+        }
         return nil;
     }
 
    private:
-    ::tcp::Connection c_;
+    SOCKET fd_{INVALID_SOCKET};
     struct {
         time::Time d, r, w;
     } dealine_;
@@ -84,16 +117,20 @@ struct tcpPeer_t : public conn_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // tcpServ_t ...
 struct tcpServ_t : public listener_t {
-    tcpServ_t(sock_t fd) : fd_(fd) {}
+    tcpServ_t(SOCKET fd) : fd_(fd) {}
     virtual ~tcpServ_t() { Close(); }
 
     // Accept ...
     virtual R<Conn, error> Accept() {
+        if (fd_ <= 0) {
+            return {nil, ErrClosed};
+        }
+
         addr_in_t addr;
         int addrlen = sizeof(addr);
 
-        sock_t fd = co::accept(fd_, &addr, &addrlen);
-        if (fd < 0) {
+        SOCKET fd = co::accept(fd_, &addr, &addrlen);
+        if (fd <= 0) {
             return {nil, errors::New(co::strerror())};
         }
 
@@ -107,22 +144,20 @@ struct tcpServ_t : public listener_t {
     virtual void Close() {
         if (fd_ > 0) {
             co::close(fd_);
-            fd_ = 0;
+            fd_ = INVALID_SOCKET;
         }
     }
 
+    virtual SOCKET Fd() const override { return fd_; }
     virtual net::Addr Addr() { return xx::GetSockAddr(fd_); }
-    virtual int Fd() const override { return fd_; }
 
    private:
-    sock_t fd_{0};
+    SOCKET fd_{INVALID_SOCKET};
 };
 
 // udpConn_t ...
 struct udpConn_t : public packetConn_t {
-    udpConn_t(sock_t fd) : fd_(fd) {}
-
-    virtual int Fd() const { return fd_; }
+    udpConn_t(SOCKET fd) : fd_(fd) {}
 
     // ReadFrom ...
     virtual R<int, Addr, error> ReadFrom(byte_s b) {
@@ -169,32 +204,53 @@ struct udpConn_t : public packetConn_t {
         return {r, nil};
     }
 
+    // Close ...
     virtual void Close() {
         if (fd_ > 0) {
             co::close(fd_);
-            fd_ = 0;
+            fd_ = INVALID_SOCKET;
         }
     };
+    virtual void CloseRead() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'r');
+        }
+    }
+    virtual void CloseWrite() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'w');
+        }
+    }
 
-    virtual Addr LocalAddr() { return GetSockAddr(fd_); };
-
+    // SetDeadline ...
     virtual error SetDeadline(const time::Time& t) override {
         dealine_.d = t;
+        if (t && time::Since(t) >= 0) {
+            Close();
+        }
         return nil;
     }
     virtual error SetReadDeadline(const time::Time& t) override {
         dealine_.r = t;
+        if (t && time::Since(t) >= 0) {
+            CloseRead();
+        }
         return nil;
     }
     virtual error SetWriteDeadline(const time::Time& t) override {
         dealine_.w = t;
+        if (t && time::Since(t) >= 0) {
+            CloseWrite();
+        }
         return nil;
     }
 
+    virtual int Fd() const { return fd_; }
+    virtual Addr LocalAddr() { return GetSockAddr(fd_); };
     virtual string String() { return "udpConn_t"; }
 
    private:
-    sock_t fd_{0};
+    SOCKET fd_{INVALID_SOCKET};
     struct {
         time::Time d, r, w;
     } dealine_;
@@ -211,8 +267,8 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
     }
     auto info = ainfo->i;
 
-    sock_t fd = co::tcp_socket(info->ai_family);
-    if (fd < 0) {
+    SOCKET fd = co::tcp_socket(info->ai_family);
+    if (fd <= 0) {
         return {nil, errors::New("create socket error: %s", co::strerror())};
     }
 
@@ -240,14 +296,6 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
     return {ln, nil};
 }
 
-// Listen ...
-R<Listener, error> ListenConfig::Listen(const Addr addr) {
-    if (!addr) {
-        return {nil, errors::New("addr is nil")};
-    }
-    return Listen(addr->String());
-}
-
 // ListenPacket ...
 R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
     AUTO_R(ainfo, err, xx::GetAddrInfo(addr));
@@ -256,8 +304,8 @@ R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
     }
     auto info = ainfo->i;
 
-    sock_t fd = co::udp_socket(info->ai_family);
-    if (fd < 0) {
+    SOCKET fd = co::udp_socket(info->ai_family);
+    if (fd <= 0) {
         return {nil, errors::New("create socket error: %s", co::strerror())};
     }
 

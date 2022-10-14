@@ -14,6 +14,11 @@
 namespace gx {
 namespace net {
 
+#ifndef _WIN32
+typedef int SOCKET;
+#define INVALID_SOCKET -1
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // error
 extern const error ErrClosed;
@@ -30,10 +35,12 @@ struct addr_t final {
     IP IP;
     uint16 Port{0};
 };
-}  // namespace xx
 
 // Addr ...
-typedef std::shared_ptr<xx::addr_t> Addr;
+typedef std::shared_ptr<addr_t> Addr;
+}  // namespace xx
+
+using xx::Addr;
 
 // MakeAddr ...
 inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return Addr(new xx::addr_t(ip, port)); }
@@ -44,77 +51,124 @@ namespace xx {
 struct conn_t : public io::ICloser {
     virtual ~conn_t() { Close(); }
 
-    virtual int Fd() const = 0;
-
     virtual R<int, error> Read(byte_s b) = 0;
     virtual R<int, error> Write(const byte_s b) = 0;
-    virtual void Close(){};
 
-    virtual Addr LocalAddr() = 0;
-    virtual Addr RemoteAddr() = 0;
+    virtual void Close(){};
+    virtual void CloseRead() { Close(); }
+    virtual void CloseWrite() { Close(); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
+    virtual SOCKET Fd() const = 0;
+    virtual Addr LocalAddr() = 0;
+    virtual Addr RemoteAddr() = 0;
     virtual string String() { return ""; }
 };
-}  // namespace xx
 
 // Conn ...
-typedef std::shared_ptr<xx::conn_t> Conn;
+typedef std::shared_ptr<conn_t> Conn;
+
+struct connWrap_t : public conn_t {
+    Conn wrap_;
+
+    connWrap_t() = default;
+    connWrap_t(Conn c) : wrap_(c) {}
+
+    virtual R<int, error> Read(byte_s buf) { return wrap_->Read(buf); }
+    virtual R<int, error> Write(const byte_s buf) { return wrap_->Write(buf); }
+
+    virtual void Close() { wrap_->Close(); };
+    virtual void CloseRead() { wrap_->CloseRead(); }
+    virtual void CloseWrite() { wrap_->CloseWrite(); }
+
+    virtual error SetDeadline(const time::Time& t) { return wrap_->SetDeadline(t); }
+    virtual error SetReadDeadline(const time::Time& t) { return wrap_->SetReadDeadline(t); }
+    virtual error SetWriteDeadline(const time::Time& t) { return wrap_->SetWriteDeadline(t); }
+
+    virtual SOCKET Fd() const { return wrap_->Fd(); };
+    virtual Addr LocalAddr() { return wrap_->LocalAddr(); };
+    virtual Addr RemoteAddr() { return wrap_->RemoteAddr(); };
+    virtual string String() { return wrap_->String(); }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // packetConn_t ...
-namespace xx {
 struct packetConn_t : public io::ICloser {
     virtual ~packetConn_t() { Close(); }
 
-    virtual int Fd() const = 0;
-
     virtual R<int, Addr, error> ReadFrom(byte_s b) = 0;
     virtual R<int, error> WriteTo(const byte_s b, Addr addr) = 0;
-    virtual void Close(){};
 
-    virtual Addr LocalAddr() = 0;
+    virtual void Close(){};
+    virtual void CloseRead() { Close(); }
+    virtual void CloseWrite() { Close(); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
+    virtual SOCKET Fd() const = 0;
+    virtual Addr LocalAddr() = 0;
     virtual string String() { return ""; }
 };
-}  // namespace xx
 
-// PacketConn ...
-typedef std::shared_ptr<xx::packetConn_t> PacketConn;
+typedef std::shared_ptr<packetConn_t> PacketConn;
+
+struct packetConnWrap_t : public packetConn_t {
+    PacketConn wrap_;
+
+    packetConnWrap_t() = default;
+    packetConnWrap_t(PacketConn pc) : wrap_(pc) {}
+
+    virtual R<int, net::Addr, error> ReadFrom(byte_s buf) { return wrap_->ReadFrom(buf); }
+    virtual R<int, error> WriteTo(const byte_s buf, Addr addr) { return wrap_->WriteTo(buf, addr); }
+
+    virtual void Close() { wrap_->Close(); };
+    virtual void CloseRead() { wrap_->CloseRead(); }
+    virtual void CloseWrite() { wrap_->CloseWrite(); }
+
+    virtual error SetDeadline(const time::Time& t) { return wrap_->SetDeadline(t); }
+    virtual error SetReadDeadline(const time::Time& t) { return wrap_->SetReadDeadline(t); }
+    virtual error SetWriteDeadline(const time::Time& t) { return wrap_->SetWriteDeadline(t); }
+
+    virtual SOCKET Fd() const { return wrap_->Fd(); };
+    virtual Addr LocalAddr() { return wrap_->LocalAddr(); };
+    virtual string String() { return wrap_->String(); }
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // listener_t ...
-namespace xx {
 struct listener_t : public io::ICloser {
     virtual ~listener_t() { Close(); }
 
-    virtual int Fd() const = 0;
-
     virtual R<Conn, error> Accept() = 0;
+
     virtual void Close(){};
 
+    virtual SOCKET Fd() const = 0;
     virtual Addr Addr() = 0;
-
     virtual string String() { return ""; }
 };
-}  // namespace xx
 
 // Listener ...
-typedef std::shared_ptr<xx::listener_t> Listener;
+typedef std::shared_ptr<listener_t> Listener;
+}  // namespace xx
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+using xx::Conn;
+using xx::Listener;
+using xx::PacketConn;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 struct Dialer final {
     Addr LocalAddr;
     time::Duration Timeout;
-    std::function<error(const string& addr, int fd)> Control;
+    std::function<error(const string& addr, SOCKET fd)> Control;
 
    public:
     // Dial ...
@@ -134,16 +188,16 @@ inline R<Conn, error> Dial(const Addr addr, int ms = 5000) { return DefaultDiale
 
 // ListenConfig ...
 struct ListenConfig final {
-    std::function<error(const string& addr, int fd)> Control;
+    std::function<error(const string& addr, SOCKET fd)> Control;
 
    public:
     // Listen ...
     R<Listener, error> Listen(const string& addr);
-    R<Listener, error> Listen(const Addr addr);
+    R<Listener, error> Listen(const Addr addr) { return Listen(addr ? addr->String() : ""); }
 
     // ListenPacket ...
     R<PacketConn, error> ListenPacket(const string& addr);
-    R<PacketConn, error> ListenPacket(const Addr addr);
+    R<PacketConn, error> ListenPacket(const Addr addr) { return ListenPacket(addr ? addr->String() : ""); }
 };
 
 // DefaultListenConfig ...

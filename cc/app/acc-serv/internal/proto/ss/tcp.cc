@@ -6,7 +6,6 @@
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
-#include "nx/nx.h"
 #include "nx/socks/socks.h"
 #include "nx/stats/stats.h"
 #include "ss.h"
@@ -19,7 +18,7 @@ using namespace nx;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
 error handleTCP(net::Conn c, net::Addr raddr) {
-    auto tag = FX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
+    auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
     auto sta = stats::NewTCPStats(stats::TypeS5, tag);
 
     sta->Start("connected");
@@ -40,7 +39,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     //     return err;
     // }
 
-    // AUTO_R(read, written, er2, io::Relay(c, rc, stats::NewRelayOption(sta)));
+    // AUTO_R(read, written, er2, nx::io::Relay(c, rc, stats::NewRelayOption(sta)));
     // if (er2) {
     //     if (er2 != net::ErrClosed) {
     //         LOGS_E(TAG << " relay " << tag << " , err: " << er2);

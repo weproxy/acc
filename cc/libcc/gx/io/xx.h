@@ -18,7 +18,6 @@ template <typename T>
 struct is_reader {
    private:
     template <typename U>
-    // static auto test(U) -> decltype(std::declval<U>()->Read((void*)0, (int)0));
     static auto test(U) -> decltype(std::declval<U>()->Read(byte_s{}));
 
    public:
@@ -72,6 +71,56 @@ template <typename T>
 struct is_read_write_closer {
     static constexpr bool value = is_read_writer<T>::value && is_closer<T>::value;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// has_close_read ...
+// ----> void CloseRead();
+template <typename T>
+struct has_close_read {
+   private:
+    template <typename U>
+    static auto test(U) -> decltype(std::declval<U>()->CloseRead());
+
+   public:
+    static constexpr bool value = !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
+};
+
+// has_close_write ...
+// ----> void CloseWrite();
+template <typename T>
+struct has_close_write {
+   private:
+    template <typename U>
+    static auto test(U) -> decltype(std::declval<U>()->CloseWrite());
+
+   public:
+    static constexpr bool value = !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
+};
+
+// call_close_read ...
+template <typename T, typename std::enable_if<xx::has_close_read<T>::value, int>::type = 0>
+void call_close_read(T t) {
+    t->CloseRead();
+}
+
+// call_close_read ...
+template <typename T, typename std::enable_if<xx::is_closer<T>::value, int>::type = 0>
+void call_close_read(T t) {
+    t->Close();
+}
+
+// call_close_write ...
+template <typename T, typename std::enable_if<xx::has_close_write<T>::value, int>::type = 0>
+void call_close_write(T t) {
+    t->CloseWrite();
+}
+
+// call_close_write ...
+template <typename T, typename std::enable_if<xx::is_closer<T>::value, int>::type = 0>
+void call_close_write(T t) {
+    t->Close();
+}
 
 }  // namespace xx
 }  // namespace io

@@ -23,7 +23,7 @@ static error checkUserPass(const string& user, const string& pass) {
 
 // handshake ...
 static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
-    c->SetDeadline(time::Now().Add(time::Second * 3));
+    c->SetDeadline(time::Now().Add(time::Second * 5));
     DEFER(c->SetDeadline(time::Time{}));
 
     socks::Command cmd = socks::Command(0);
@@ -102,8 +102,8 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
 // handleTCP ...
 extern error handleTCP(net::Conn c, net::Addr raddr);
 
-// handleUDP ...
-extern error handleUDP(net::Conn c, net::Addr raddr);
+// handleAssoc ...
+extern error handleAssoc(net::Conn c, net::Addr raddr);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
@@ -123,7 +123,7 @@ static error handleConn(net::Conn c) {
         case socks::CmdConnect:
             return handleTCP(c, raddr->ToNetAddr());
         case socks::CmdAssociate:
-            return handleUDP(c, raddr->ToNetAddr());
+            return handleAssoc(c, raddr->ToNetAddr());
         case socks::CmdBind:
             return errors::New("not support socks command: bind");
         default:
@@ -144,7 +144,7 @@ struct Server : public proto::IServer {
     error Start() override {
         AUTO_R(ln, err, net::Listen(addr_));
         if (err) {
-            LOGS_E(TAG << " Start(" << addr_ << "), err: " << err);
+            LOGS_E(TAG << " Listen(" << addr_ << "), err: " << err);
             return err;
         }
 
@@ -155,11 +155,13 @@ struct Server : public proto::IServer {
             for (;;) {
                 AUTO_R(c, err, ln->Accept());
                 if (err) {
-                    LOGS_E(TAG << " accept(), err: " << err);
+                    if (err != net::ErrClosed) {
+                        LOGS_E(TAG << " Accept(), err: " << err);
+                    }
                     break;
                 }
 
-                LOGS_V(TAG << " accept() " << c->RemoteAddr());
+                LOGS_V(TAG << " Accept() " << c->RemoteAddr());
 
                 gx::go([c = c] { handleConn(c); });
             }

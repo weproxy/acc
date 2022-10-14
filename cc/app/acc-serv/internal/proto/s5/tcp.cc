@@ -6,7 +6,7 @@
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
-#include "nx/nx.h"
+#include "nx/netio/netio.h"
 #include "nx/socks/socks.h"
 #include "nx/stats/stats.h"
 #include "s5.h"
@@ -19,7 +19,7 @@ using namespace nx;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
 error handleTCP(net::Conn c, net::Addr raddr) {
-    auto tag = FX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
+    auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
     auto sta = stats::NewTCPStats(stats::TypeS5, tag);
 
     sta->Start("connected");
@@ -40,7 +40,11 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         return err;
     }
 
-    AUTO_R(read, written, er2, io::Relay(c, rc, stats::NewRelayOption(sta)));
+    netio::RelayOption opt;
+    opt.Read.CopingFn = [sta = sta](size_t n) { sta->AddRecv(n); };
+    opt.Write.CopingFn = [sta = sta](size_t n) { sta->AddSent(n); };
+
+    AUTO_R(read, written, er2, netio::Relay(c, rc, opt));
     if (er2) {
         if (er2 != net::ErrClosed) {
             LOGS_E(TAG << " relay " << tag << " , err: " << er2);
@@ -51,6 +55,48 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     return nil;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// handleUDP ...
+extern error handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr);
+
+// handleAssoc ...
+error handleAssoc(net::Conn c, net::Addr raddr) {
+    auto caddr = c->RemoteAddr();
+
+    auto tag = GX_SS(TAG << " Assoc_" << nx::NewID() << " " << caddr << "->" << raddr);
+    auto sta = stats::NewTCPStats(stats::TypeS5, tag);
+
+    sta->Start("connected");
+    DEFER(sta->Done("closed"));
+
+    AUTO_R(ln, er1, net::ListenPacket(":0"));
+    if (er1) {
+        LOGS_E(TAG << " dial, err: " << er1);
+        socks::WriteReply(c, socks::ReplyHostUnreachable);
+        return er1;
+    }
+
+    // handleUDP
+    gx::go([ln = ln, caddr = caddr, raddr = raddr] { handleUDP(ln, caddr, raddr); });
+
+    auto err = socks::WriteReply(c, socks::ReplySuccess, 0, ln->LocalAddr());
+    if (err) {
+        if (err != net::ErrClosed) {
+            LOGS_E(TAG << " err: " << err);
+        }
+        return err;
+    }
+
+    AUTO_R(_, er2, io::Copy(io::Discard, c));
+    if (er2) {
+        if (er2 != net::ErrClosed) {
+            LOGS_E(TAG << " err: " << er2);
+        }
+        return er2;
+    }
+
+    return nil;
+}
 }  // namespace xx
 
 NAMESPACE_END_S5

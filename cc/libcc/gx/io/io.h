@@ -71,7 +71,7 @@ struct discard_t {
 }  // namespace xx
 
 // Discard ...
-extern xx::discard_t Discard;
+extern std::shared_ptr<xx::discard_t> Discard;
 
 }  // namespace io
 }  // namespace gx

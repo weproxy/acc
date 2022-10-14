@@ -25,13 +25,12 @@ end
 -- SRCDIR
 local SRCDIR = APPDIR.."/internal"
 
--- include dir
--- add_includedirs(APPDIR.."/internal")
-add_includedirs(APPDIR)
-
 -- target
 target(NAME)
     set_kind("binary")
+
+    -- add_includedirs(APPDIR.."/internal")
+    add_includedirs(APPDIR)
 
     add_files(CMDDIR.."/**.cc|**_test.cc")
     add_files(SRCDIR.."/**.cc|**_test.cc")

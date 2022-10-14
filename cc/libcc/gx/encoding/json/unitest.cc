@@ -78,5 +78,6 @@ void test_json() {
         std::cout << cc << std::endl;
     }
 }
+
 }  // namespace unitest
 }  // namespace gx

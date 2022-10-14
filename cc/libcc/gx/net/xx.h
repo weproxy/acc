@@ -76,14 +76,14 @@ typedef std::shared_ptr<addrInfo_t> AddrInfo;
 // GetAddrInfo ...
 typedef R<AddrInfo, error> AddrInfoRet;
 AddrInfoRet GetAddrInfo(const string& host, const string& port);
-AddrInfoRet GetAddrInfo(const string& host, uint16 port);
+inline AddrInfoRet GetAddrInfo(const string& host, uint16 port) {return GetAddrInfo(host, GX_SS(port));}
 AddrInfoRet GetAddrInfo(const string& addr);
 
 // GetSockAddr ...
-Addr GetSockAddr(int fd);
+Addr GetSockAddr(SOCKET fd);
 
 // GetPeerAddr ...
-Addr GetPeerAddr(int fd);
+Addr GetPeerAddr(SOCKET fd);
 
 }  // namespace xx
 }  // namespace net

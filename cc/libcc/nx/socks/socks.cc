@@ -122,5 +122,25 @@ R<Addr, error> ParseAddr(const byte_s buf) {
     }
 }
 
+// CopyAddr ...
+R<int, error> CopyAddr(byte_s buf, Addr addr) {
+    if (addr || buf.size() >= addr->B.size()) {
+        memcpy(buf.data(), addr->B.data(), addr->B.size());
+        return {addr->B.size(), nil};
+    }
+    return {0, errors::New("socks::WriteAddr fail")};
+}
+
+// AppendAddr ...
+R<int, error> AppendAddr(byte_s buf, Addr addr) {
+    if (addr) {
+        for (int i = 0; i < addr->B.size(); i++) {
+            append(buf, addr->B[i]);
+        }
+        return {addr->B.size(), nil};
+    }
+    return {0, errors::New("socks::AppendAddr fail")};
+}
+
 }  // namespace socks
 }  // namespace nx

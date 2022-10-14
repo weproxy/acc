@@ -40,6 +40,11 @@ struct addr_t {
     uint8 operator[](size_t i) const { return B[i]; }
     uint8& operator[](size_t i) { return B[i]; }
 
+    byte* data() { return B.data(); }
+    const byte* data() const { return B.data(); }
+    int size() { return B.size(); }
+    const int size() const { return B.size(); }
+
     // IP ...
     net::IP IP() const;
 
@@ -76,7 +81,7 @@ inline Addr FromNetAddr(net::Addr addr) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // ReadAddr ..
-template <typename Reader, typename std::enable_if<gx::io::xx::is_reader<Reader>::value, int>::type = 0>
+template <typename Reader, typename std::enable_if<io::xx::is_reader<Reader>::value, int>::type = 0>
 R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
     byte_s B = make(256);
 
@@ -124,6 +129,12 @@ R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
 R<Addr, error> ParseAddr(const byte_s buf);
+
+// CopyAddr ...
+R<int, error> CopyAddr(byte_s buf, Addr addr);
+
+// AppendAddr ...
+R<int, error> AppendAddr(byte_s buf, Addr addr);
 
 }  // namespace socks
 }  // namespace nx

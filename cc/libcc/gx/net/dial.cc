@@ -15,16 +15,16 @@ Dialer DefaultDialer;
 
 namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// tcpCli_t ...
-struct tcpCli_t : public conn_t {
-    tcpCli_t(int fd) : fd_(fd) {}
-
-    virtual ~tcpCli_t() { Close(); }
-
-    virtual string String() { return "tcpCli_t"; }
+// tcpConn_t for Dial() ...
+struct tcpConn_t : public conn_t {
+    tcpConn_t(SOCKET fd) : fd_(fd) {}
+    virtual ~tcpConn_t() { Close(); }
 
     // Read ...
     virtual R<int, error> Read(byte_s b) {
+        if (fd_ <= 0) {
+            return {0, ErrClosed};
+        }
         int l = co::recv(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
         if (l <= 0) {
             if (co::error() == EAGAIN) {
@@ -37,6 +37,9 @@ struct tcpCli_t : public conn_t {
 
     // Write ...
     virtual R<int, error> Write(const byte_s b) {
+        if (fd_ <= 0) {
+            return {0, ErrClosed};
+        }
         int l = co::send(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
         if (l <= 0) {
             if (co::error() == EAGAIN) {
@@ -51,29 +54,51 @@ struct tcpCli_t : public conn_t {
     virtual void Close() {
         if (fd_ > 0) {
             co::close(fd_);
-            fd_ = 0;
+            fd_ = INVALID_SOCKET;
         }
+    }
+    virtual void CloseRead() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'r');
+        }
+    }
+
+    virtual void CloseWrite() {
+        if (fd_ > 0) {
+            co::shutdown(fd_, 'w');
+        }
+    }
+
+    // SetDeadline ...
+    virtual error SetDeadline(const time::Time& t) {
+        dealine_.d = t;
+        if (t && time::Since(t) >= 0) {
+            Close();
+        }
+        return nil;
+    }
+    virtual error SetReadDeadline(const time::Time& t) {
+        dealine_.r = t;
+        if (t && time::Since(t) >= 0) {
+            CloseRead();
+        }
+        return nil;
+    }
+    virtual error SetWriteDeadline(const time::Time& t) {
+        dealine_.w = t;
+        if (t && time::Since(t) >= 0) {
+            CloseWrite();
+        }
+        return nil;
     }
 
     virtual int Fd() const { return fd_; }
     virtual Addr LocalAddr() { return xx::GetSockAddr(fd_); }
     virtual Addr RemoteAddr() { return xx::GetPeerAddr(fd_); }
-
-    virtual error SetDeadline(const time::Time& t) {
-        dealine_.d = t;
-        return nil;
-    }
-    virtual error SetReadDeadline(const time::Time& t) {
-        dealine_.r = t;
-        return nil;
-    }
-    virtual error SetWriteDeadline(const time::Time& t) {
-        dealine_.w = t;
-        return nil;
-    }
+    virtual string String() { return GX_SS("tcpConn_t{" << RemoteAddr() << "}"); }
 
    public:
-    int fd_{0};
+    SOCKET fd_{0};
     struct {
         time::Time d, r, w;
     } dealine_;
@@ -89,7 +114,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
     }
     auto info = ainfo->i;
 
-    sock_t fd = co::tcp_socket(info->ai_family);
+    SOCKET fd = co::tcp_socket(info->ai_family);
     if (fd < 0) {
         return {nil, errors::New("create socket error: %s", co::strerror())};
     }
@@ -125,7 +150,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
 
     co::set_tcp_nodelay(fd);
 
-    std::shared_ptr<xx::tcpCli_t> c(new xx::tcpCli_t(fd));
+    std::shared_ptr<xx::tcpConn_t> c(new xx::tcpConn_t(fd));
 
     return {c, nil};
 }

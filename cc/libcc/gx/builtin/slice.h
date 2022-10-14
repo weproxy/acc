@@ -14,8 +14,8 @@ namespace gx {
 // slice ...
 template <typename T>
 struct slice {
-    VecPtr<T> vec_{nullptr};
     int beg_{0}, end_{0};
+    VecPtr<T> vec_{nullptr};
 
     explicit slice(int len, int cap = 0) : end_(len), vec_(VecPtr<T>(new Vec<T>(len))) {
         if (cap > len) {
@@ -29,8 +29,8 @@ struct slice {
         end_ += x.size();
     }
     slice() = default;
-    slice(const slice& r) : vec_(r.vec_), beg_(r.beg_), end_(r.end_) {}
-    slice(slice&& r) : vec_(r.vec_), beg_(r.beg_), end_(r.end_) { r._reset(); }
+    slice(const slice& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) {}
+    slice(slice&& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) { r._reset(); }
 
     slice(const string& s) : slice(s.length(), s.length()) { memcpy(data(), s.data(), s.length()); }
 
@@ -39,7 +39,7 @@ struct slice {
     const T& operator[](int i) const { return vec_->operator[](beg_ + i); }
 
     // Sub ...
-    slice Sub(int beg, int end) const {
+    slice Sub(int beg, int end = -1) const {
         slice r;
         int begt = beg < 0 ? beg_ : (beg_ + beg);
         int endt = end < 0 ? end_ : (beg_ + end);
@@ -52,7 +52,7 @@ struct slice {
     }
 
     // operator (beg, end), likes golang [beg:end]
-    slice operator()(int beg, int end) const { return Sub(beg, end); }
+    slice operator()(int beg, int end = -1) const { return Sub(beg, end); }
 
     // operator =
     slice& operator=(const slice& r) { _assign(r); }

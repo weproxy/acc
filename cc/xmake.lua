@@ -14,8 +14,12 @@ set_xmakever("2.3.1")
 -- set common flags
 set_languages("c++11")
 set_warnings("all")     -- -Wall
---set_symbols("debug")    -- dbg symbols
 
+add_rules("mode.debug")
+if is_mode("debug") then
+    add_defines("DEBUG")
+    set_symbols("debug")    -- dbg symbols
+end
 
 if is_plat("windows") then
     set_optimize("fastest")  -- faster: -O2  fastest: -Ox  none: -O0

@@ -45,7 +45,7 @@ struct Time {
     Time(const Time& t) { t_ = t.t_; }
 
     // IsZero ...
-    bool IsZero() const { return t_.tv_sec == 0 && t_.tv_nsec == 0; }
+    bool IsZero() const { return t_.tv_sec <= 0 && t_.tv_nsec <= 0; }
 
     // Before ...
     bool Before(const Time& t) const;
@@ -73,7 +73,7 @@ struct Time {
     int64 UnixMicro() const { return t_.tv_sec * 1e6 + t_.tv_nsec / 1e3; }
     int64 UnixNano() const { return t_.tv_sec * 1e9 + t_.tv_nsec; }
 
-   private:
+//    private:
     struct timespec t_;
 };
 

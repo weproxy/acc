@@ -40,7 +40,7 @@ check:
 pre: check
 
 config: check
-	xmake config --with_libcurl=n --fpic=y
+	xmake config -m debug  --with_libcurl=n --fpic=y
 
 build: pre
 	xmake build

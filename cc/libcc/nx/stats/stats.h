@@ -6,7 +6,7 @@
 
 #include <atomic>
 
-#include "gx/io/io.h"
+#include "nx/nx.h"
 #include "gx/time/time.h"
 #include "gx/x/time/rate/rate.h"
 
@@ -299,16 +299,6 @@ inline Stats NewTCPStats(Type typ, const string& tag) { return NewStats(typ, tag
 
 // NewUDPStats ...
 inline Stats NewUDPStats(Type typ, const string& tag) { return NewStats(typ, tag, false); }
-
-// NewRelayOption ...
-inline io::RelayOption NewRelayOption(Stats sta, rate::Limiter readLimit = nil, rate::Limiter writeLimit = nil) {
-    io::RelayOption opt;
-    opt.Read.Limit = readLimit;
-    opt.Write.Limit = writeLimit;
-    opt.Read.OnCopy = [sta = sta](size_t size) { sta->AddRecv(size); };
-    opt.Write.OnCopy = [sta = sta](size_t size) { sta->AddSent(size); };
-    return opt;
-}
 
 }  // namespace stats
 }  // namespace nx

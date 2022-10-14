@@ -40,13 +40,8 @@ AddrInfoRet GetAddrInfo(const string& host, const string& port) {
 }
 
 // GetAddrInfo ...
-AddrInfoRet GetAddrInfo(const string& host, uint16 port) {
-    return GetAddrInfo(host, string(str::from(port).c_str()));
-}
-
-// GetAddrInfo ...
 AddrInfoRet GetAddrInfo(const string& addr) {
-    AUTO_R(host, port, err, SplitHostPort(addr));
+    AUTO_R(host, port, err, SplitHostPort(addr.empty() ? "0.0.0.0:0" : addr));
     if (err) {
         return {{}, err};
     }
@@ -55,7 +50,11 @@ AddrInfoRet GetAddrInfo(const string& addr) {
 }
 
 // _getSockAddr  ...
-static Addr _getSockAddr(int fd, bool peer) {
+static Addr _getSockAddr(SOCKET fd, bool peer) {
+    if (fd <= 0) {
+        return nil;
+    }
+
     addr_in_t addr;
     socklen_t addrLen = sizeof(addr);
 
@@ -73,10 +72,10 @@ static Addr _getSockAddr(int fd, bool peer) {
 }
 
 // GetSockAddr ...
-Addr GetSockAddr(int fd) { return _getSockAddr(fd, false); }
+Addr GetSockAddr(SOCKET fd) { return _getSockAddr(fd, false); }
 
 // GetPeerAddr ...
-Addr GetPeerAddr(int fd) { return _getSockAddr(fd, true); }
+Addr GetPeerAddr(SOCKET fd) { return _getSockAddr(fd, true); }
 
 }  // namespace xx
 }  // namespace net
