@@ -15,7 +15,7 @@ namespace netio {
 R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
     byte_s buf = make(1024 * 32);
 
-    size_t witten = 0;
+    size_t written = 0;
     error rerr;
 
     for (;;) {
@@ -33,7 +33,7 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
 
             AUTO_R(nw, er2, w->Write(buf(0, nr)));
             if (nw > 0) {
-                witten += nw;
+                written += nw;
                 if (opt.CopingFn) {
                     opt.CopingFn(nw);
                 }
@@ -49,9 +49,9 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
         }
     }
 
-    println("io::Copy(", r, "->", w, ")", witten, "bytes");
+    println("io::Copy(", r, "->", w, ")", written, "bytes");
 
-    return {witten, rerr};
+    return {written, rerr};
 }
 
 // Relay ...
@@ -98,7 +98,7 @@ R<size_t /*r*/, size_t /*w*/, error> Relay(net::Conn c, net::Conn rc, RelayOptio
 R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt) {
     byte_s buf = make(1024 * 4);
 
-    size_t witten = 0;
+    size_t written = 0;
     error rerr;
 
     for (;;) {
@@ -106,7 +106,7 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         if (nr > 0) {
             AUTO_R(nw, er2, w->WriteTo(buf(0, nr), addr));
             if (nw > 0) {
-                witten += nw;
+                written += nw;
                 if (opt.CopingFn) {
                     opt.CopingFn(nw);
                 }
@@ -122,9 +122,9 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         }
     }
 
-    println("io::Copy(", r, "->", w, ")", witten, "bytes");
+    println("io::Copy(", r, "->", w, ")", written, "bytes");
 
-    return {witten, rerr};
+    return {written, rerr};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

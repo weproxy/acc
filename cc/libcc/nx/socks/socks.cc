@@ -90,36 +90,29 @@ const string addr_t::String() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
-R<Addr, error> ParseAddr(const byte_s buf) {
-    if (buf.size() < 1 + 1 + 1 + 2) {
+//	| ATYP | ADDR | PORT |
+//	+------+------+------+
+//	|  1   |  x   |  2   |
+R<Addr, error> ParseAddr(const byte_s B) {
+    if (B.size() < 1 + 1 + 1 + 2) {
         return {nil, ErrInvalidAddrLen};
     }
 
-    switch (buf[0]) {
-        case AddrTypeIPv4: {
-            auto n = 1 + net::IPv4len + 2;
-            if (buf.size() < n) {
-                return {nil, ErrInvalidAddrLen};
-            }
-            return {Addr(new xx::addr_t(buf(0, n))), nil};
-        }
-        case AddrTypeIPv6: {
-            auto n = 1 + net::IPv6len + 2;
-            if (buf.size() < n) {
-                return {nil, ErrInvalidAddrLen};
-            }
-            return {Addr(new xx::addr_t(buf(0, n))), nil};
-        }
-        case AddrTypeDomain: {
-            auto n = 1 + 1 + buf[1] + 2;
-            if (buf.size() < n) {
-                return {nil, ErrInvalidAddrLen};
-            }
-            return {Addr(new xx::addr_t(buf(0, n))), nil};
-        }
-        default:
-            return {nil, ErrInvalidAddrType};
+    int m = 0;
+    if (AddrTypeIPv4 == B[0]) {
+        m = 1 + net::IPv4len + 2;
+    } else if (AddrTypeIPv6 == B[0]) {
+        m = 1 + net::IPv6len + 2;
+    } else if (AddrTypeDomain == B[0]) {
+        m = 1 + 1 + B[1] + 2;  // DOMAIN_LEN = B[1]
+    } else {
+        return {nil, ErrInvalidAddrLen};
     }
+
+    if (B.size() < m) {
+        return {nil, ErrInvalidAddrLen};
+    }
+    return {Addr(new xx::addr_t(B(0, m))), nil};
 }
 
 // CopyAddr ...

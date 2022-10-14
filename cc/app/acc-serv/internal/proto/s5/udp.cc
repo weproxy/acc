@@ -24,29 +24,47 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 
     // ReadFrom ...
     // readFrom target server, and pack data to client
+    //
+    // <<< RSP:
+    //     | RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
+    //     +-----+------+------+----------+----------+------+
+    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
     virtual R<int, net::Addr, error> ReadFrom(byte_s buf) {
         if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
             return {0, nil, socks::ErrInvalidAddrType};
         }
 
-        int pos = 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
+        int pos = 3 + 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf(pos)));
         if (err) {
             return {n, addr, err};
         }
 
         auto raddr = socks::FromNetAddr(addr);
-        socks::CopyAddr(buf, raddr);
+        socks::CopyAddr(buf(3), raddr);
 
-        n += raddr->B.size();
+        n += 3 + raddr->B.size();
+
+        buf[0] = 0; // RSV
+        buf[1] = 0; //
+        buf[2] = 0; // FRAG
 
         return {n, addr, nil};
     }
 
     // WriteTo ...
     // unpack data from client, and writeTo target server
+    //
+    // >>> REQ:
+    //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
+    //     +-----+------+------+----------+----------+------+
+    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
     virtual R<int, error> WriteTo(byte_s buf) {
-        AUTO_R(raddr, er1, socks::ParseAddr(buf));
+        if (buf.size() < 10) {
+            return {0, socks::ErrInvalidSocksVersion};
+        }
+
+        AUTO_R(raddr, er1, socks::ParseAddr(buf(3)));
         if (er1) {
             return {0, er1};
         }
@@ -56,7 +74,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
             return {0, socks::ErrInvalidAddrType};
         }
 
-        int pos = raddr->B.size();
+        int pos = 3 + raddr->B.size();
         AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
         if (er2) {
             return {n, er2};
@@ -88,8 +106,8 @@ error handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr) {
     auto rc = udpConn_t::wrap(ln);
 
     netio::RelayOption opt;
-    opt.Read.CopingFn = [sta = sta](size_t n) { sta->AddRecv(n); };
-    opt.Write.CopingFn = [sta = sta](size_t n) { sta->AddSent(n); };
+    opt.Read.CopingFn = [sta = sta](int n) { sta->AddRecv(n); };
+    opt.Write.CopingFn = [sta = sta](int n) { sta->AddSent(n); };
 
     AUTO_R(read, written, er2, netio::Relay(c, rc, opt));
     if (er2) {

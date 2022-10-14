@@ -32,6 +32,10 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         return er1;
     }
 
+    // <<< REP:
+    //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
     auto err = socks::WriteReply(c, socks::ReplySuccess, 0, net::MakeAddr(net::IPv4zero, 0));
     if (err) {
         if (err != net::ErrClosed) {
@@ -41,8 +45,8 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     }
 
     netio::RelayOption opt;
-    opt.Read.CopingFn = [sta = sta](size_t n) { sta->AddRecv(n); };
-    opt.Write.CopingFn = [sta = sta](size_t n) { sta->AddSent(n); };
+    opt.Read.CopingFn = [sta = sta](int n) { sta->AddRecv(n); };
+    opt.Write.CopingFn = [sta = sta](int n) { sta->AddSent(n); };
 
     AUTO_R(read, written, er2, netio::Relay(c, rc, opt));
     if (er2) {
@@ -79,6 +83,10 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     // handleUDP
     gx::go([ln = ln, caddr = caddr, raddr = raddr] { handleUDP(ln, caddr, raddr); });
 
+    // <<< REP:
+    //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
     auto err = socks::WriteReply(c, socks::ReplySuccess, 0, ln->LocalAddr());
     if (err) {
         if (err != net::ErrClosed) {

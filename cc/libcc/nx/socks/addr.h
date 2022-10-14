@@ -24,8 +24,8 @@ extern const error ErrInvalidAddrLen;
 // AddrType  ...
 enum AddrType {
     AddrTypeIPv4 = 1,
-    AddrTypeDomain = 2,
-    AddrTypeIPv6 = 3,
+    AddrTypeDomain = 3,
+    AddrTypeIPv6 = 4,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,52 +78,39 @@ inline Addr FromNetAddr(net::Addr addr) {
     r->FromNetAddr(addr);
     return r;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 // ReadAddr ..
+//     | ATYP | ADDR | PORT |
+//     +------+------+------+
+//     |  1   |  x   |  2   |
 template <typename Reader, typename std::enable_if<io::xx::is_reader<Reader>::value, int>::type = 0>
 R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
-    byte_s B = make(256);
+    byte_s B = make(MaxAddrLen);
 
+    // 2bytes = ATYP + (MAYBE)DOMAIN_LEN
     AUTO_R(n, err, io::ReadFull(r, B(0, 2)));
     if (err) {
         return {n, nil, err};
     }
-    int L = n;
 
-    switch (B[0]) {
-        case AddrTypeIPv4: {
-            auto n = 1 + net::IPv4len;
-            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
-            L += t > 0 ? t : 0;
-            if (err) {
-                return {L, nil, err};
-            }
-            break;
-        }
-        case AddrTypeIPv6: {
-            auto n = 1 + net::IPv6len;
-            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
-            L += t > 0 ? t : 0;
-            if (err) {
-                return {L, nil, err};
-            }
-            break;
-        }
-        case AddrTypeDomain: {
-            auto n = 1 + 1 + B[1];
-            AUTO_R(t, err, io::ReadFull(r, B(2, 2 + n)));
-            L += t > 0 ? t : 0;
-            if (err) {
-                return {L, nil, err};
-            }
-            break;
-        }
-        default:
-            return {L, nil, ErrInvalidAddrLen};
+    int m = 0;
+    if (AddrTypeIPv4 == B[0]) {
+        m = 1 + net::IPv4len + 2;
+    } else if (AddrTypeIPv6 == B[0]) {
+        m = 1 + net::IPv6len + 2;
+    } else if (AddrTypeDomain == B[0]) {
+        m = 1 + 1 + B[1] + 2; // DOMAIN_LEN = B[1]
+    } else {
+        return {n, nil, ErrInvalidAddrLen};
     }
 
-    return {L, Addr(new xx::addr_t(B(0, L))), nil};
+    AUTO_R(t, er2, io::ReadFull(r, B(2, 2 + m)));
+    n += t > 0 ? t : 0;
+    if (er2) {
+        return {n, nil, er2};
+    }
+
+    return {n, Addr(new xx::addr_t(B(0, m))), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

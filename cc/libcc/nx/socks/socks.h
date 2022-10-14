@@ -110,7 +110,12 @@ typedef std::function<error(const string& user, const string& pass)> CheckUserPa
 // ServerAuth ...
 template <typename ReadWriter, typename std::enable_if<io::xx::is_read_writer<ReadWriter>::value, int>::type = 0>
 error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = {}) {
-    byte_s buf = make(256);
+    byte_s buf = make(512);
+
+    // <<< REP:
+    //     | VER | METHOD |
+    //     +-----+--------+
+    //     |  1  |   1    |
 
     buf[0] = Version5;
     buf[1] = AuthMethodUserPass;
@@ -118,6 +123,11 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     if (er1) {
         return er1;
     }
+
+    // >>> REQ:
+    //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+    //     +-----+------+----------+------+----------+
+    //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
 
     AUTO_R(_2, er2, io::ReadFull(c, buf(0, 2)));
     if (er2) {
@@ -150,6 +160,11 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     // check user pass
     auto err = checkUserPassFn ? checkUserPassFn(user, pass) : nil;
 
+    // <<< REP:
+    //     | VER | STATUS |
+    //     +-----+--------+
+    //     |  1  |   1    |
+
     buf[0] = UserAuthVersion;
     buf[1] = err ? ReplyAuthFailure : ReplyAuthSuccess;
     AUTO_R(_5, er5, c->Write(buf(0, 2)));
@@ -163,7 +178,12 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
 // WriteReply ...
 template <typename Writer, typename std::enable_if<io::xx::is_writer<Writer>::value, int>::type = 0>
 error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
-    byte_s buf = make(128);
+    // <<< REP:
+    //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+
+    byte_s buf = make(boundAddr ? 3 + MaxAddrLen : 8);
     int len = 3;
 
     buf[0] = Version5;

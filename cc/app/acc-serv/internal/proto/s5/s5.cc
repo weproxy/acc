@@ -29,6 +29,11 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
     socks::Command cmd = socks::Command(0);
     byte_s buf = make(256);
 
+    // >>> REQ:
+    //     | VER | NMETHODS | METHODS  |
+    //     +-----+----------+----------+
+    //     |  1  |    1     | 1 to 255 |
+
     AUTO_R(_1, er1, io::ReadFull(c, buf(0, 2)));
     if (er1) {
         socks::WriteReply(c, socks::ReplyAuthFailure);
@@ -67,10 +72,29 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         return {cmd, nil, socks::ErrNoSupportedAuth};
     }
 
+    // <<< REP:
+    //     | VER | METHOD |
+    //     +-----+--------+
+    //     |  1  |   1    |
+
+    // >>> REQ:
+    //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+    //     +-----+------+----------+------+----------+
+    //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+
+    // <<< REP:
+    //     | VER | STATUS |
+    //     +-----+--------+
+    //     |  1  |   1    |
     auto err = socks::ServerAuthUserPass(c, checkUserPass);
     if (err) {
         return {cmd, nil, err};
     }
+
+    // >>> REQ:
+    //     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
 
     AUTO_R(_3, er3, io::ReadFull(c, buf(0, 3)));
     if (er3) {
@@ -92,8 +116,6 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         socks::WriteReply(c, socks::ReplyAddressNotSupported);
         return {cmd, nil, er4};
     }
-
-    // socks::WriteReply(c, socks::ReplySuccess);
 
     return {cmd, raddr, nil};
 }
