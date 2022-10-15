@@ -15,7 +15,7 @@ namespace netio {
 // Packet ...
 struct Packet {
     net::Addr Addr;
-    byte_s Data;
+    slice<byte> Data;
 };
 
 // CopingFn ...

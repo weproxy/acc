@@ -47,14 +47,14 @@ void test() {
         {
             auto s = fmt::Sprintf("GET / HTTP/1.0\r\nHost: %s\r\n\r\n", host);
 
-            AUTO_R(_, err, c->Write(byte_s(s)));
+            AUTO_R(_, err, c->Write(slice<byte>(s)));
             if (err) {
                 LOGX_E(err);
                 return;
             }
         }
 
-        byte_s buf = make(32 * 1024);
+        slice<byte> buf = make(32 * 1024);
 
         for (;;) {
             AUTO_R(n, err, c->Read(buf));

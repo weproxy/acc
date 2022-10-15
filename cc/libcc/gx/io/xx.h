@@ -18,7 +18,7 @@ template <typename T>
 struct is_reader {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Read(byte_s{}));
+    static auto test(U) -> decltype(std::declval<U>()->Read(slice<byte>{}));
 
    public:
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
@@ -30,7 +30,7 @@ template <typename T>
 struct is_writer {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Write(byte_s{}));
+    static auto test(U) -> decltype(std::declval<U>()->Write(slice<byte>{}));
 
    public:
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;

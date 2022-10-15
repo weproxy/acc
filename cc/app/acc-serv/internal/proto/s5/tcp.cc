@@ -81,7 +81,10 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     }
 
     // handleUDP
-    gx::go([ln = ln, caddr = caddr, raddr = raddr] { handleUDP(ln, caddr, raddr); });
+    gx::go([ln = ln, caddr = caddr, raddr = raddr] {
+        // raddr is not fixed, it maybe be changed after
+        handleUDP(ln, caddr, raddr);
+    });
 
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |

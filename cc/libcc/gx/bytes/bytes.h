@@ -8,7 +8,7 @@ namespace gx {
 namespace bytes {
 
 // IndexByte ...
-inline int IndexByte(const byte_s& s, byte c) {
+inline int IndexByte(const slice<byte>& s, byte c) {
     const byte* b = s.data();
     for (int i = 0; i < s.size(); i++) {
         if (b[i] == c) {
@@ -19,7 +19,7 @@ inline int IndexByte(const byte_s& s, byte c) {
 }
 
 // Index ...
-inline int Index(const byte_s& s, const byte_s& subslice) {
+inline int Index(const slice<byte>& s, const slice<byte>& subslice) {
     int sl = s.length(), rl = substr.length();
 
     if (rl == 0) {
@@ -41,7 +41,7 @@ inline int Index(const byte_s& s, const byte_s& subslice) {
 }
 
 // LastIndexByte ...
-inline int LastIndexByte(const byte_s& s, byte c) {
+inline int LastIndexByte(const slice<byte>& s, byte c) {
     const byte* a = s.data();
     for (int i = s.size() - 1; i >= 0; i--) {
         if (a[i] == c) {
@@ -52,7 +52,7 @@ inline int LastIndexByte(const byte_s& s, byte c) {
 }
 
 // LastIndex ...
-inline int LastIndex(const byte_s& s, const byte_s& sep) {
+inline int LastIndex(const slice<byte>& s, const slice<byte>& sep) {
     int sl = s.length(), rl = sep.length();
 
     if (rl == 0) {
@@ -73,12 +73,12 @@ inline int LastIndex(const byte_s& s, const byte_s& sep) {
 }
 
 // Equal ...
-inline bool Equal(const byte_s& a, const byte_s& b) {
+inline bool Equal(const slice<byte>& a, const slice<byte>& b) {
     return (&a == &b || (a.len() == b.len() && memcmp(a.data(), b.data(), a.len()) == 0);
 }
 
 // Compare ...
-inline int Compare(const byte_s& a, const byte_s& b) {
+inline int Compare(const slice<byte>& a, const slice<byte>& b) {
     if (&a == &b) {
         return 0;
     }
@@ -100,7 +100,7 @@ inline int Compare(const byte_s& a, const byte_s& b) {
 }
 
 // Count ...
-inline int Count(const byte_s& s, const byte_s& sep) {
+inline int Count(const slice<byte>& s, const slice<byte>& sep) {
     int c = 0;
     const byte *a = s.data(), *b = sep.data();
     for (int i = 0; i < s.size(); i++) {
@@ -115,7 +115,7 @@ inline int Count(const byte_s& s, const byte_s& sep) {
 }
 
 // Contains ...
-inline bool Contains(const byte_s& s, const byte_s& subslice) { return Index(s, subslice) != -1; }
+inline bool Contains(const slice<byte>& s, const slice<byte>& subslice) { return Index(s, subslice) != -1; }
 
 }  // namespace bytes
 }  // namespace gx

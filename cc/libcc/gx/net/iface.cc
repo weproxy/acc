@@ -21,7 +21,7 @@ string HardwareAddr::String(bool upper) const {
 
 namespace xx {
 // Addrs ...
-R<Vec<Addr>, error> interface_t::Addrs() { return {{}, errFuncNotImpl}; }
+R<Vec<Addr>, error> interface_t::Addrs() const { return {{}, errFuncNotImpl}; }
 }  // namespace xx
 
 // Interfaces ...

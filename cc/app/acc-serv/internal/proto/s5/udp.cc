@@ -16,53 +16,156 @@ NAMESPACE_BEG_S5
 namespace xx {
 using namespace nx;
 
-// udpConn_t to target server
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// udpSessPtr ...
+struct udpSess_t;
+typedef std::shared_ptr<udpSess_t> udpSessPtr;
+
+// AfterCloseFn ...
+typedef std::function<void()> AfterCloseFn;
+
+// key_t ...
+typedef uint64 key_t;
+
+// makeKey ...
+static key_t makeKey(net::IP ip, uint16 port) {
+    uint64 a = (uint64)(*(uint32*)ip.B.data());  // Only IPv4
+    uint64 b = (uint64)(*(uint16*)&port);
+    return a << 16 | b;
+}
+static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
+
+// udpSessMapPtr ...
+typedef Map<key_t, udpSessPtr> udpSessMap;
+typedef std::shared_ptr<udpSessMap> udpSessMapPtr;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// udpSess_t ...
+//
+// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
+//   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
+//                     --> raddr=4.4.4.4:53
+//
+struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
+    net::PacketConn ln_;  // to source client, it is net::PacketConn
+    net::PacketConn rc_;  // to target server, it is udpConn_t
+    net::Addr caddr_;     // source client addr
+    stats::Stats sta_;
+
+    udpSess_t(net::PacketConn ln, net::PacketConn rc, net::Addr caddr) : ln_(ln), rc_(rc), caddr_(caddr) {}
+    ~udpSess_t() { Close(); }
+
+    // Close ...
+    void Close() {
+        if (rc_) {
+            rc_->Close();
+        }
+    }
+
+    // Start ...
+    void Start(const AfterCloseFn& afterCloseFn) {
+        auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_);
+        auto sta = stats::NewUDPStats(stats::TypeS5, tag);
+
+        sta->Start("started");
+        sta_ = sta;
+
+        // loopRecvRC
+        gx::go([thiz = shared_from_this(), afterCloseFn = afterCloseFn] {
+            DEFER(afterCloseFn());
+            DEFER(thiz->sta_->Done("closed"));
+
+            slice<byte> buf = make(1024 * 4);
+
+            for (;;) {
+                // 5 minutes timeout
+                thiz->rc_->SetReadDeadline(time::Now().Add(time::Minute * 5));
+
+                // udpConn_t::ReadFrom()
+                // readFrom target server, and pack data (to client)
+                AUTO_R(nr, _, er1, thiz->rc_->ReadFrom(buf));
+                if (er1) {
+                    break;
+                } else if (nr > 0) {
+                    AUTO_R(nw, er2, thiz->ln_->WriteTo(buf(0, nr), thiz->caddr_));
+                    if (er2) {
+                        break;
+                    } else if (nw > 0) {
+                        thiz->sta_->AddSent(nw);
+                    }
+                }
+            }
+        });
+    }
+
+    // WriteToRC ...
+    void WriteToRC(slice<byte> buf) {
+        // buf is from source client
+        sta_->AddRecv(buf.size());
+
+        // udpConn_t::WriteTo()
+        // unpack data (from source client), and writeTo target server
+        AUTO_R(n, err, rc_->WriteTo(buf, nil));
+        if (err) {
+            return;
+        }
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// udpConn_t
+// to target server
 struct udpConn_t : public net::xx::packetConnWrap_t {
     socks::AddrType typ_{socks::AddrTypeIPv4};
 
     udpConn_t(net::PacketConn pc) : net::xx::packetConnWrap_t(pc) {}
 
     // ReadFrom ...
-    // readFrom target server, and pack data to client
+    // readFrom target server, and pack data (to client)
     //
     // <<< RSP:
     //     | RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, net::Addr, error> ReadFrom(byte_s buf) {
+    virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override {
         if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
             return {0, nil, socks::ErrInvalidAddrType};
         }
 
+        // readFrom target server
         int pos = 3 + 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf(pos)));
         if (err) {
             return {n, addr, err};
         }
 
+        // pack data
+
         auto raddr = socks::FromNetAddr(addr);
         socks::CopyAddr(buf(3), raddr);
 
         n += 3 + raddr->B.size();
 
-        buf[0] = 0; // RSV
-        buf[1] = 0; //
-        buf[2] = 0; // FRAG
+        buf[0] = 0;  // RSV
+        buf[1] = 0;  //
+        buf[2] = 0;  // FRAG
 
         return {n, addr, nil};
     }
 
     // WriteTo ...
-    // unpack data from client, and writeTo target server
+    // unpack data (from source client), and writeTo target server
     //
     // >>> REQ:
     //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, error> WriteTo(byte_s buf) {
+    virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr) override {
         if (buf.size() < 10) {
             return {0, socks::ErrInvalidSocksVersion};
         }
+
+        // unpack data
 
         AUTO_R(raddr, er1, socks::ParseAddr(buf(3)));
         if (er1) {
@@ -74,6 +177,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
             return {0, socks::ErrInvalidAddrType};
         }
 
+        // writeTo target server
         int pos = 3 + raddr->B.size();
         AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
         if (er2) {
@@ -90,31 +194,75 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleUDP ...
-error handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr) {
-    auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr << "->" << raddr);
-    auto sta = stats::NewUDPStats(stats::TypeS5, tag);
+//
+// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
+//   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
+//                     --> raddr=4.4.4.4:53
+//
+error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
+    // sessMap
+    udpSessMapPtr sessMap(new udpSessMap());
+    DEFER(for (auto& kv : *sessMap) { kv.second->Close(); });
 
-    sta->Start("started");
-    DEFER(sta->Done("closed"));
+    DEFER(ln->Close());
 
-    AUTO_R(ln, err, net::ListenPacket(":0"));
-    if (err) {
-        return err;
-    }
+    slice<byte> buf = make(1024 * 4);
 
-    auto rc = udpConn_t::wrap(ln);
+    for (;;) {
+        // 5 minutes timeout
+        ln->SetReadDeadline(time::Now().Add(time::Minute * 5));
 
-    netio::RelayOption opt;
-    opt.Read.CopingFn = [sta = sta](int n) { sta->AddRecv(n); };
-    opt.Write.CopingFn = [sta = sta](int n) { sta->AddSent(n); };
-
-    AUTO_R(read, written, er2, netio::Relay(c, rc, opt));
-    if (er2) {
-        if (er2 != net::ErrClosed) {
-            LOGS_E(TAG << " relay " << tag << " , err: " << er2);
+        // read
+        AUTO_R(n, caddr, err, ln->ReadFrom(buf));
+        if (err) {
+            if (err != net::ErrClosed) {
+                LOGS_E(TAG << " err: " << err);
+            }
+            break;
+        } else if (n <= 0) {
+            continue;
         }
-        return er2;
+
+        // packet data
+        auto data = buf(0, n);
+
+        // lookfor or create sess
+        udpSessPtr sess;
+
+        // use source client addr as key
+        // <TODO-Notice>
+        //  some user's env has multi-outbound-ip, we will get diff caddr although he use one-same-conn
+        key_t key = makeKey(caddr);
+
+        auto it = sessMap->find((key));
+        if (it == sessMap->end()) {
+            // create a new rc for every new source client
+            AUTO_R(c, err, net::ListenPacket(":0"));
+            if (err) {
+                LOGS_E(TAG << " err: " << err);
+                continue;
+            }
+
+            // wrap as udpConn_t
+            auto rc = udpConn_t::wrap(c);
+
+            // store to sessMap
+            sess = udpSessPtr(new udpSess_t(ln, rc, caddr));
+            (*sessMap)[key] = sess;
+
+            // start recv loop...
+            sess->Start([sessMap, key = key] {
+                // remove it after rc closed
+                sessMap->erase(key);
+            });
+        } else {
+            sess = it->second;
+        }
+
+        // writeTo target server
+        sess->WriteToRC(data);
     }
 
     return nil;

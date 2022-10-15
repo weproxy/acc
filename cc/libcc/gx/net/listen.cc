@@ -21,10 +21,10 @@ struct tcpPeer_t : public conn_t {
     virtual ~tcpPeer_t() { Close(); }
 
     // String ...
-    virtual string String() override { return GX_SS("tcpPeer_t{" << RemoteAddr() << "}"); }
+    virtual string String() const override { return GX_SS("tcpPeer_t{" << RemoteAddr() << "}"); }
 
     // Read ...
-    virtual R<int, error> Read(byte_s b) override {
+    virtual R<int, error> Read(slice<byte> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
@@ -42,7 +42,7 @@ struct tcpPeer_t : public conn_t {
     }
 
     // Write ...
-    virtual R<int, error> Write(const byte_s b) override {
+    virtual R<int, error> Write(const slice<byte> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
@@ -82,8 +82,8 @@ struct tcpPeer_t : public conn_t {
     }
 
     virtual SOCKET Fd() const override { return fd_; }
-    virtual Addr LocalAddr() override { return GetSockAddr(fd_); }
-    virtual Addr RemoteAddr() override { return GetPeerAddr(fd_); }
+    virtual Addr LocalAddr() const override { return GetSockAddr(fd_); }
+    virtual Addr RemoteAddr() const override { return GetPeerAddr(fd_); }
 
     virtual error SetDeadline(const time::Time& t) override {
         dealine_.d = t;
@@ -149,7 +149,7 @@ struct tcpServ_t : public listener_t {
     }
 
     virtual SOCKET Fd() const override { return fd_; }
-    virtual net::Addr Addr() { return xx::GetSockAddr(fd_); }
+    virtual net::Addr Addr() const { return xx::GetSockAddr(fd_); }
 
    private:
     SOCKET fd_{INVALID_SOCKET};
@@ -160,7 +160,7 @@ struct udpConn_t : public packetConn_t {
     udpConn_t(SOCKET fd) : fd_(fd) {}
 
     // ReadFrom ...
-    virtual R<int, Addr, error> ReadFrom(byte_s b) {
+    virtual R<int, Addr, error> ReadFrom(slice<byte> b) {
         if (fd_ <= 0) {
             return {0, nil, ErrClosed};
         }
@@ -183,7 +183,7 @@ struct udpConn_t : public packetConn_t {
     }
 
     // WriteTo ...
-    virtual R<int, error> WriteTo(const byte_s b, Addr raddr) {
+    virtual R<int, error> WriteTo(const slice<byte> b, Addr raddr) {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
@@ -246,8 +246,8 @@ struct udpConn_t : public packetConn_t {
     }
 
     virtual int Fd() const { return fd_; }
-    virtual Addr LocalAddr() { return GetSockAddr(fd_); };
-    virtual string String() { return "udpConn_t"; }
+    virtual Addr LocalAddr() const { return GetSockAddr(fd_); };
+    virtual string String() const { return "udpConn_t"; }
 
    private:
     SOCKET fd_{INVALID_SOCKET};

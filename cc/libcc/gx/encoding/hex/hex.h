@@ -11,7 +11,7 @@ namespace hex {
 
 // EncodeToString ...
 string EncodeToString(const void* src, size_t len);
-inline string EncodeToString(const byte_s& s) { return EncodeToString(s.data(), s.length()); }
+inline string EncodeToString(const slice<byte>& s) { return EncodeToString(s.data(), s.length()); }
 inline string EncodeToString(const string& s) { return EncodeToString(s.data(), s.length()); }
 
 // DecodeString ...

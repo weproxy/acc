@@ -124,12 +124,6 @@ struct slice {
     }
 };
 
-// byte_s ...
-typedef slice<byte> byte_s;
-
-// char_s ...
-typedef slice<char> char_s;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // append ...
 namespace xx {

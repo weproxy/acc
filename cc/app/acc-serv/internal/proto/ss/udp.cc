@@ -14,7 +14,7 @@ namespace xx {
 using namespace nx;
 
 // handleUDP ...
-error handleUDP(net::PacketConn pc, net::Addr caddr, const byte_s buf) {
+error handleUDP(net::PacketConn pc, net::Addr caddr, const slice<byte> buf) {
     // AUTO_R(_, err, io::Copy(c, c));
     AUTO_R(n, err, pc->WriteTo(buf, caddr));
     if (err) {

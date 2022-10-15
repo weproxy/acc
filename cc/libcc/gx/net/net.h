@@ -51,8 +51,8 @@ namespace xx {
 struct conn_t : public io::ICloser {
     virtual ~conn_t() { Close(); }
 
-    virtual R<int, error> Read(byte_s b) = 0;
-    virtual R<int, error> Write(const byte_s b) = 0;
+    virtual R<int, error> Read(slice<byte> b) = 0;
+    virtual R<int, error> Write(const slice<byte> b) = 0;
 
     virtual void Close(){};
     virtual void CloseRead() { Close(); }
@@ -63,9 +63,9 @@ struct conn_t : public io::ICloser {
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr LocalAddr() = 0;
-    virtual Addr RemoteAddr() = 0;
-    virtual string String() { return ""; }
+    virtual Addr LocalAddr() const = 0;
+    virtual Addr RemoteAddr() const = 0;
+    virtual string String() const { return "conn_t{}"; }
 };
 
 // Conn ...
@@ -77,21 +77,21 @@ struct connWrap_t : public conn_t {
     connWrap_t() = default;
     connWrap_t(Conn c) : wrap_(c) {}
 
-    virtual R<int, error> Read(byte_s buf) { return wrap_->Read(buf); }
-    virtual R<int, error> Write(const byte_s buf) { return wrap_->Write(buf); }
+    virtual R<int, error> Read(slice<byte> buf) override { return wrap_->Read(buf); }
+    virtual R<int, error> Write(const slice<byte> buf) override { return wrap_->Write(buf); }
 
-    virtual void Close() { wrap_->Close(); };
-    virtual void CloseRead() { wrap_->CloseRead(); }
-    virtual void CloseWrite() { wrap_->CloseWrite(); }
+    virtual void Close() override { wrap_->Close(); };
+    virtual void CloseRead() override { wrap_->CloseRead(); }
+    virtual void CloseWrite() override { wrap_->CloseWrite(); }
 
-    virtual error SetDeadline(const time::Time& t) { return wrap_->SetDeadline(t); }
-    virtual error SetReadDeadline(const time::Time& t) { return wrap_->SetReadDeadline(t); }
-    virtual error SetWriteDeadline(const time::Time& t) { return wrap_->SetWriteDeadline(t); }
+    virtual error SetDeadline(const time::Time& t) override { return wrap_->SetDeadline(t); }
+    virtual error SetReadDeadline(const time::Time& t) override { return wrap_->SetReadDeadline(t); }
+    virtual error SetWriteDeadline(const time::Time& t) override { return wrap_->SetWriteDeadline(t); }
 
-    virtual SOCKET Fd() const { return wrap_->Fd(); };
-    virtual Addr LocalAddr() { return wrap_->LocalAddr(); };
-    virtual Addr RemoteAddr() { return wrap_->RemoteAddr(); };
-    virtual string String() { return wrap_->String(); }
+    virtual SOCKET Fd() const override { return wrap_->Fd(); };
+    virtual Addr LocalAddr() const override { return wrap_->LocalAddr(); };
+    virtual Addr RemoteAddr() const override { return wrap_->RemoteAddr(); };
+    virtual string String() const override { return wrap_->String(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,8 +99,8 @@ struct connWrap_t : public conn_t {
 struct packetConn_t : public io::ICloser {
     virtual ~packetConn_t() { Close(); }
 
-    virtual R<int, Addr, error> ReadFrom(byte_s b) = 0;
-    virtual R<int, error> WriteTo(const byte_s b, Addr addr) = 0;
+    virtual R<int, Addr, error> ReadFrom(slice<byte> b) = 0;
+    virtual R<int, error> WriteTo(const slice<byte> b, Addr addr) = 0;
 
     virtual void Close(){};
     virtual void CloseRead() { Close(); }
@@ -111,8 +111,8 @@ struct packetConn_t : public io::ICloser {
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr LocalAddr() = 0;
-    virtual string String() { return ""; }
+    virtual Addr LocalAddr() const = 0;
+    virtual string String() const { return "packetConn_t{}"; }
 };
 
 typedef std::shared_ptr<packetConn_t> PacketConn;
@@ -123,20 +123,20 @@ struct packetConnWrap_t : public packetConn_t {
     packetConnWrap_t() = default;
     packetConnWrap_t(PacketConn pc) : wrap_(pc) {}
 
-    virtual R<int, net::Addr, error> ReadFrom(byte_s buf) { return wrap_->ReadFrom(buf); }
-    virtual R<int, error> WriteTo(const byte_s buf, Addr addr) { return wrap_->WriteTo(buf, addr); }
+    virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override { return wrap_->ReadFrom(buf); }
+    virtual R<int, error> WriteTo(const slice<byte> buf, Addr addr) override { return wrap_->WriteTo(buf, addr); }
 
-    virtual void Close() { wrap_->Close(); };
-    virtual void CloseRead() { wrap_->CloseRead(); }
-    virtual void CloseWrite() { wrap_->CloseWrite(); }
+    virtual void Close() override { wrap_->Close(); };
+    virtual void CloseRead() override { wrap_->CloseRead(); }
+    virtual void CloseWrite() override { wrap_->CloseWrite(); }
 
-    virtual error SetDeadline(const time::Time& t) { return wrap_->SetDeadline(t); }
-    virtual error SetReadDeadline(const time::Time& t) { return wrap_->SetReadDeadline(t); }
-    virtual error SetWriteDeadline(const time::Time& t) { return wrap_->SetWriteDeadline(t); }
+    virtual error SetDeadline(const time::Time& t) override { return wrap_->SetDeadline(t); }
+    virtual error SetReadDeadline(const time::Time& t) override { return wrap_->SetReadDeadline(t); }
+    virtual error SetWriteDeadline(const time::Time& t) override { return wrap_->SetWriteDeadline(t); }
 
-    virtual SOCKET Fd() const { return wrap_->Fd(); };
-    virtual Addr LocalAddr() { return wrap_->LocalAddr(); };
-    virtual string String() { return wrap_->String(); }
+    virtual SOCKET Fd() const override { return wrap_->Fd(); };
+    virtual Addr LocalAddr() const override { return wrap_->LocalAddr(); };
+    virtual string String() const override { return wrap_->String(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,8 +149,8 @@ struct listener_t : public io::ICloser {
     virtual void Close(){};
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr Addr() = 0;
-    virtual string String() { return ""; }
+    virtual Addr Addr() const = 0;
+    virtual string String() const { return "listener_t{}"; }
 };
 
 // Listener ...
@@ -259,7 +259,7 @@ struct interface_t {
     Flags Flags;
 
     // Addrs ...
-    R<Vec<Addr>, error> Addrs();
+    R<Vec<Addr>, error> Addrs() const;
 };
 }  // namespace xx
 

@@ -13,7 +13,7 @@ NAMESPACE_BEG_SS
 namespace xx {
 
 extern error handleTCP(net::Conn c, net::Addr raddr);
-extern error handleUDP(net::PacketConn pc, net::Addr caddr, const byte_s buf);
+extern error handleUDP(net::PacketConn pc, net::Addr caddr, const slice<byte> buf);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
@@ -67,7 +67,7 @@ struct Server : public proto::IServer {
         });
 
         gx::go([pc = pc_] {
-            byte_s buf = make(1024 * 8);
+            slice<byte> buf = make(1024 * 8);
 
             for (;;) {
                 AUTO_R(n, caddr, err, pc->ReadFrom(buf));

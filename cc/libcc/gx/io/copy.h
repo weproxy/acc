@@ -19,7 +19,7 @@ template <typename Writer, typename Reader,
           typename std::enable_if<xx::is_writer<Writer>::value && xx::is_reader<Reader>::value,
                                   int>::type = 0>
 R<size_t /*w*/, error> Copy(Writer w, Reader r, const CopingFn& copingFn = {}) {
-    byte_s buf = make(1024 * 32);
+    slice<byte> buf = make(1024 * 32);
 
     size_t witten = 0;
     error rerr;

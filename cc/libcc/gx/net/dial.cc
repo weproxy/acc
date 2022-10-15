@@ -21,7 +21,7 @@ struct tcpConn_t : public conn_t {
     virtual ~tcpConn_t() { Close(); }
 
     // Read ...
-    virtual R<int, error> Read(byte_s b) {
+    virtual R<int, error> Read(slice<byte> b) {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
@@ -36,7 +36,7 @@ struct tcpConn_t : public conn_t {
     }
 
     // Write ...
-    virtual R<int, error> Write(const byte_s b) {
+    virtual R<int, error> Write(const slice<byte> b) {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
@@ -93,9 +93,9 @@ struct tcpConn_t : public conn_t {
     }
 
     virtual int Fd() const { return fd_; }
-    virtual Addr LocalAddr() { return xx::GetSockAddr(fd_); }
-    virtual Addr RemoteAddr() { return xx::GetPeerAddr(fd_); }
-    virtual string String() { return GX_SS("tcpConn_t{" << RemoteAddr() << "}"); }
+    virtual Addr LocalAddr() const { return xx::GetSockAddr(fd_); }
+    virtual Addr RemoteAddr() const { return xx::GetPeerAddr(fd_); }
+    virtual string String() const { return GX_SS("tcpConn_t{" << RemoteAddr() << "}"); }
 
    public:
     SOCKET fd_{0};

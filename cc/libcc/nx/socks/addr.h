@@ -31,10 +31,10 @@ enum AddrType {
 ////////////////////////////////////////////////////////////////////////////////
 namespace xx {
 struct addr_t {
-    byte_s B;
+    slice<byte> B;
 
     addr_t() = default;
-    addr_t(const byte_s b) : B(b) {}
+    addr_t(const slice<byte> b) : B(b) {}
 
     operator bool() const { return (bool)B; }
     uint8 operator[](size_t i) const { return B[i]; }
@@ -85,7 +85,7 @@ inline Addr FromNetAddr(net::Addr addr) {
 //     |  1   |  x   |  2   |
 template <typename Reader, typename std::enable_if<io::xx::is_reader<Reader>::value, int>::type = 0>
 R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
-    byte_s B = make(MaxAddrLen);
+    slice<byte> B = make(MaxAddrLen);
 
     // 2bytes = ATYP + (MAYBE)DOMAIN_LEN
     AUTO_R(n, err, io::ReadFull(r, B(0, 2)));
@@ -115,13 +115,13 @@ R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
-R<Addr, error> ParseAddr(const byte_s buf);
+R<Addr, error> ParseAddr(const slice<byte> buf);
 
 // CopyAddr ...
-R<int, error> CopyAddr(byte_s buf, Addr addr);
+R<int, error> CopyAddr(slice<byte> buf, Addr addr);
 
 // AppendAddr ...
-R<int, error> AppendAddr(byte_s buf, Addr addr);
+R<int, error> AppendAddr(slice<byte> buf, Addr addr);
 
 }  // namespace socks
 }  // namespace nx
