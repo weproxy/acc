@@ -45,7 +45,7 @@ void test_chan() {
 
 // test_slice ...
 void test_slice() {
-#define PRINT_SLICE(s) std::cout << "len(" #s ")=" << s.size() << ", " #s "=" << s << std::endl
+#define PRINT_SLICE(s) std::cout << "len(" #s ")=" << len(s) << ", " #s "=" << s << std::endl
 
     byte n1 = '\n', n2 = '\r', n3 = ' ';
     int n4 = -2;

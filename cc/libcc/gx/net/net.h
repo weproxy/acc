@@ -44,33 +44,42 @@ using xx::Addr;
 
 // MakeAddr ...
 inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return Addr(new xx::addr_t(ip, port)); }
+}  // namespace net
+}  // namespace gx
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#include "xx.h"
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace gx {
+namespace net {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // conn_t ...
 namespace xx {
 struct conn_t : public io::ICloser {
-    virtual ~conn_t() { Close(); }
+    virtual ~conn_t() {}
 
     virtual R<int, error> Read(slice<byte> b) = 0;
     virtual R<int, error> Write(const slice<byte> b) = 0;
 
-    virtual void Close(){};
-    virtual void CloseRead() { Close(); }
-    virtual void CloseWrite() { Close(); }
+    virtual void Close() { println("conn_t.Close()"); };
+    virtual void CloseRead() { return xx::CloseRead(Fd()); }
+    virtual void CloseWrite() { return xx::CloseWrite(Fd()); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr LocalAddr() const = 0;
-    virtual Addr RemoteAddr() const = 0;
+    virtual Addr LocalAddr() const { return xx::GetSockAddr(Fd()); }
+    virtual Addr RemoteAddr() const { return xx::GetPeerAddr(Fd()); }
     virtual string String() const { return "conn_t{}"; }
 };
 
 // Conn ...
 typedef std::shared_ptr<conn_t> Conn;
 
+// connWrap_t ...
 struct connWrap_t : public conn_t {
     Conn wrap_;
 
@@ -97,26 +106,28 @@ struct connWrap_t : public conn_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // packetConn_t ...
 struct packetConn_t : public io::ICloser {
-    virtual ~packetConn_t() { Close(); }
+    virtual ~packetConn_t() {}
 
     virtual R<int, Addr, error> ReadFrom(slice<byte> b) = 0;
     virtual R<int, error> WriteTo(const slice<byte> b, Addr addr) = 0;
 
     virtual void Close(){};
-    virtual void CloseRead() { Close(); }
-    virtual void CloseWrite() { Close(); }
+    virtual void CloseRead() { return xx::CloseRead(Fd()); }
+    virtual void CloseWrite() { return xx::CloseWrite(Fd()); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
     virtual error SetWriteDeadline(const time::Time& t) { return nil; }
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr LocalAddr() const = 0;
+    virtual Addr LocalAddr() const { return xx::GetSockAddr(Fd()); }
     virtual string String() const { return "packetConn_t{}"; }
 };
 
+// PacketConn ...
 typedef std::shared_ptr<packetConn_t> PacketConn;
 
+// packetConnWrap_t ...
 struct packetConnWrap_t : public packetConn_t {
     PacketConn wrap_;
 
@@ -142,14 +153,14 @@ struct packetConnWrap_t : public packetConn_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // listener_t ...
 struct listener_t : public io::ICloser {
-    virtual ~listener_t() { Close(); }
+    virtual ~listener_t() {}
 
     virtual R<Conn, error> Accept() = 0;
 
     virtual void Close(){};
 
     virtual SOCKET Fd() const = 0;
-    virtual Addr Addr() const = 0;
+    virtual Addr Addr() const { return xx::GetSockAddr(Fd()); }
     virtual string String() const { return "listener_t{}"; }
 };
 
@@ -280,5 +291,3 @@ R<Interface, error> InterfaceByName(const string& name);
 
 }  // namespace net
 }  // namespace gx
-
-#include "xx.h"

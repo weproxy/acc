@@ -85,6 +85,12 @@ Addr GetSockAddr(SOCKET fd);
 // GetPeerAddr ...
 Addr GetPeerAddr(SOCKET fd);
 
+// CloseRead ...
+void CloseRead(SOCKET fd);
+
+// CloseWrite ...
+void CloseWrite(SOCKET fd);
+
 }  // namespace xx
 }  // namespace net
 }  // namespace gx

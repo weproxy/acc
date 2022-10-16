@@ -11,7 +11,9 @@
 #include "nx/stats/stats.h"
 #include "s5.h"
 
-NAMESPACE_BEG_S5
+namespace app {
+namespace proto {
+namespace s5 {
 
 namespace xx {
 using namespace nx;
@@ -110,4 +112,6 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 }
 }  // namespace xx
 
-NAMESPACE_END_S5
+}  // namespace s5
+}  // namespace proto
+}  // namespace app

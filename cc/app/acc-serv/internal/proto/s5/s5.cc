@@ -9,7 +9,9 @@
 #include "logx/logx.h"
 #include "nx/socks/socks.h"
 
-NAMESPACE_BEG_S5
+namespace app {
+namespace proto {
+namespace s5 {
 using namespace nx;
 
 namespace xx {
@@ -17,7 +19,7 @@ namespace xx {
 
 // checkUserPass ...
 static error checkUserPass(const string& user, const string& pass) {
-    // LOGS_D(TAG << " handshake() auth: user=" << user << ", pass=" << pass);
+    LOGS_D(TAG << " handshake() auth: user=" << user << ", pass=" << pass);
     return nil;
 }
 
@@ -53,11 +55,11 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         return {cmd, nil, er2};
     }
 
-    bool methodUserPass = false;
-
+    bool methodNotRequired = false, methodUserPass = false;
     for (int i = 0; i < n; i++) {
         switch (buf[i]) {
             case socks::AuthMethodNotRequired:
+                methodNotRequired = true;
                 break;
             case socks::AuthMethodUserPass:
                 methodUserPass = true;
@@ -67,28 +69,28 @@ static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
         }
     }
 
-    if (!methodUserPass) {
+    if (methodNotRequired || methodUserPass) {
+        // <<< REP:
+        //     | VER | METHOD |
+        //     +-----+--------+
+        //     |  1  |   1    |
+
+        // >>> REQ:
+        //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+        //     +-----+------+----------+------+----------+
+        //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+
+        // <<< REP:
+        //     | VER | STATUS |
+        //     +-----+--------+
+        //     |  1  |   1    |
+        auto err = socks::ServerAuth(c, methodUserPass, checkUserPass);
+        if (err) {
+            return {cmd, nil, err};
+        }
+    } else {
         socks::WriteReply(c, socks::AuthMethodNoAcceptableMethods);
         return {cmd, nil, socks::ErrNoSupportedAuth};
-    }
-
-    // <<< REP:
-    //     | VER | METHOD |
-    //     +-----+--------+
-    //     |  1  |   1    |
-
-    // >>> REQ:
-    //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-    //     +-----+------+----------+------+----------+
-    //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
-    // <<< REP:
-    //     | VER | STATUS |
-    //     +-----+--------+
-    //     |  1  |   1    |
-    auto err = socks::ServerAuthUserPass(c, checkUserPass);
-    if (err) {
-        return {cmd, nil, err};
     }
 
     // >>> REQ:
@@ -226,4 +228,6 @@ static auto _ = [] {
     return true;
 }();
 
-NAMESPACE_END_S5
+}  // namespace s5
+}  // namespace proto
+}  // namespace app

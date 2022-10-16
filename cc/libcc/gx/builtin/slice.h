@@ -131,20 +131,20 @@ template <typename T>
 inline void append(slice<T>&) {}
 
 template <typename T = byte, typename V = byte, typename... X>
-void append(slice<T>& s, V&& v, X&&... x) {
-    auto it = s.vec_->begin() + s.end_;
-    if (it < s.vec_->end()) {
+void append(slice<T>& dst, V&& v, X&&... x) {
+    auto it = dst.vec_->begin() + dst.end_;
+    if (it < dst.vec_->end()) {
         *it = std::forward<V>(v);
     } else {
-        s.vec_->insert(it, std::forward<V>(v));
+        dst.vec_->insert(it, std::forward<V>(v));
     }
-    s.end_++;
-    append(s, std::forward<X>(x)...);
+    dst.end_++;
+    append(dst, std::forward<X>(x)...);
 }
 
 template <typename T = byte, typename... X>
-void append(slice<T>& s, X&&... x) {
-    append(s, std::forward<X>(x)...);
+void append(slice<T>& dst, X&&... x) {
+    append(dst, std::forward<X>(x)...);
 }
 }  // namespace xx
 
@@ -156,10 +156,16 @@ slice<T> make(int len = 0, int cap = 0) {
     return slice<T>(len, cap);
 }
 
+// len ...
+template <typename T = byte>
+int len(const slice<T>& s) {
+    return s.size();
+}
+
 // append ...
 template <typename T = byte, typename... X>
-slice<T> append(const slice<T>& l, X&&... x) {
-    slice<T> s(l);
+slice<T> append(const slice<T>& dst, X&&... x) {
+    slice<T> s(dst);
     if (sizeof...(x) > 0) {
         s._create_if_null();
         xx::append<T>(s, std::forward<X>(x)...);
@@ -169,54 +175,54 @@ slice<T> append(const slice<T>& l, X&&... x) {
 
 // append ...
 template <typename T = byte>
-slice<T> append(const slice<T>& l, const slice<T>& r) {
-    slice<T> s(l);
-    if (r) {
+slice<T> append(const slice<T>& dst, const slice<T>& src) {
+    slice<T> s(dst);
+    if (len(src) > 0) {
         s._create_if_null();
-        s.vec_->insert(s.vec_->begin() + s.end_, r.vec_->begin() + r.beg_, r.vec_->begin() + r.end_);
-        s.end_ += r.length();
+        s.vec_->insert(s.vec_->begin() + s.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
+        s.end_ += len(src);
     }
     return s;
 }
 
 // copy ...
 template <typename T = byte>
-int copy(slice<T>& l, const slice<T>& r) {
+int copy(slice<T>& dst, const slice<T>& src) {
     int i = 0;
-    for (; i < l.size() && i < r.length(); i++) {
-        l[i] = r[i];
+    for (; i < len(dst) && i < len(src); i++) {
+        dst[i] = src[i];
     }
     return i;
 }
 
 // copy ...
 template <typename T = byte>
-int copy(slice<T>& l, const void* b, int len) {
+int copy(slice<T>& dst, const void* src, int n) {
     int i = 0;
-    const T* r = (const T*)b;
-    for (; i < l.size() && i < len; i++) {
-        l[i] = r[i];
+    const T* r = (const T*)src;
+    for (; i < len(dst) && i < n; i++) {
+        dst[i] = r[i];
     }
     return i;
 }
 
 // copy ...
 template <typename T = byte>
-int copy(slice<T>&& l, const slice<T>& r) {
+int copy(slice<T>&& dst, const slice<T>& src) {
     int i = 0;
-    for (; i < l.size() && i < r.length(); i++) {
-        l[i] = r[i];
+    for (; i < len(dst) && i < len(src); i++) {
+        dst[i] = src[i];
     }
     return i;
 }
 
 // copy ...
 template <typename T = byte>
-int copy(slice<T>&& l, const void* b, int len) {
+int copy(slice<T>&& dst, const void* src, int n) {
     int i = 0;
-    const T* r = (const T*)b;
-    for (; i < l.size() && i < len; i++) {
-        l[i] = r[i];
+    const T* r = (const T*)src;
+    for (; i < len(dst) && i < n; i++) {
+        dst[i] = r[i];
     }
     return i;
 }

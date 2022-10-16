@@ -10,13 +10,13 @@ namespace gx {
 namespace ioutil {
 
 // ReadAll ...
-template <typename Reader, typename std::enable_if<io::xx::is_reader<Reader>::value, int>::type = 0>
-R<bytesli, error> ReadAll(Reader r) {
+template <typename IReader, typename std::enable_if<io::xx::is_reader<IReader>::value, int>::type = 0>
+R<slice<byte>, error> ReadAll(IReader r) {
     return {{}, nil};
 }
 
 // ReadFile ...
-inline R<bytesli, error> ReadFile(const string& filename) {
+inline R<slice<byte>, error> ReadFile(const string& filename) {
     return {{}, nil};
 }
 

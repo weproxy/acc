@@ -21,70 +21,67 @@ struct tcpConn_t : public conn_t {
     virtual ~tcpConn_t() { Close(); }
 
     // Read ...
-    virtual R<int, error> Read(slice<byte> b) {
+    virtual R<int, error> Read(slice<byte> b) override {
+        if (len(b) <= 0) {
+            return {0, io::ErrShortBuffer};
+        }
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
-        int l = co::recv(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.r));
-        if (l <= 0) {
+
+        int r = co::recv(fd_, b.data(), len(b), timeoutMs(dealine_.d, dealine_.r));
+        if (r <= 0) {
             if (co::error() == EAGAIN) {
-                return {l, ErrClosed};
+                return {r, ErrClosed};
             }
-            return {l, errors::New(co::strerror())};
+            return {r, errors::New(co::strerror())};
         }
-        return {l, nil};
+        return {r, nil};
     }
 
     // Write ...
-    virtual R<int, error> Write(const slice<byte> b) {
+    virtual R<int, error> Write(const slice<byte> b) override {
+        if (len(b) <= 0) {
+            return {0, io::ErrShortBuffer};
+        }
         if (fd_ <= 0) {
             return {0, ErrClosed};
         }
-        int l = co::send(fd_, b.data(), b.size(), timeoutMs(dealine_.d, dealine_.w));
-        if (l <= 0) {
+
+        int r = co::send(fd_, b.data(), len(b), timeoutMs(dealine_.d, dealine_.w));
+        if (r <= 0) {
             if (co::error() == EAGAIN) {
-                return {l, ErrClosed};
+                return {r, ErrClosed};
             }
-            return {l, errors::New(co::strerror())};
+            return {r, errors::New(co::strerror())};
         }
-        return {l, nil};
+        return {r, nil};
     }
 
     // Close ...
-    virtual void Close() {
+    virtual void Close() override {
         if (fd_ > 0) {
             co::close(fd_);
             fd_ = INVALID_SOCKET;
         }
     }
-    virtual void CloseRead() {
-        if (fd_ > 0) {
-            co::shutdown(fd_, 'r');
-        }
-    }
-
-    virtual void CloseWrite() {
-        if (fd_ > 0) {
-            co::shutdown(fd_, 'w');
-        }
-    }
 
     // SetDeadline ...
-    virtual error SetDeadline(const time::Time& t) {
+    virtual error SetDeadline(const time::Time& t) override {
         dealine_.d = t;
         if (t && time::Since(t) >= 0) {
             Close();
         }
         return nil;
     }
-    virtual error SetReadDeadline(const time::Time& t) {
+    virtual error SetReadDeadline(const time::Time& t) override {
         dealine_.r = t;
         if (t && time::Since(t) >= 0) {
             CloseRead();
         }
         return nil;
     }
-    virtual error SetWriteDeadline(const time::Time& t) {
+    virtual error SetWriteDeadline(const time::Time& t) override {
         dealine_.w = t;
         if (t && time::Since(t) >= 0) {
             CloseWrite();
@@ -92,10 +89,10 @@ struct tcpConn_t : public conn_t {
         return nil;
     }
 
-    virtual int Fd() const { return fd_; }
-    virtual Addr LocalAddr() const { return xx::GetSockAddr(fd_); }
-    virtual Addr RemoteAddr() const { return xx::GetPeerAddr(fd_); }
-    virtual string String() const { return GX_SS("tcpConn_t{" << RemoteAddr() << "}"); }
+    virtual int Fd() const override { return fd_; }
+    virtual Addr LocalAddr() const override { return xx::GetSockAddr(fd_); }
+    virtual Addr RemoteAddr() const override { return xx::GetPeerAddr(fd_); }
+    virtual string String() const override { return GX_SS("tcpConn_t{" << RemoteAddr() << "}"); }
 
    public:
     SOCKET fd_{0};

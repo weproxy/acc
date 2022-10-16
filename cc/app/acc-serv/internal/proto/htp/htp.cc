@@ -6,29 +6,83 @@
 
 #include "../proto.h"
 #include "logx/logx.h"
+#include "gx/net/net.h"
 
 namespace app {
 namespace proto {
 namespace htp {
 
+namespace xx {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// handleConn ...
+static error handleConn(net::Conn c) {
+    DEFER(c->Close());
+
+    return nil;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server ...
 struct Server : public proto::IServer {
+    string addr_;
+    net::Listener ln_;
+
+    Server(const string& addr) : addr_(addr) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
-    virtual error Start() override {
-        LOGS_D(TAG << " Start()");
+    error Start() override {
+        AUTO_R(ln, err, net::Listen(addr_));
+        if (err) {
+            LOGS_E(TAG << " Listen(" << addr_ << "), err: " << err);
+            return err;
+        }
+
+        LOGS_D(TAG << " Start(" << addr_ << ")");
+
+        ln_ = ln;
+        gx::go([ln = ln_] {
+            for (;;) {
+                AUTO_R(c, err, ln->Accept());
+                if (err) {
+                    if (err != net::ErrClosed) {
+                        LOGS_E(TAG << " Accept(), err: " << err);
+                    }
+                    break;
+                }
+
+                LOGS_V(TAG << " Accept() " << c->RemoteAddr());
+
+                gx::go([c = c] { handleConn(c); });
+            }
+        });
+
         return nil;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    virtual void Close() override { LOGS_D(TAG << " Close()"); }
+    void Close() override {
+        if (ln_) {
+            ln_->Close();
+        }
+        LOGS_D(TAG << " Close()");
+    }
 };
+}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
-static R<proto::Server, error> New(const json::J& j) {
+R<proto::Server, error> New(const json::J& j) {
     LOGS_V(TAG << " Conf: " << j);
-    auto s = std::shared_ptr<Server>(new Server);
+
+    auto addr = j["listen"];
+    if (!addr.is_string() || addr.empty()) {
+        return {nil, errors::New("invalid addr")};
+    }
+
+    auto s = std::shared_ptr<xx::Server>(new xx::Server(addr));
+
     return {s, nil};
 }
 

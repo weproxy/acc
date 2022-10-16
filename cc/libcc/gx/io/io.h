@@ -49,11 +49,11 @@ inline Closer NewCloserFn(const xx::CloserFn&& fn) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ReadFull ..
-template <typename Reader, typename std::enable_if<xx::is_reader<Reader>::value, int>::type = 0>
-R<int, error> ReadFull(Reader r, slice<byte> buf) {
+template <typename IReader, typename std::enable_if<xx::is_reader<IReader>::value, int>::type = 0>
+R<int, error> ReadFull(IReader r, slice<byte> buf) {
     int nr = 0;
-    while (nr < buf.size()) {
-        AUTO_R(n, err, r->Read(buf(nr, buf.size() - nr)));
+    while (nr < len(buf)) {
+        AUTO_R(n, err, r->Read(buf(nr)));
         if (n > 0) {
             nr += n;
         }
@@ -66,7 +66,7 @@ R<int, error> ReadFull(Reader r, slice<byte> buf) {
 
 namespace xx {
 struct discard_t {
-    R<int, error> Write(const slice<byte> b) { return {b.size(), nil}; }
+    R<int, error> Write(const slice<byte> b) { return {len(b), nil}; }
 };
 }  // namespace xx
 

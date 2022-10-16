@@ -16,3 +16,6 @@
 [submodule "cc/libcc/3rd/lwip"]
 	path = cc/libcc/3rd/lwip
 	url = https://github.com/lwip-tcpip/lwip
+[submodule "cc/libcc/3rd/botan"]
+	path = cc/libcc/3rd/botan
+	url = https://github.com/randombit/botan

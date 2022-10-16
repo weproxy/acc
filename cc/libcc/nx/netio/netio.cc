@@ -49,7 +49,7 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
         }
     }
 
-    println("io::Copy(", r, "->", w, ")", written, "bytes");
+    // println("io::Copy(", r, "->", w, ")", written, "bytes");
 
     return {written, rerr};
 }
@@ -122,7 +122,7 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         }
     }
 
-    println("io::Copy(", r, "->", w, ")", written, "bytes");
+    // println("io::Copy(", r, "->", w, ")", written, "bytes");
 
     return {written, rerr};
 }

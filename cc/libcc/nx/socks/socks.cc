@@ -24,7 +24,7 @@ const error ErrInvalidAddrLen = errors::New("invalid address length");
 namespace xx {
 // IP ...
 net::IP addr_t::IP() const {
-    if (B.size() > 0) {
+    if (len(B) > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
                 return net::IP(B(1, 1 + net::IPv4len));
@@ -39,7 +39,7 @@ net::IP addr_t::IP() const {
 
 // Port ...
 int addr_t::Port() const {
-    if (B.size() > 0) {
+    if (len(B) > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
                 return int(B[1 + net::IPv4len]) << 8 | int(B[1 + net::IPv4len + 1]);
@@ -79,7 +79,7 @@ void addr_t::FromNetAddr(net::Addr addr) {
 
 // String ...
 const string addr_t::String() const {
-    if (B.size() <= 0) {
+    if (len(B) <= 0) {
         return "<nil>";
     }
 
@@ -94,7 +94,7 @@ const string addr_t::String() const {
 //	+------+------+------+
 //	|  1   |  x   |  2   |
 R<Addr, error> ParseAddr(const slice<byte> B) {
-    if (B.size() < 1 + 1 + 1 + 2) {
+    if (len(B) < 1 + 1 + 1 + 2) {
         return {nil, ErrInvalidAddrLen};
     }
 
@@ -109,7 +109,7 @@ R<Addr, error> ParseAddr(const slice<byte> B) {
         return {nil, ErrInvalidAddrLen};
     }
 
-    if (B.size() < m) {
+    if (len(B) < m) {
         return {nil, ErrInvalidAddrLen};
     }
     return {Addr(new xx::addr_t(B(0, m))), nil};
@@ -117,9 +117,9 @@ R<Addr, error> ParseAddr(const slice<byte> B) {
 
 // CopyAddr ...
 R<int, error> CopyAddr(slice<byte> buf, Addr addr) {
-    if (addr || buf.size() >= addr->B.size()) {
-        memcpy(buf.data(), addr->B.data(), addr->B.size());
-        return {addr->B.size(), nil};
+    if (addr || len(buf) >= len(addr->B)) {
+        memcpy(buf.data(), addr->B.data(), len(addr->B));
+        return {len(addr->B), nil};
     }
     return {0, errors::New("socks::WriteAddr fail")};
 }
@@ -127,10 +127,10 @@ R<int, error> CopyAddr(slice<byte> buf, Addr addr) {
 // AppendAddr ...
 R<int, error> AppendAddr(slice<byte> buf, Addr addr) {
     if (addr) {
-        for (int i = 0; i < addr->B.size(); i++) {
+        for (int i = 0; i < len(addr->B); i++) {
             append(buf, addr->B[i]);
         }
-        return {addr->B.size(), nil};
+        return {len(addr->B), nil};
     }
     return {0, errors::New("socks::AppendAddr fail")};
 }

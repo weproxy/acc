@@ -32,51 +32,52 @@ R<T...> MakeR(T&&... args) {
 #define _GX_CAT(x, n) _GX_CAT_(x, n)
 #define _GX_EXPAND(x) x
 
-#define _GXR_GETVX(_1, _2, _3, _4, _5, _6, _7, _8, _r, x, ...) x
+#define _GXR_MICRO(_1, _2, _3, _4, _5, _6, _7, _8, _r, x, ...) x
 
 ////////////////////////////////////////////////////////////////////////////////
 // for AUTO_R(...)
-#if __cplusplus >= 201703L  //  C++17
-#define _GXR_V1(v1, r, x) auto [v1] = r
-#define _GXR_V2(v1, v2, r, x) auto [v1, v2] = r
-#define _GXR_V3(v1, v2, v3, r, x) auto [v1, v2, v3] = r
-#define _GXR_V4(v1, v2, v3, v4, r, x) auto [v1, v2, v3, v4] = r
-#define _GXR_V5(v1, v2, v3, v4, v5, r, x) auto [v1, v2, v3, v4, v5] = r
-#define _GXR_V6(v1, v2, v3, v4, v5, v6, r, x) auto [v1, v2, v3, v4, v5, v6] = r
-#define _GXR_V7(v1, v2, v3, v4, v5, v6, v7, r, x) auto [v1, v2, v3, v4, v5, v6, v7] = r
-#define _GXR_V8(v1, v2, v3, v4, v5, v6, v7, v8, r, x) auto [v1, v2, v3, v4, v5, v6, v7, v8] = r
+#if __cplusplus >= 201703L  // >= C++17
+#define _GXR_AUTO1(v1, r, x) auto [v1] = r
+#define _GXR_AUTO2(v1, v2, r, x) auto [v1, v2] = r
+#define _GXR_AUTO3(v1, v2, v3, r, x) auto [v1, v2, v3] = r
+#define _GXR_AUTO4(v1, v2, v3, v4, r, x) auto [v1, v2, v3, v4] = r
+#define _GXR_AUTO5(v1, v2, v3, v4, v5, r, x) auto [v1, v2, v3, v4, v5] = r
+#define _GXR_AUTO6(v1, v2, v3, v4, v5, v6, r, x) auto [v1, v2, v3, v4, v5, v6] = r
+#define _GXR_AUTO7(v1, v2, v3, v4, v5, v6, v7, r, x) auto [v1, v2, v3, v4, v5, v6, v7] = r
+#define _GXR_AUTO8(v1, v2, v3, v4, v5, v6, v7, v8, r, x) auto [v1, v2, v3, v4, v5, v6, v7, v8] = r
 #else  // < C++17
-////////////////////////////////////////////////////////////////////////////////
-#define _GXR_V1(v1, r, x) \
-    auto x = r;           \
-    auto v1 = gx::GetR<0>(x)
-#define _GXR_V2(v1, v2, r, x) \
-    _GXR_V1(v1, r, x);        \
-    auto v2 = gx::GetR<1>(x)
-#define _GXR_V3(v1, v2, v3, r, x) \
-    _GXR_V2(v1, v2, r, x);        \
-    auto v3 = gx::GetR<2>(x)
-#define _GXR_V4(v1, v2, v3, v4, r, x) \
-    _GXR_V3(v1, v2, v3, r, x);        \
-    auto v4 = gx::GetR<3>(x)
-#define _GXR_V5(v1, v2, v3, v4, v5, r, x) \
-    _GXR_V4(v1, v2, v3, v4, r, x);        \
-    auto v5 = gx::GetR<4>(x)
-#define _GXR_V6(v1, v2, v3, v4, v5, v6, r, x) \
-    _GXR_V5(v1, v2, v3, v4, v5, r, x);        \
-    auto v6 = gx::GetR<5>(x)
-#define _GXR_V7(v1, v2, v3, v4, v5, v6, v7, r, x) \
-    _GXR_V6(v1, v2, v3, v4, v5, v6, r, x);        \
-    auto v7 = gx::GetR<6>(x)
-#define _GXR_V8(v1, v2, v3, v4, v5, v6, v7, v8, r, x) \
-    _GXR_V7(v1, v2, v3, v4, v5, v6, v7, r, x);        \
-    auto v8 = gx::GetR<7>(x)
+#define _GXR_SET_V(v, n, x) auto v = gx::GetR<n>(x)
+#define _GXR_AUTO1(v1, r, x) \
+    auto x = r;              \
+    _GXR_SET_V(v1, 0, x)
+#define _GXR_AUTO2(v1, v2, r, x) \
+    _GXR_AUTO1(v1, r, x);        \
+    _GXR_SET_V(v2, 1, x)
+#define _GXR_AUTO3(v1, v2, v3, r, x) \
+    _GXR_AUTO2(v1, v2, r, x);        \
+    _GXR_SET_V(v3, 2, x)
+#define _GXR_AUTO4(v1, v2, v3, v4, r, x) \
+    _GXR_AUTO3(v1, v2, v3, r, x);        \
+    _GXR_SET_V(v4, 3, x)
+#define _GXR_AUTO5(v1, v2, v3, v4, v5, r, x) \
+    _GXR_AUTO4(v1, v2, v3, v4, r, x);        \
+    _GXR_SET_V(v5, 4, x)
+#define _GXR_AUTO6(v1, v2, v3, v4, v5, v6, r, x) \
+    _GXR_AUTO5(v1, v2, v3, v4, v5, r, x);        \
+    _GXR_SET_V(v6, 5, x)
+#define _GXR_AUTO7(v1, v2, v3, v4, v5, v6, v7, r, x) \
+    _GXR_AUTO6(v1, v2, v3, v4, v5, v6, r, x);        \
+    _GXR_SET_V(v7, 6, x)
+#define _GXR_AUTO8(v1, v2, v3, v4, v5, v6, v7, v8, r, x) \
+    _GXR_AUTO7(v1, v2, v3, v4, v5, v6, v7, r, x);        \
+    _GXR_SET_V(v8, 7, x)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-#define AUTO_R(...)                                                                                             \
-    _GX_EXPAND(_GXR_GETVX(__VA_ARGS__, _GXR_V8, _GXR_V7, _GXR_V6, _GXR_V5, _GXR_V4, _GXR_V3, _GXR_V2, _GXR_V1)) \
+#define AUTO_R(...)                                                                                            \
+    _GX_EXPAND(_GXR_MICRO(__VA_ARGS__, _GXR_AUTO8, _GXR_AUTO7, _GXR_AUTO6, _GXR_AUTO5, _GXR_AUTO4, _GXR_AUTO3, \
+                          _GXR_AUTO2, _GXR_AUTO1))                                                             \
     (__VA_ARGS__, _GX_CAT(__x__, __LINE__))
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

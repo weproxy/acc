@@ -13,6 +13,10 @@ namespace htp {
 // TAG ...
 constexpr const char* TAG = "[htp]";
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// New ...
+R<proto::Server, error> New(const json::J& j);
+
 }  // namespace htp
 }  // namespace proto
 }  // namespace app

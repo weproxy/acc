@@ -16,11 +16,11 @@ inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
     char b[8];
     if (' ' <= c && c <= '~') {
         ::sprintf(b, "'%c'", (char)c);
-    } else if ((c == '\n')) {
+    } else if (c == '\n') {
         ::sprintf(b, "'\\n'");
-    } else if ((c == '\r')) {
+    } else if (c == '\r') {
         ::sprintf(b, "'\\r'");
-    } else if ((c == '\t')) {
+    } else if(c == '\t') {
         ::sprintf(b, "'\\t'");
     } else {
         ::sprintf(b, "%d", c);
@@ -93,6 +93,16 @@ void println(T&&... t) {
     ss << std::endl;
     std::cout << ss.str();
 }
+
+// panic ...
+template <typename... T>
+void panic(T&&... t) {
+    std::ostringstream ss;
+    xx::out(ss, std::forward<T>(t)...);
+    std::cout << ss.str();
+    throw(ss);
+}
+
 }  // namespace gx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

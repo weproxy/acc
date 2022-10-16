@@ -10,7 +10,7 @@ namespace bytes {
 // IndexByte ...
 inline int IndexByte(const slice<byte>& s, byte c) {
     const byte* b = s.data();
-    for (int i = 0; i < s.size(); i++) {
+    for (int i = 0; i < len(s); i++) {
         if (b[i] == c) {
             return i;
         }
@@ -20,12 +20,12 @@ inline int IndexByte(const slice<byte>& s, byte c) {
 
 // Index ...
 inline int Index(const slice<byte>& s, const slice<byte>& subslice) {
-    int sl = s.length(), rl = substr.length();
+    int sl = s.length(), rl = subslice.length();
 
     if (rl == 0) {
         return 0;
     } else if (rl == 1) {
-        return IndexByte(s, substr[0]);
+        return IndexByte(s, subslice[0]);
     } else if (rl == sl) {
         return memcmp(s.data(), subslice.data(), rl) == 0 ? 0 : -1;
     }
@@ -43,7 +43,7 @@ inline int Index(const slice<byte>& s, const slice<byte>& subslice) {
 // LastIndexByte ...
 inline int LastIndexByte(const slice<byte>& s, byte c) {
     const byte* a = s.data();
-    for (int i = s.size() - 1; i >= 0; i--) {
+    for (int i = len(s) - 1; i >= 0; i--) {
         if (a[i] == c) {
             return i;
         }
@@ -58,12 +58,12 @@ inline int LastIndex(const slice<byte>& s, const slice<byte>& sep) {
     if (rl == 0) {
         return 0;
     } else if (rl == 1) {
-        return LastIndexByte(s, substr[0]);
+        return LastIndexByte(s, sep[0]);
     } else if (rl == sl) {
-        return s == substr ? 0 : -1;
+        return memcmp(s.data(), sep.data(), rl) == 0 ? 0 : -1;
     }
 
-    const char *a = s.data(), *b = sep.data();
+    const byte *a = s.data(), *b = sep.data();
     for (int i = sl - rl; i >= 0; i--) {
         if (memcmp(a + i, b, rl) == 0) {
             return i;
@@ -74,7 +74,7 @@ inline int LastIndex(const slice<byte>& s, const slice<byte>& sep) {
 
 // Equal ...
 inline bool Equal(const slice<byte>& a, const slice<byte>& b) {
-    return (&a == &b || (a.len() == b.len() && memcmp(a.data(), b.data(), a.len()) == 0);
+    return (&a == &b || (a.len() == b.len() && memcmp(a.data(), b.data(), a.len()) == 0));
 }
 
 // Compare ...
@@ -103,8 +103,8 @@ inline int Compare(const slice<byte>& a, const slice<byte>& b) {
 inline int Count(const slice<byte>& s, const slice<byte>& sep) {
     int c = 0;
     const byte *a = s.data(), *b = sep.data();
-    for (int i = 0; i < s.size(); i++) {
-        for (int j = 0; j < sep.size(); j++) {
+    for (int i = 0; i < len(s); i++) {
+        for (int j = 0; j < len(sep); j++) {
             if (a[i] == b[j]) {
                 c++;
                 break;

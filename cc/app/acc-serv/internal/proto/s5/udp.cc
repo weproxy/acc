@@ -11,7 +11,9 @@
 #include "nx/stats/stats.h"
 #include "s5.h"
 
-NAMESPACE_BEG_S5
+namespace app {
+namespace proto {
+namespace s5 {
 
 namespace xx {
 using namespace nx;
@@ -20,9 +22,6 @@ using namespace nx;
 // udpSessPtr ...
 struct udpSess_t;
 typedef std::shared_ptr<udpSess_t> udpSessPtr;
-
-// AfterCloseFn ...
-typedef std::function<void()> AfterCloseFn;
 
 // key_t ...
 typedef uint64 key_t;
@@ -51,6 +50,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     net::PacketConn rc_;  // to target server, it is udpConn_t
     net::Addr caddr_;     // source client addr
     stats::Stats sta_;
+    std::function<void()> afterClosedFn_;
 
     udpSess_t(net::PacketConn ln, net::PacketConn rc, net::Addr caddr) : ln_(ln), rc_(rc), caddr_(caddr) {}
     ~udpSess_t() { Close(); }
@@ -59,11 +59,16 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     void Close() {
         if (rc_) {
             rc_->Close();
+            if (afterClosedFn_) {
+                afterClosedFn_();
+            }
+            sta_->Done("closed");
+            rc_ = nil;
         }
     }
 
     // Start ...
-    void Start(const AfterCloseFn& afterCloseFn) {
+    void Start() {
         auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_);
         auto sta = stats::NewUDPStats(stats::TypeS5, tag);
 
@@ -71,9 +76,8 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         sta_ = sta;
 
         // loopRecvRC
-        gx::go([thiz = shared_from_this(), afterCloseFn = afterCloseFn] {
-            DEFER(afterCloseFn());
-            DEFER(thiz->sta_->Done("closed"));
+        gx::go([thiz = shared_from_this()] {
+            DEFER(thiz->Close());
 
             slice<byte> buf = make(1024 * 4);
 
@@ -100,8 +104,12 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
 
     // WriteToRC ...
     void WriteToRC(slice<byte> buf) {
+        if (!rc_) {
+            return;
+        }
+
         // buf is from source client
-        sta_->AddRecv(buf.size());
+        sta_->AddRecv(len(buf));
 
         // udpConn_t::WriteTo()
         // unpack data (from source client), and writeTo target server
@@ -144,7 +152,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         auto raddr = socks::FromNetAddr(addr);
         socks::CopyAddr(buf(3), raddr);
 
-        n += 3 + raddr->B.size();
+        n += 3 + len(raddr->B);
 
         buf[0] = 0;  // RSV
         buf[1] = 0;  //
@@ -161,7 +169,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
     virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr) override {
-        if (buf.size() < 10) {
+        if (len(buf) < 10) {
             return {0, socks::ErrInvalidSocksVersion};
         }
 
@@ -178,7 +186,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         }
 
         // writeTo target server
-        int pos = 3 + raddr->B.size();
+        int pos = 3 + len(raddr->B);
         AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
         if (er2) {
             return {n, er2};
@@ -252,11 +260,11 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
             sess = udpSessPtr(new udpSess_t(ln, rc, caddr));
             (*sessMap)[key] = sess;
 
+            // remove it after rc closed
+            sess->afterClosedFn_ = [sessMap, key = key] { sessMap->erase(key); };
+
             // start recv loop...
-            sess->Start([sessMap, key = key] {
-                // remove it after rc closed
-                sessMap->erase(key);
-            });
+            sess->Start();
         } else {
             sess = it->second;
         }
@@ -270,4 +278,6 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
 }  // namespace xx
 
-NAMESPACE_END_S5
+}  // namespace s5
+}  // namespace proto
+}  // namespace app

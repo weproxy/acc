@@ -9,6 +9,9 @@ APP ?= ${app}
 CMD ?= ${cmd}
 ARG ?= ${arg}
 
+env ?= release
+ENV ?= ${env}
+
 ver ?= $(shell date "+%Y%m%d%H%M")
 VER ?= ${ver}
 
@@ -18,8 +21,8 @@ else
 	NAME = ${APP}-${CMD}
 endif
 
-ifneq ($(wildcard ./app/${name}),)
-    SRCDIR = ./app/${name}
+ifneq ($(wildcard ./app/${NAME}),)
+    SRCDIR = ./app/${NAME}
 else
     SRCDIR = ./app/${app}/cmd/${cmd}
 endif
@@ -40,9 +43,9 @@ check:
 pre: check
 
 config: check
-	xmake config -m debug  --with_libcurl=n --fpic=y
+	xmake config -m ${ENV} --with_libcurl=n --fpic=y
 
-build: pre
+build: pre config
 	xmake build
 
 run: build

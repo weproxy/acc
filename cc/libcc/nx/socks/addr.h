@@ -42,8 +42,8 @@ struct addr_t {
 
     byte* data() { return B.data(); }
     const byte* data() const { return B.data(); }
-    int size() { return B.size(); }
-    const int size() const { return B.size(); }
+    int size() { return len(B); }
+    const int size() const { return len(B); }
 
     // IP ...
     net::IP IP() const;
@@ -99,12 +99,12 @@ R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
     } else if (AddrTypeIPv6 == B[0]) {
         m = 1 + net::IPv6len + 2;
     } else if (AddrTypeDomain == B[0]) {
-        m = 1 + 1 + B[1] + 2; // DOMAIN_LEN = B[1]
+        m = 1 + 1 + B[1] + 2;  // DOMAIN_LEN = B[1]
     } else {
         return {n, nil, ErrInvalidAddrLen};
     }
 
-    AUTO_R(t, er2, io::ReadFull(r, B(2, 2 + m)));
+    AUTO_R(t, er2, io::ReadFull(r, B(2, m)));
     n += t > 0 ? t : 0;
     if (er2) {
         return {n, nil, er2};

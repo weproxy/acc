@@ -49,8 +49,8 @@ AddrInfoRet GetAddrInfo(const string& addr) {
     return GetAddrInfo(host, (uint16)port);
 }
 
-// _getSockAddr  ...
-static Addr _getSockAddr(SOCKET fd, bool peer) {
+// getFdAddr  ...
+static Addr getFdAddr(SOCKET fd, bool peer) {
     if (fd <= 0) {
         return nil;
     }
@@ -72,10 +72,16 @@ static Addr _getSockAddr(SOCKET fd, bool peer) {
 }
 
 // GetSockAddr ...
-Addr GetSockAddr(SOCKET fd) { return _getSockAddr(fd, false); }
+Addr GetSockAddr(SOCKET fd) { return getFdAddr(fd, false); }
 
 // GetPeerAddr ...
-Addr GetPeerAddr(SOCKET fd) { return _getSockAddr(fd, true); }
+Addr GetPeerAddr(SOCKET fd) { return getFdAddr(fd, true); }
+
+// CloseRead ...
+void CloseRead(SOCKET fd) { co::shutdown(fd, 'r'); }
+
+// CloseWrite ...
+void CloseWrite(SOCKET fd) { co::shutdown(fd, 'w'); }
 
 }  // namespace xx
 }  // namespace net

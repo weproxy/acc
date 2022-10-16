@@ -109,7 +109,7 @@ typedef std::function<error(const string& user, const string& pass)> CheckUserPa
 
 // ServerAuth ...
 template <typename ReadWriter, typename std::enable_if<io::xx::is_read_writer<ReadWriter>::value, int>::type = 0>
-error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = {}) {
+error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& checkUserPassFn = {}) {
     slice<byte> buf = make(512);
 
     // <<< REP:
@@ -118,10 +118,14 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     //     |  1  |   1    |
 
     buf[0] = Version5;
-    buf[1] = AuthMethodUserPass;
+    buf[1] = userPassRequired ? AuthMethodUserPass : AuthMethodNotRequired;
     AUTO_R(_1, er1, c->Write(buf(0, 2)));
     if (er1) {
         return er1;
+    }
+
+    if (!userPassRequired) {
+        return nil;
     }
 
     // >>> REQ:
@@ -138,7 +142,7 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     }
 
     auto userLen = buf[1];
-    if (userLen > buf.size() - 2) {
+    if (userLen > len(buf) - 2) {
         return ErrUserAuthFailed;
     }
     AUTO_R(_3, er3, io::ReadFull(c, buf(0, userLen + 1)));
@@ -148,7 +152,7 @@ error ServerAuthUserPass(ReadWriter c, const CheckUserPassFn& checkUserPassFn = 
     string user((char*)buf.data(), userLen);
 
     auto passLen = buf[userLen];
-    if (passLen > sizeof(buf) - 2) {
+    if (passLen > len(buf) - 2) {
         return ErrUserAuthFailed;
     }
     AUTO_R(_4, er4, io::ReadFull(c, buf(0, passLen)));
