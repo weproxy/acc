@@ -100,13 +100,13 @@ struct detect_stringer {
         std::is_pointer<T>::value && is_string<decltype(test_ptrop<T>(std::declval<T>()))>::value;
 };
 
-// is_stringer ...
+// has_string ...
 // if has .String()
 // if has .operator string()
 // if has ->String()
 // if has ->operator string()
 template <typename T>
-struct is_stringer {
+struct has_string {
     static constexpr bool value = (detect_stringer<T>::has_reffn || detect_stringer<T>::has_ptrfn ||
                                    detect_stringer<T>::has_refop || detect_stringer<T>::has_ptrop);
 };

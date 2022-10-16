@@ -83,7 +83,7 @@ inline Addr FromNetAddr(net::Addr addr) {
 //     | ATYP | ADDR | PORT |
 //     +------+------+------+
 //     |  1   |  x   |  2   |
-template <typename Reader, typename std::enable_if<io::xx::is_reader<Reader>::value, int>::type = 0>
+template <typename Reader, typename std::enable_if<io::xx::has_read<Reader>::value, int>::type = 0>
 R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
     slice<byte> B = make(MaxAddrLen);
 

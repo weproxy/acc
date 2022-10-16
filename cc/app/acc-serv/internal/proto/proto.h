@@ -17,7 +17,7 @@ constexpr const char* TAG = "[proto]";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // IServer ...
-struct IServer : public io::ICloser {
+struct IServer : public io::xx::closer_t {
     virtual error Start() = 0;
     virtual void Close() = 0;
 };

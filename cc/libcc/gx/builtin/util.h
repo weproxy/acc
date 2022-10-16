@@ -20,7 +20,7 @@ inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
         ::sprintf(b, "'\\n'");
     } else if (c == '\r') {
         ::sprintf(b, "'\\r'");
-    } else if(c == '\t') {
+    } else if (c == '\t') {
         ::sprintf(b, "'\\t'");
     } else {
         ::sprintf(b, "%d", c);
@@ -38,7 +38,7 @@ inline std::ostream& operator<<(std::ostream& s, char c) {
 // if has .operator string()
 // if has ->String()
 // if has ->operator string()
-template <typename T, typename std::enable_if<gx::xx::is_stringer<T>::value, int>::type = 0>
+template <typename T, typename std::enable_if<gx::xx::has_string<T>::value, int>::type = 0>
 std::ostream& operator<<(std::ostream& s, T t) {
     s << gx::xx::to_string(t);
     return s;

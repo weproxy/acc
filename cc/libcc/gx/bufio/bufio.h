@@ -33,26 +33,26 @@ namespace gx {
 namespace bufio {
 
 // Reader ...
-template <typename IReader, typename std::enable_if<gx::io::xx::is_reader<IReader>::value, int>::type = 0>
+template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>
 using Reader = std::shared_ptr<xx::reader_t<IReader>>;
 
 // Writer ...
-template <typename IWriter, typename std::enable_if<gx::io::xx::is_writer<IWriter>::value, int>::type = 0>
+template <typename IWriter, typename std::enable_if<gx::io::xx::has_write<IWriter>::value, int>::type = 0>
 using Writer = std::shared_ptr<xx::writer_t<IWriter>>;
 
 // NewReader ...
-template <typename IReader, typename std::enable_if<gx::io::xx::is_reader<IReader>::value, int>::type = 0>
+template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>
 Reader<IReader> NewReader(IReader rd, int size = defaultBufSize) {
     if (size < minReadBufferSize) {
         size = minReadBufferSize;
     }
     Reader<IReader> r(new xx::reader_t<IReader>(rd));
-    r.reset(make(size), rd);
+    r->reset(make(size), rd);
     return r;
 }
 
 // NewWriter ...
-template <typename IWriter, typename std::enable_if<gx::io::xx::is_writer<IWriter>::value, int>::type = 0>
+template <typename IWriter, typename std::enable_if<gx::io::xx::has_write<IWriter>::value, int>::type = 0>
 Writer<IWriter> NewWriter(IWriter wr, int size = defaultBufSize) {
     if (size < minReadBufferSize) {
         size = minReadBufferSize;

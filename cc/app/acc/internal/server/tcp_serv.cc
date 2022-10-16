@@ -10,7 +10,7 @@ namespace app {
 namespace server {
 
 // tcpServer ...
-struct tcpServer : public io::ICloser {
+struct tcpServer : public io::xx::closer_t {
     virtual void Close() override {}
 };
 

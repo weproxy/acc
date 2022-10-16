@@ -12,10 +12,10 @@ namespace gx {
 namespace io {
 namespace xx {
 
-// is_reader ...
+// has_read ...
 // ----> R<int, error> Read(void*, size_t)
 template <typename T>
-struct is_reader {
+struct has_read {
    private:
     template <typename U>
     static auto test(U) -> decltype(std::declval<U>()->Read(slice<byte>{}));
@@ -24,10 +24,10 @@ struct is_reader {
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
-// is_writer ...
+// has_write ...
 // ----> R<int, error> Write(const void*, size_t)
 template <typename T>
-struct is_writer {
+struct has_write {
    private:
     template <typename U>
     static auto test(U) -> decltype(std::declval<U>()->Write(slice<byte>{}));
@@ -36,10 +36,10 @@ struct is_writer {
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
-// is_closer ...
+// has_close ...
 // ----> void Close();
 template <typename T>
-struct is_closer {
+struct has_close {
    private:
     template <typename U>
     static auto test(U) -> decltype(std::declval<U>()->Close());
@@ -48,28 +48,28 @@ struct is_closer {
     static constexpr bool value = !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
 };
 
-// is_read_writer ...
+// has_read_write ...
 template <typename T>
-struct is_read_writer {
-    static constexpr bool value = is_reader<T>::value && is_writer<T>::value;
+struct has_read_write {
+    static constexpr bool value = has_read<T>::value && has_write<T>::value;
 };
 
-// is_read_closer ...
+// has_read_close ...
 template <typename T>
-struct is_read_closer {
-    static constexpr bool value = is_reader<T>::value && is_closer<T>::value;
+struct has_read_close {
+    static constexpr bool value = has_read<T>::value && has_close<T>::value;
 };
 
-// is_write_closer ...
+// has_write_close ...
 template <typename T>
-struct is_write_closer {
-    static constexpr bool value = is_writer<T>::value && is_closer<T>::value;
+struct has_write_close {
+    static constexpr bool value = has_write<T>::value && has_close<T>::value;
 };
 
-// is_read_write_closer ...
+// has_read_write_close ...
 template <typename T>
-struct is_read_write_closer {
-    static constexpr bool value = is_read_writer<T>::value && is_closer<T>::value;
+struct has_read_write_close {
+    static constexpr bool value = has_read_write<T>::value && has_close<T>::value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ void call_close_read(T t) {
 }
 
 // call_close_read ...
-template <typename T, typename std::enable_if<xx::is_closer<T>::value, int>::type = 0>
+template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
 void call_close_read(T t) {
     t->Close();
 }
@@ -117,7 +117,7 @@ void call_close_write(T t) {
 }
 
 // call_close_write ...
-template <typename T, typename std::enable_if<xx::is_closer<T>::value, int>::type = 0>
+template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
 void call_close_write(T t) {
     t->Close();
 }

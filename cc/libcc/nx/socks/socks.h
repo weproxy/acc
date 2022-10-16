@@ -108,7 +108,7 @@ extern const error ErrNoSupportedAuth;
 typedef std::function<error(const string& user, const string& pass)> CheckUserPassFn;
 
 // ServerAuth ...
-template <typename ReadWriter, typename std::enable_if<io::xx::is_read_writer<ReadWriter>::value, int>::type = 0>
+template <typename ReadWriter, typename std::enable_if<io::xx::has_read_write<ReadWriter>::value, int>::type = 0>
 error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& checkUserPassFn = {}) {
     slice<byte> buf = make(512);
 
@@ -180,7 +180,7 @@ error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& che
 }
 
 // WriteReply ...
-template <typename Writer, typename std::enable_if<io::xx::is_writer<Writer>::value, int>::type = 0>
+template <typename Writer, typename std::enable_if<io::xx::has_write<Writer>::value, int>::type = 0>
 error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |

@@ -17,7 +17,7 @@ namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // reader_t ...
-template <typename IReader, typename std::enable_if<gx::io::xx::is_reader<IReader>::value, int>::type = 0>
+template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>
 struct reader_t {
     slice<byte> buf;   //
     IReader rd;        // reader provided by the client
@@ -419,7 +419,7 @@ struct reader_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // writer_t ...
-template <typename IWriter, typename std::enable_if<gx::io::xx::is_writer<IWriter>::value, int>::type = 0>
+template <typename IWriter, typename std::enable_if<gx::io::xx::has_write<IWriter>::value, int>::type = 0>
 struct writer_t {
     error err;
     slice<byte> buf;
@@ -567,7 +567,7 @@ struct writer_t {
 //
 // readWriter_t ...
 template <typename IReader, typename IWriter,
-          typename std::enable_if<gx::io::xx::is_reader<IReader>::value && gx::io::xx::is_writer<IReader>::IWriter,
+          typename std::enable_if<gx::io::xx::has_read<IReader>::value && gx::io::xx::has_write<IReader>::IWriter,
                                   int>::type = 0>
 struct readWriter_t {
     IReader rd;

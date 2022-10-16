@@ -10,19 +10,21 @@ namespace gx {
 namespace ioutil {
 
 // ReadAll ...
-template <typename IReader, typename std::enable_if<io::xx::is_reader<IReader>::value, int>::type = 0>
-R<slice<byte>, error> ReadAll(IReader r) {
-    return {{}, nil};
+template <typename Reader, typename std::enable_if<io::xx::has_read<Reader>::value, int>::type = 0>
+R<slice<byte>, error> ReadAll(Reader r) {
+    return {{}, ERR_TODO};
 }
 
 // ReadFile ...
 inline R<slice<byte>, error> ReadFile(const string& filename) {
-    return {{}, nil};
+    // TOOD..
+    return {{}, ERR_TODO};
 }
 
 // WriteFile ...
 inline error WriteFile(const string& filename, const void* data, size_t len) {
-    return nil;
+    // TOOD..
+    return ERR_TODO;
 }
 
 }  // namespace ioutil

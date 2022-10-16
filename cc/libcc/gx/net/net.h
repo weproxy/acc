@@ -56,7 +56,7 @@ namespace net {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // conn_t ...
 namespace xx {
-struct conn_t : public io::ICloser {
+struct conn_t : public io::xx::closer_t {
     virtual ~conn_t() {}
 
     virtual R<int, error> Read(slice<byte> b) = 0;
@@ -105,7 +105,7 @@ struct connWrap_t : public conn_t {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // packetConn_t ...
-struct packetConn_t : public io::ICloser {
+struct packetConn_t : public io::xx::closer_t {
     virtual ~packetConn_t() {}
 
     virtual R<int, Addr, error> ReadFrom(slice<byte> b) = 0;
@@ -152,7 +152,7 @@ struct packetConnWrap_t : public packetConn_t {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // listener_t ...
-struct listener_t : public io::ICloser {
+struct listener_t : public io::xx::closer_t {
     virtual ~listener_t() {}
 
     virtual R<Conn, error> Accept() = 0;

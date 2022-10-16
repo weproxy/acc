@@ -99,4 +99,8 @@ struct strerr_t : public err_t {
     string s_;
     static error New(const string& s) { return error(new strerr_t(s)); }
 };
+
+// ERR_TODO ...
+#define ERR_TODO errors::New("<TODO> %s:%d %s",  __FILE__, __LINE__, __FUNCTION__)
+
 }  // namespace gx
