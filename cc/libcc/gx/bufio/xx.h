@@ -29,59 +29,62 @@ struct reader_t {
     reader_t(IReader r) : rd(r) {}
 
     // Size ...
-    int Size() { return len(this->buf); }
+    int Size() { return len(buf); }
 
     // Reset ...
     void Reset(IReader r) {
-        if (!this->buf) {
-            this->buf = make(defaultBufSize);
+        if (!buf) {
+            buf = make(defaultBufSize);
         }
-        this->reset(buf, r);
+        reset(buf, r);
     }
 
     // reset ...
     void reset(slice<byte> buf, IReader r) {
-        this->buf = buf;
-        this->rd = r;
-        this->lastByte = -1;
-        this->lastRuneSize = -1;
+        auto& b = *this;
+        b.buf = buf;
+        b.rd = r;
+        b.lastByte = -1;
+        b.lastRuneSize = -1;
     }
 
     // fill ...
     void fill() {
+        auto& b = *this;
         // Slide existing data to beginning.
-        if (this->r > 0) {
-            copy(this->buf, this->buf(this->r, this->w));
-            this->w -= this->r;
-            this->r = 0;
+        if (b.r > 0) {
+            copy(b.buf, b.buf(b.r, b.w));
+            b.w -= b.r;
+            b.r = 0;
         }
 
-        if (this->w >= len(this->buf)) {
+        if (b.w >= len(b.buf)) {
             panic("bufio: tried to fill full buffer");
         }
 
         // Read new data: try a limited number of times.
         for (int i = maxConsecutiveEmptyReads; i > 0; i--) {
-            AUTO_R(n, err, this->rd.Read(this->buf(this->w)));
+            AUTO_R(n, err, b.rd.Read(b.buf(b.w)));
             if (n < 0) {
                 panic(errNegativeRead);
             }
-            this->w += n;
+            b.w += n;
             if (err) {
-                this->err = err;
+                b.err = err;
                 return;
             }
             if (n > 0) {
                 return;
             }
         }
-        this->err = io::ErrNoProgress;
+        b.err = io::ErrNoProgress;
     }
 
     // readErr ...
     error readErr() {
-        auto err = this->err;
-        this->err = nil;
+        auto& b = *this;
+        auto err = b.err;
+        b.err = nil;
         return err;
     }
 
@@ -91,32 +94,36 @@ struct reader_t {
             return {{}, ErrNegativeCount};
         }
 
-        this->lastByte = -1;
-        this->lastRuneSize = -1;
+        auto& b = *this;
 
-        for (; this->w - this->r < n && this->w - this->r < len(this->buf) && this->err == nil;) {
-            this->fill();  // this->w-this->r < len(this->buf) => buffer is not full
+        b.lastByte = -1;
+        b.lastRuneSize = -1;
+
+        for (; b.w - b.r < n && b.w - b.r < len(b.buf) && b.err == nil;) {
+            b.fill();  // b.w-b.r < len(b.buf) => buffer is not full
         }
 
-        if (n > len(this->buf)) {
-            return {this->buf(this->r, this->w), ErrBufferFull};
+        if (n > len(b.buf)) {
+            return {b.buf(b.r, b.w), ErrBufferFull};
         }
 
-        // 0 <= n <= len(this->buf)
+        // 0 <= n <= len(b.buf)
         error err;
-        if (int avail = this->w - this->r; avail < n) {
+        if (int avail = b.w - b.r; avail < n) {
             // not enough data in buffer
             n = avail;
-            err = this->readErr();
+            err = b.readErr();
             if (err == nil) {
                 err = ErrBufferFull;
             }
         }
-        return {this->buf(this->r, this->r + n), err};
+        return {b.buf(b.r, b.r + n), err};
     }
 
     // Discard ...
     R<int, error> Discard(int n) {
+        auto& b = *this;
+
         int discarded;
         error err;
         if (n < 0) {
@@ -126,26 +133,26 @@ struct reader_t {
             return {discarded, err};
         }
 
-        this->lastByte = -1;
-        this->lastRuneSize = -1;
+        b.lastByte = -1;
+        b.lastRuneSize = -1;
 
         int remain = n;
         for (;;) {
-            int skip = this->Buffered();
+            int skip = b.Buffered();
             if (skip == 0) {
-                this->fill();
-                skip = this->Buffered();
+                b.fill();
+                skip = b.Buffered();
             }
             if (skip > remain) {
                 skip = remain;
             }
-            this->r += skip;
+            b.r += skip;
             remain -= skip;
             if (remain == 0) {
                 return {n, nil};
             }
-            if (this->err != nil) {
-                return {n - remain, this->readErr()};
+            if (b.err != nil) {
+                return {n - remain, b.readErr()};
             }
         }
 
@@ -154,136 +161,147 @@ struct reader_t {
 
     // Read ...
     R<int, error> Read(slice<byte> p) {
+        auto& b = *this;
+
         int n;
         error err;
 
         n = len(p);
         if (n == 0) {
-            if (this->Buffered() > 0) {
+            if (b.Buffered() > 0) {
                 return {0, nil};
             }
-            return {0, this->readErr()};
+            return {0, b.readErr()};
         }
-        if (this->r == this->w) {
-            if (this->err != nil) {
-                return {0, this->readErr()};
+        if (b.r == b.w) {
+            if (b.err != nil) {
+                return {0, b.readErr()};
             }
-            if (len(p) >= len(this->buf)) {
+            if (len(p) >= len(b.buf)) {
                 // Large read, empty buffer.
                 // Read directly into p to avoid copy.
-                AUTO_R(_n, _err, this->rd.Read(p));
+                AUTO_R(_n, _err, b.rd.Read(p));
                 n = _n;
-                this->err = _err;
+                b.err = _err;
                 if (n < 0) {
                     panic(errNegativeRead);
                 }
                 if (n > 0) {
-                    this->lastByte = int(p[n - 1]);
-                    this->lastRuneSize = -1;
+                    b.lastByte = int(p[n - 1]);
+                    b.lastRuneSize = -1;
                 }
-                return {n, this->readErr()};
+                return {n, b.readErr()};
             }
             // One read.
-            // Do not use this->fill, which will loop.
-            this->r = 0;
-            this->w = 0;
-            AUTO_R(_n, _err, this->rd.Read(this->buf));
+            // Do not use b.fill, which will loop.
+            b.r = 0;
+            b.w = 0;
+            AUTO_R(_n, _err, b.rd.Read(b.buf));
             n = _n;
-            this->err = _err;
+            b.err = _err;
             if (n < 0) {
                 panic(errNegativeRead);
             }
             if (n == 0) {
-                return {0, this->readErr()};
+                return {0, b.readErr()};
             }
-            this->w += n;
+            b.w += n;
         }
 
         // copy as much as we can
         // Note: if the slice panics here, it is probably because
         // the underlying reader returned a bad count. See issue 49795.
-        n = copy(p, this->buf(this->r, this->w));
-        this->r += n;
-        this->lastByte = int(this->buf[this->r - 1]);
-        this->lastRuneSize = -1;
+        n = copy(p, b.buf(b.r, b.w));
+        b.r += n;
+        b.lastByte = int(b.buf[b.r - 1]);
+        b.lastRuneSize = -1;
         return {n, nil};
     }
 
     // ReadByte ...
     R<byte, error> ReadByte() {
-        this->lastRuneSize = -1;
-        for (; this->r == this->w;) {
-            if (this->err != nil) {
-                return {0, this->readErr()};
+        auto& b = *this;
+
+        b.lastRuneSize = -1;
+        for (; b.r == b.w;) {
+            if (b.err != nil) {
+                return {0, b.readErr()};
             }
-            this->fill();  // buffer is empty
+            b.fill();  // buffer is empty
         }
-        auto c = this->buf[this->r];
-        this->r++;
-        this->lastByte = int(c);
+        auto c = b.buf[b.r];
+        b.r++;
+        b.lastByte = int(c);
         return {c, nil};
     }
 
     // UnreadByte ...
     error UnreadByte() {
-        if (this->lastByte < 0 || this->r == 0 && this->w > 0) {
+        auto& b = *this;
+
+        if (b.lastByte < 0 || b.r == 0 && b.w > 0) {
             return ErrInvalidUnreadByte;
         }
-        // this->r > 0 || this->w == 0
-        if (this->r > 0) {
-            this->r--;
+        // b.r > 0 || b.w == 0
+        if (b.r > 0) {
+            b.r--;
         } else {
-            // this->r == 0 && this->w == 0
-            this->w = 1;
+            // b.r == 0 && b.w == 0
+            b.w = 1;
         }
-        this->buf[this->r] = byte(this->lastByte);
-        this->lastByte = -1;
-        this->lastRuneSize = -1;
+        b.buf[b.r] = byte(b.lastByte);
+        b.lastByte = -1;
+        b.lastRuneSize = -1;
         return nil;
     }
 
     // Buffered ...
-    int Buffered() { return this->w - this->r; }
+    int Buffered() {
+        auto& b = *this;
+        return b.w - b.r;
+    }
 
     // ReadSlice ...
     R<slice<byte>, error> ReadSlice(byte delim) {
+        auto& b = *this;
+
         slice<byte> line;
         error err;
         int s = 0;  // search start index
         for (;;) {
             // Search buffer.
-            if (int i = bytes::IndexByte(this->buf(this->r + s, this->w), delim); i >= 0) {
+            if (int i = bytes::IndexByte(b.buf(b.r + s, b.w), delim); i >= 0) {
                 i += s;
-                line = this->buf(this->r, this->r + i + 1);
-                this->r += i + 1;
+                line = b.buf(b.r, b.r + i + 1);
+                b.r += i + 1;
                 break;
             }
 
             // Pending error?
-            if (this->err != nil) {
-                line = this->buf(this->r, this->w);
-                this->r = this->w;
-                err = this->readErr();
+            if (b.err != nil) {
+                line = b.buf(b.r, b.w);
+                b.r = b.w;
+                err = b.readErr();
                 break;
             }
 
             // Buffer full?
-            if (this->Buffered() >= len(this->buf)) {
-                this->r = this->w;
-                line = this->buf;
+            if (b.Buffered() >= len(b.buf)) {
+                b.r = b.w;
+                line = b.buf;
                 err = ErrBufferFull;
                 break;
             }
 
-            s = this->w - this->r;  // do not rescan area we scanned before
+            s = b.w - b.r;  // do not rescan area we scanned before
 
-            this->fill();  // buffer is not full
+            b.fill();  // buffer is not full
         }
 
         // Handle last byte, if any.
         if (int i = len(line) - 1; i >= 0) {
-            this->lastByte = int(line[i]);
-            this->lastRuneSize = -1;
+            b.lastByte = int(line[i]);
+            b.lastRuneSize = -1;
         }
 
         return {line, err};
@@ -291,19 +309,21 @@ struct reader_t {
 
     // ReadLine ...
     R<slice<byte>, bool, error> ReadLine() {
+        auto& b = *this;
+
         bool isPrefix = false;
 
-        AUTO_R(line, err, this->ReadSlice('\n'));
+        AUTO_R(line, err, b.ReadSlice('\n'));
         if (err == ErrBufferFull) {
             // Handle the case where "\r\n" straddles the buffer.
             if (len(line) > 0 && line[len(line) - 1] == '\r') {
                 // Put the '\r' back on buf and drop it from line.
                 // Let the next call to ReadLine check for "\r\n".
-                if (this->r == 0) {
+                if (b.r == 0) {
                     // should be unreachable
                     panic("bufio: tried to rewind past start of buffer");
                 }
-                this->r--;
+                b.r--;
                 line = line(0, len(line) - 1);
             }
             return {line, true, nil};
@@ -329,6 +349,8 @@ struct reader_t {
 
     // collectFragments ...
     R<slice<slice<byte>>, slice<byte>, int, error> collectFragments(byte delim) {
+        auto& b = *this;
+
         slice<slice<byte>> fullBuffers;
         slice<byte> finalFragment;
         int totalLen = 0;
@@ -337,7 +359,7 @@ struct reader_t {
         slice<byte> frag;
         // Use ReadSlice to look for delim, accumulating full buffers.
         for (;;) {
-            AUTO_R(_frag, e, this->ReadSlice(delim));
+            AUTO_R(_frag, e, b.ReadSlice(delim));
             frag = _frag;
             if (e == nil) {  // got final fragment
                 break;
@@ -360,7 +382,9 @@ struct reader_t {
 
     // ReadBytes ...
     R<slice<byte>, error> ReadBytes(byte delim) {
-        AUTO_R(full, frag, n, err, this->collectFragments(delim));
+        auto& b = *this;
+
+        AUTO_R(full, frag, n, err, b.collectFragments(delim));
         // Allocate new buffer to hold the full pieces and the fragment.
         slice<byte> buf = make(n);
         n = 0;
@@ -374,13 +398,16 @@ struct reader_t {
 
     // ReadString ...
     R<string, error> ReadString(byte delim) {
-        // AUTO_R(full, frag, n, err, this->collectFragments(delim));
+        auto& b = *this;
+
+        // AUTO_R(full, frag, n, err, b.collectFragments(delim));
         // // Allocate new buffer to hold the full pieces and the fragment.
         // var buf strings.Builder;
         // buf.Grow(n);
         // // Copy full pieces and fragment in.
-        // for
-        //     _, fb : = range full { buf.Write(fb); }
+        // for (int i = 0; i < len(full); i++) {
+        //     buf.Write(full[i]);
+        // }
         // buf.Write(frag);
         // return {buf.String(), err};
     }
@@ -402,126 +429,135 @@ struct writer_t {
     writer_t(IWriter w) : wr(w) {}
 
     // Size ...
-    int Size() { return len(this->buf); }
+    int Size() { return len(buf); }
 
     // Reset ...
     void Reset(IWriter w) {
-        if (this->buf == nil) {
-            this->buf = make(defaultBufSize);
+        auto& b = *this;
+
+        if (b.buf == nil) {
+            b.buf = make(defaultBufSize);
         }
-        this->err = nil;
-        this->n = 0;
-        this->wr = w;
+        b.err = nil;
+        b.n = 0;
+        b.wr = w;
     }
 
     // Flush ...
     error Flush() {
-        if (this->err != nil) {
-            return this->err;
+        auto& b = *this;
+
+        if (b.err != nil) {
+            return b.err;
         }
-        if (this->n == 0) {
+        if (b.n == 0) {
             return nil;
         }
-        AUTO_R(n, _er, this->wr.Write(this->buf(0, this->n)));
+        AUTO_R(n, _er, b.wr.Write(b.buf(0, b.n)));
         err = _er;
-        if (n < this->n && err == nil) {
+        if (n < b.n && err == nil) {
             err = io::ErrShortWrite;
         }
         if (err != nil) {
-            if (n > 0 && n < this->n) {
-                copy(this->buf(0, this->n - n), this->buf(n, this->n));
+            if (n > 0 && n < b.n) {
+                copy(b.buf(0, b.n - n), b.buf(n, b.n));
             };
-            this->n -= n;
-            this->err = err;
+            b.n -= n;
+            b.err = err;
             return err;
         }
-        this->n = 0;
+        b.n = 0;
         return nil;
     }
 
     // Available ...
-    int Available() { return len(this->buf) - this->n; };
+    int Available() { return len(buf) - n; };
 
     // AvailableBuffer ...
-    slice<byte> AvailableBuffer() { return this->buf(this->n)(0, 0); }
+    slice<byte> AvailableBuffer() { return buf(n)(0, 0); }
 
     // Buffered ...
-    int Buffered() { return this->n; }
+    int Buffered() { return n; }
 
     // Write ...
     R<int, error> Write(slice<byte> p) {
+        auto& b = *this;
+
         int nn;
         error err;
-        for (; len(p) > this->Available() && this->err == nil;) {
+        for (; len(p) > b.Available() && b.err == nil;) {
             int n = 0;
-            if (this->Buffered() == 0) {
+            if (b.Buffered() == 0) {
                 // Large write, empty buffer.
                 // Write directly from p to avoid copy.
-                AUTO_R(_n, _e, this->wr.Write(p));
+                AUTO_R(_n, _e, b.wr.Write(p));
                 n = _n;
-                this->err = _e;
+                b.err = _e;
             } else {
-                n = copy(this->buf(this->n), p);
-                this->n += n;
-                this->Flush();
+                n = copy(b.buf(b.n), p);
+                b.n += n;
+                b.Flush();
             }
             nn += n;
             p = p(n);
         }
-        if (this->err != nil) {
-            return {nn, this->err};
+        if (b.err != nil) {
+            return {nn, b.err};
         }
-        int n = copy(this->buf(this->n), p);
-        this->n += n;
+        int n = copy(b.buf(b.n), p);
+        b.n += n;
         nn += n;
         return {nn, nil};
     }
 
     // WriteByte ...
     error WriteByte(byte c) {
-        if (this->err != nil) {
-            return this->err;
+        auto& b = *this;
+
+        if (b.err != nil) {
+            return b.err;
         }
-        if (this->Available() <= 0 && this->Flush() != nil) {
-            return this->err;
+        if (b.Available() <= 0 && b.Flush() != nil) {
+            return b.err;
         }
-        this->buf[this->n] = c;
-        this->n++;
+        b.buf[b.n] = c;
+        b.n++;
         return nil;
     }
 
     // // WriteString ...
     // R<int, error> WriteString(const string& s) {
+    //     auto& b = *this;
     //     io::StringWriter sw;
     //     bool tryStringWriter = true;
 
     //     int nn == 0;
-    //     for (; len(s) > this->Available() && this->err == nil;) {
+    //     for (; len(s) > b.Available() && b.err == nil;) {
     //         var n int;
-    //         if (this->Buffered() == 0 && sw == nil && tryStringWriter) {
-    //             // Check at most once whether this->wr is a StringWriter.
-    //             sw, tryStringWriter = this->wr.(io.StringWriter);
+    //         if (b.Buffered() == 0 && sw == nil && tryStringWriter) {
+    //             // Check at most once whether b.wr is a StringWriter.
+    //             sw, tryStringWriter = b.wr.(io.StringWriter);
     //         }
-    //         if (this->Buffered() == 0 && tryStringWriter) {
+    //         if (b.Buffered() == 0 && tryStringWriter) {
     //             // Large write, empty buffer, and the underlying writer supports
     //             // WriteString: forward the write to the underlying StringWriter.
     //             // This avoids an extra copy.
     //             AUTO_R(_n, _e, sw.WriteString(s));
     //             n = _n;
-    //             this->err = _e;
+    //             b.err = _e;
     //         } else {
-    //             n = copy(this->buf(this->n), s);
-    //             this->n += n;
-    //             this->Flush();
+    //             n = copy(b.buf(b.n), s);
+    //             b.n += n;
+    //             b.Flush();
     //         }
     //         nn += n;
     //         s = s(n);
     //     }
-    //     if (this->err != nil) {
-    //         return {nn, this->err};
+    //     if (b.err != nil) {
+    //         return {nn, b.err};
     //     }
-    //     int n = copy(this->buf(this->n:), s);
-    //     this->n += n;
+    //     int n = copy(b.buf(b.n:), s);
+    //     b.n += n;
     //     nn += n;
     //     return {nn, nil};
     // }
