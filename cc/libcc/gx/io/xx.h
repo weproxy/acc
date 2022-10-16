@@ -13,7 +13,7 @@ namespace io {
 namespace xx {
 
 // has_read ...
-// ----> R<int, error> Read(void*, size_t)
+// ----> R<int, error> Read(slice<byte>)
 template <typename T>
 struct has_read {
    private:
@@ -21,11 +21,12 @@ struct has_read {
     static auto test(U) -> decltype(std::declval<U>()->Read(slice<byte>{}));
 
    public:
-    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
+    static constexpr bool value = !std::is_function<T>::value && !std::is_scalar<T>::value &&
+                                  gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
 // has_write ...
-// ----> R<int, error> Write(const void*, size_t)
+// ----> R<int, error> Write(const slice<byte>)
 template <typename T>
 struct has_write {
    private:
@@ -33,7 +34,8 @@ struct has_write {
     static auto test(U) -> decltype(std::declval<U>()->Write(slice<byte>{}));
 
    public:
-    static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
+    static constexpr bool value = !std::is_function<T>::value && !std::is_scalar<T>::value &&
+                                  gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
 // has_close ...
@@ -45,7 +47,8 @@ struct has_close {
     static auto test(U) -> decltype(std::declval<U>()->Close());
 
    public:
-    static constexpr bool value = !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
+    static constexpr bool value = !std::is_function<T>::value && !std::is_scalar<T>::value &&
+                                  !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
 };
 
 // has_read_write ...

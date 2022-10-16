@@ -34,6 +34,32 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         return er1;
     }
 
+    if (false)
+    {
+        auto _0 = io::NewCloser(rc);
+        auto _1 = io::NewReader(rc);
+        auto _2 = io::NewWriter(rc);
+        auto _3 = io::NewReadWriter(rc);
+        auto _4 = io::NewReadCloser(rc);
+        auto _5 = io::NewWriteCloser(rc);
+        auto _6 = io::NewReadWriteCloser(rc);
+    }
+#if 0
+    {
+        auto r = [](slice<byte>) -> R<int, error> { return {0, nil}; };
+        auto w = [](const slice<byte>) -> R<int, error> { return {0, nil}; };
+        auto c = [] {};
+
+        auto _0 = io::NewCloser(c);
+        auto _1 = io::NewReader(r);
+        auto _2 = io::NewWriter(w);
+        auto _3 = io::NewReadWriter(r, w);
+        auto _4 = io::NewReadCloser(r, c);
+        auto _5 = io::NewWriteCloser(w, c);
+        auto _6 = io::NewReadWriteCloser(r, w, c);
+    }
+#endif
+
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
     //     +-----+-----+-------+------+----------+----------+

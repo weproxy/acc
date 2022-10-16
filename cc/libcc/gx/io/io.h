@@ -44,6 +44,8 @@ typedef std::shared_ptr<xx::readCloser_t> ReadCloser;
 typedef std::shared_ptr<xx::writeCloser_t> WriteCloser;
 typedef std::shared_ptr<xx::readWriteCloser_t> ReadWriteCloser;
 
+////////////////////////////////////////////////////////////////////////////////
+//
 // NewReader ...
 inline Reader NewReader(const ReadFn& fn) { return std::shared_ptr<xx::readerFn_t>(new xx::readerFn_t(fn)); }
 
@@ -73,18 +75,62 @@ inline ReadWriteCloser NewReadWriteCloser(const ReadFn& r, const WriteFn& w, con
     return std::shared_ptr<xx::readWriteCloserFn_t>(new xx::readWriteCloserFn_t(r, w, c));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// NewReader ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
+inline Reader NewReader(T t) {
+    return std::shared_ptr<xx::readerObj_t<T>>(new xx::readerObj_t<T>(t));
+}
+
+// NewWriter ...
+template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
+inline Writer NewWriter(T t) {
+    return std::shared_ptr<xx::writerObj_t<T>>(new xx::writerObj_t<T>(t));
+}
+
+// NewCloser ...
+template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
+inline Closer NewCloser(T t) {
+    return std::shared_ptr<xx::closerObj_t<T>>(new xx::closerObj_t<T>(t));
+}
+
+// NewReadWriter ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
+inline ReadWriter NewReadWriter(T t) {
+    return std::shared_ptr<xx::readWriterObj_t<T>>(new xx::readWriterObj_t<T>(t));
+}
+
+// NewReadCloser ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+inline ReadCloser NewReadCloser(T t) {
+    return std::shared_ptr<xx::readCloserObj_t<T>>(new xx::readCloserObj_t<T>(t));
+}
+
+// NewWriteCloser ...
+template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
+inline WriteCloser NewWriteCloser(T t) {
+    return std::shared_ptr<xx::writeCloserObj_t<T>>(new xx::writeCloserObj_t<T>(t));
+}
+
+// NewReadWriteCloser ...
+template <typename T, typename std::enable_if<
+                          xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+inline ReadWriteCloser NewReadWriteCloser(T t) {
+    return std::shared_ptr<xx::readWriteCloserObj_t<T>>(new xx::readWriteCloserObj_t<T>(t));
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CopingFn ...
 typedef std::function<void(int /*w*/)> CopingFn;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copy ...
 template <typename Writer, typename Reader,
           typename std::enable_if<xx::has_write<Writer>::value && xx::has_read<Reader>::value, int>::type = 0>
 R<size_t /*w*/, error> Copy(Writer w, Reader r, const CopingFn& copingFn = {}) {
     slice<byte> buf = make(1024 * 32);
 
-    size_t witten = 0;
+    size_t written = 0;
     error rerr;
 
     for (;;) {
@@ -92,7 +138,7 @@ R<size_t /*w*/, error> Copy(Writer w, Reader r, const CopingFn& copingFn = {}) {
         if (nr > 0) {
             AUTO_R(nw, er2, w->Write(buf(0, nr)));
             if (nw > 0) {
-                witten += nw;
+                written += nw;
                 if (copingFn) {
                     copingFn(nw);
                 }
@@ -108,7 +154,7 @@ R<size_t /*w*/, error> Copy(Writer w, Reader r, const CopingFn& copingFn = {}) {
         }
     }
 
-    return {witten, rerr};
+    return {written, rerr};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

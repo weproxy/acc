@@ -172,6 +172,139 @@ struct readWriteCloserFn_t : public readWriteCloser_t {
     CloseFn c_;
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// readerObj_t
+template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
+struct readerObj_t : public reader_t {
+    readerObj_t(T t) : t_(t) {}
+    virtual R<int, error> Read(slice<byte> b) override {
+        if (t_) {
+            return t_->Read(b);
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    T t_;
+};
+
+// writerObj_t
+template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
+struct writerObj_t : public writer_t {
+    writerObj_t(T t) : t_(t) {}
+    virtual R<int, error> Write(const slice<byte> b) override {
+        if (t_) {
+            return t_->Write(b);
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    T t_;
+};
+
+// closerObj_t
+template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
+struct closerObj_t : public closer_t {
+    closerObj_t(T t) : t_(t) {}
+    virtual void Close() override {
+        if (t_) {
+            t_->Close();
+        }
+    }
+
+   protected:
+    T t_;
+};
+
+// readWriterObj_t
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
+struct readWriterObj_t : public readWriter_t {
+    readWriterObj_t(T t) : t_(t) {}
+    virtual R<int, error> Read(slice<byte> b) override {
+        if (t_) {
+            return t_->Read(b);
+        }
+        return {0, ErrEOF};
+    }
+    virtual R<int, error> Write(const slice<byte> b) override {
+        if (t_) {
+            return t_->Write(b);
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    T t_;
+};
+
+// readCloserObj_t
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+struct readCloserObj_t : public readCloser_t {
+    readCloserObj_t(T t) : t_(t) {}
+    virtual R<int, error> Read(slice<byte> b) override {
+        if (t_) {
+            return t_->Read(b);
+        }
+        return {0, ErrEOF};
+    }
+    virtual void Close() override {
+        if (t_) {
+            t_->Close();
+        }
+    }
+
+   protected:
+    T t_;
+};
+
+// writeCloserObj_t
+template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
+struct writeCloserObj_t : public writeCloser_t {
+    writeCloserObj_t(T t) : t_(t) {}
+    virtual R<int, error> Write(const slice<byte> b) override {
+        if (t_) {
+            return t_->Write(b);
+        }
+        return {0, ErrEOF};
+    }
+    virtual void Close() override {
+        if (t_) {
+            t_->Close();
+        }
+    }
+
+   protected:
+    T t_;
+};
+
+// readWriteCloserObj_t
+template <typename T, typename std::enable_if<
+                          xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+struct readWriteCloserObj_t : public readWriteCloser_t {
+    readWriteCloserObj_t(T t) : t_(t) {}
+    virtual R<int, error> Read(slice<byte> b) override {
+        if (t_) {
+            return t_->Read(b);
+        }
+        return {0, ErrEOF};
+    }
+    virtual R<int, error> Write(const slice<byte> b) override {
+        if (t_) {
+            return t_->Write(b);
+        }
+        return {0, ErrEOF};
+    }
+    virtual void Close() override {
+        if (t_) {
+            t_->Close();
+        }
+    }
+
+   protected:
+    T t_;
+};
+
 }  // namespace xx
 }  // namespace io
 }  // namespace gx
