@@ -37,4 +37,5 @@ typedef int32 rune;
 #include "defer.h"
 #include "go.h"
 #include "slice.h"
+#include "map.h"
 #include "util.h"

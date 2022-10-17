@@ -2,9 +2,8 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#pragma once
+#include "http.h"
 
-#include "gx/gx.h"
 #include "gx/errors/errors.h"
 
 namespace gx {
@@ -15,31 +14,6 @@ const error ErrBodyNotAllowed = errors::New("http: request method or response st
 const error ErrHijacked = errors::New("http: connection has been hijacked");
 const error ErrContentLength = errors::New("http: wrote more than the declared Content-Length");
 const error ErrWriteAfterFlush = errors::New("unused");
-
-// Header ...
-struct Header {
-    typedef MapPtr<string, slice<string>> Values;
-    Values map_;
-
-    Header& Add(const string& key, const string& val) {
-        // Header
-        return *this;
-    }
-};
-
-namespace xx {
-
-// responseWriter_t ...
-struct responseWriter_t {
-
-};
-
-// ResponseWriter ...
-typedef SharedPtr<responseWriter_t> ResponseWriter;
-}  // namespace xx
-
-// ResponseWriter ...
-using xx::ResponseWriter;
 
 }  // namespace http
 }  // namespace gx

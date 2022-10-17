@@ -30,21 +30,49 @@ using Userinfo = SharedPtr<xx::uinfo_t>;
 
 // Values ...
 struct Values {
-    MapPtr<string, slice<string>> map_;
+    typedef string Key;
+    typedef slice<string> Val;
 
-    Values() : map_(new Map<string, slice<string>>()) {}
+    map<Key, Val> map_;
 
-    slice<string>& operator[](const string& key) { return (*map_)[key]; }
-    const slice<string>& operator[](const string& key) const { return (*map_)[key]; }
+    Values() : map_(makemap<Key, Val>()) {}
 
-    string String() const;
+    slice<string>& operator[](const string& key) { return map_[key]; }
+    const slice<string>& operator[](const string& key) const { map_[key]; }
 
-    const string& Get(const string& key);
-    void Set(const string& key, const string& value);
-    void Add(const string& key, const string& value);
-    void Del(const string& key);
-    bool Has(const string& key);
-    string Encode();
+    string String() const { return GX_SS(map_); }
+
+    const string& Get(const string& key) {
+        AUTO_R(vs, ok, map_(key));
+        if (!ok || len(vs) == 0) {
+            return "";
+        }
+        return vs[0];
+    }
+
+    void Set(const string& key, const string& value) {
+        if (map_) {
+            map_[key] = slice<string>{value};
+        }
+    }
+    void Add(const string& key, const string& value) {
+        if (map_) {
+            map_[key] = append(map_[key], value);
+        }
+    }
+    void Del(const string& key) {
+        if (map_) {
+            map_.del(key);
+        }
+    }
+    bool Has(const string& key) const {
+        AUTO_R(_, ok, map_(key));
+        return ok;
+    }
+
+    // Encode encodes the values into “URL encoded” form
+    // ("bar=baz&foo=quux") sorted by key.
+    string Encode() const;
 };
 
 // ParseQuery ...
@@ -135,6 +163,6 @@ inline R<string, error> PathUnescape(const string& s) { return xx::unescape(s, x
 
 namespace gx {
 namespace unitest {
-void test_strings();
+void test_net_url();
 }  // namespace unitest
 }  // namespace gx

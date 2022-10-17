@@ -213,6 +213,36 @@ R<Values, error> ParseQuery(const string& query) {
     return {m, err};
 }
 
+// Encode encodes the values into “URL encoded” form
+// ("bar=baz&foo=quux") sorted by key.
+string Values::Encode() const {
+    if (!map_) {
+        return "";
+    }
+    strings::Builder buf;
+    slice<string> keys = make<string>(0, len(map_));
+    for (auto& kv : *map_) {
+        keys = append(keys, kv.first);
+    }
+    // sort.Strings(keys)
+    // for _, k := range keys {
+    for (int i = 0; i < len(keys); i++) {
+        auto k = keys[i];
+        auto& vs = map_[k];
+        auto keyEscaped = QueryEscape(k);
+        for (int j = 0; j < len(vs); j++) {
+            auto v = vs[j];
+            if (buf.Len() > 0) {
+                buf.WriteByte('&');
+            }
+            buf.WriteString(keyEscaped);
+            buf.WriteByte('=');
+            buf.WriteString(QueryEscape(v));
+        }
+    }
+    return buf.String();
+}
+
 }  // namespace url
 }  // namespace gx
 

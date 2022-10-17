@@ -11,20 +11,47 @@
 namespace gx {
 namespace http {
 
+// Unless otherwise noted, these are defined in RFC 7231 section 4.3.
+const char* MethodGet = "GET";
+const char* MethodHead = "HEAD";
+const char* MethodPost = "POST";
+const char* MethodPut = "PUT";
+const char* MethodPatch = "PATCH";  // RFC 5789
+const char* MethodDelete = "DELETE";
+const char* MethodConnect = "CONNECT";
+const char* MethodOptions = "OPTIONS";
+const char* MethodTrace = "TRACE";
+
 // Errors used by the HTTP server.
 extern const error ErrBodyNotAllowed;
 extern const error ErrHijacked;
 extern const error ErrContentLength;
 extern const error ErrWriteAfterFlush;
 
+// Header ...
+struct Header : public url::Values {
+    slice<string> Values(const string& key) { return map_[key]; }
+
+    Header Clone() { return {}; }
+};
+
 namespace xx {
-// header_t ...
-struct header_t {
+
+// response_t ...
+struct response_t {
     // ...
 };
 
-// Header ...
-using Header = SharedPtr<header_t>;
+// Response ...
+using Response = SharedPtr<response_t>;
+
+// responseWriter_t ...
+struct responseWriter_t {
+    // ...
+};
+
+// ResponseWriter ...
+using ResponseWriter = SharedPtr<responseWriter_t>;
 
 // request_t ...
 struct request_t {
@@ -49,12 +76,30 @@ struct request_t {
 
     string Host;
 
+    url::Values Form;
+    url::Values PostForm;
+
+    struct Header Trailer;
+
+    string RemoteAdr;
+    string RequestURI;
+
+    Response Response;
 };
+
+// Response ...
+using Request = SharedPtr<request_t>;
 
 };  // namespace xx
 
 // Request ...
-using Request = SharedPtr<xx::request_t>;
+using xx::Request;
+
+// Response ...
+using xx::Response;
+
+// ResponseWriter ...
+using xx::ResponseWriter;
 
 }  // namespace http
 }  // namespace gx
