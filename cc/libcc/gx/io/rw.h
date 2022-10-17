@@ -27,7 +27,7 @@ struct writer_t {
 // closer_t  ...
 struct closer_t {
     virtual ~closer_t() {}
-    virtual void Close() = 0;
+    virtual error Close() = 0;
 };
 
 // readWriter_t  ...
@@ -74,11 +74,7 @@ struct writerFn_t : public writer_t {
 // closerFn_t
 struct closerFn_t : public closer_t {
     closerFn_t(const CloseFn& c) : c_(c) {}
-    virtual void Close() override {
-        if (c_) {
-            c_();
-        }
-    }
+    virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
     CloseFn c_;
@@ -114,11 +110,7 @@ struct readCloserFn_t : public readCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (c_) {
-            c_();
-        }
-    }
+    virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
     ReadFn r_;
@@ -134,11 +126,7 @@ struct writeCloserFn_t : public writeCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (c_) {
-            c_();
-        }
-    }
+    virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
     WriteFn w_;
@@ -160,11 +148,7 @@ struct readWriteCloserFn_t : public readWriteCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (c_) {
-            c_();
-        }
-    }
+    virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
     ReadFn r_;
@@ -207,11 +191,7 @@ struct writerObj_t : public writer_t {
 template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
 struct closerObj_t : public closer_t {
     closerObj_t(T t) : t_(t) {}
-    virtual void Close() override {
-        if (t_) {
-            t_->Close();
-        }
-    }
+    virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
     T t_;
@@ -248,11 +228,7 @@ struct readCloserObj_t : public readCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (t_) {
-            t_->Close();
-        }
-    }
+    virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
     T t_;
@@ -268,11 +244,7 @@ struct writeCloserObj_t : public writeCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (t_) {
-            t_->Close();
-        }
-    }
+    virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
     T t_;
@@ -295,14 +267,16 @@ struct readWriteCloserObj_t : public readWriteCloser_t {
         }
         return {0, ErrEOF};
     }
-    virtual void Close() override {
-        if (t_) {
-            t_->Close();
-        }
-    }
+    virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
     T t_;
+};
+
+// nopCloser_t ...
+struct nopCloser_t : public readCloser_t {
+    virtual R<int, error> Read(slice<byte> b) override { return {0, nil}; }
+    virtual error Close() override { return nil; }
 };
 
 }  // namespace xx

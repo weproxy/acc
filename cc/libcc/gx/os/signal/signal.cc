@@ -15,7 +15,7 @@ namespace xx {
 static Map<int, CallbackFn> _cbs;
 
 // _wgs ...
-static Map<int, std::shared_ptr<WaitGroup>> _wgs;
+static Map<int, SharedPtr<WaitGroup>> _wgs;
 
 // sig_handler ..
 static void sig_handler(int sig) {
@@ -39,7 +39,7 @@ void notify(const std::function<void(int)>& cb, int sig) {
 }
 
 // waitNotify ...
-void waitNotify(std::shared_ptr<WaitGroup> wg, const std::function<void(int)>& cb, int sig) {
+void waitNotify(SharedPtr<WaitGroup> wg, const std::function<void(int)>& cb, int sig) {
     _wgs[sig] = wg;
     notify(cb, sig);
 }

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
 #include "gx/time/time.h"
 
 namespace gx {
@@ -22,7 +21,7 @@ struct limiter_t {
 };
 
 // Limiter ...
-typedef std::shared_ptr<limiter_t> Limiter;
+typedef SharedPtr<limiter_t> Limiter;
 
 }  // namespace rate
 }  // namespace gx

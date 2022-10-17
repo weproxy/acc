@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
 #include "gx/errors/errors.h"
 #include "nlohmann/json.hpp"
 

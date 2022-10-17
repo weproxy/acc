@@ -19,7 +19,7 @@ constexpr const char* TAG = "[proto]";
 // IServer ...
 struct IServer : public io::xx::closer_t {
     virtual error Start() = 0;
-    virtual void Close() = 0;
+    virtual error Close() = 0;
 };
 
 // Server ...

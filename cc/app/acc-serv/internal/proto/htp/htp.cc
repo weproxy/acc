@@ -5,8 +5,8 @@
 #include "htp.h"
 
 #include "../proto.h"
-#include "logx/logx.h"
 #include "gx/net/net.h"
+#include "logx/logx.h"
 
 namespace app {
 namespace proto {
@@ -62,11 +62,12 @@ struct Server : public proto::IServer {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    void Close() override {
+    error Close() override {
         if (ln_) {
             ln_->Close();
         }
         LOGS_D(TAG << " Close()");
+        return nil;
     }
 };
 }  // namespace xx

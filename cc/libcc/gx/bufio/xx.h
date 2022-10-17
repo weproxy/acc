@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 #include "gx/bytes/bytes.h"
 #include "gx/errors/errors.h"
 #include "gx/io/io.h"

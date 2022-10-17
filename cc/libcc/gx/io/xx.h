@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 
 namespace gx {
 namespace io {
@@ -39,7 +39,7 @@ struct has_write {
 };
 
 // has_close ...
-// ----> void Close();
+// ----> error Close();
 template <typename T>
 struct has_close {
    private:
@@ -48,7 +48,7 @@ struct has_close {
 
    public:
     static constexpr bool value = !std::is_function<T>::value && !std::is_scalar<T>::value &&
-                                  !gx::xx::is_same<decltype(test<T>(std::declval<T>())), gx::xx::nil_t>::value;
+                                  gx::xx::is_same<decltype(test<T>(std::declval<T>())), error>::value;
 };
 
 // has_read_write ...

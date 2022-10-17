@@ -16,7 +16,7 @@ using namespace gx;
 struct IHandler : public io::xx::closer_t {
     virtual error Handle(net::Conn c, net::Addr raddr) = 0;
     virtual error HandlePacket(net::PacketConn c, net::Addr raddr) = 0;
-    virtual void Close() = 0;
+    virtual error Close() override = 0;
 };
 
 // Handler ...

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
 #include "gx/io/io.h"
 
 namespace gx {
@@ -33,12 +32,12 @@ namespace gx {
 namespace bufio {
 
 // Reader ...
-template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>
-using Reader = std::shared_ptr<xx::reader_t<IReader>>;
+template <typename T, typename std::enable_if<gx::io::xx::has_read<T>::value, int>::type = 0>
+using Reader = SharedPtr<xx::reader_t<T>>;
 
 // Writer ...
-template <typename IWriter, typename std::enable_if<gx::io::xx::has_write<IWriter>::value, int>::type = 0>
-using Writer = std::shared_ptr<xx::writer_t<IWriter>>;
+template <typename T, typename std::enable_if<gx::io::xx::has_write<T>::value, int>::type = 0>
+using Writer = SharedPtr<xx::writer_t<T>>;
 
 // NewReader ...
 template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>

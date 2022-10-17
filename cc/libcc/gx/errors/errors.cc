@@ -31,7 +31,7 @@ error New(const string& fmt, ...) {
 
     va_end(ap);
 
-    return std::shared_ptr<strerr_t>(new strerr_t(s));
+    return SharedPtr<strerr_t>(new strerr_t(s));
 }
 
 }  // namespace errors

@@ -24,7 +24,12 @@ typedef uint64_t uint64;
 
 typedef uint32_t uint;
 typedef uint8_t byte;
+
+typedef int32 rune;
 }  // namespace gx
+
+// gx_TodoErr ...
+#define gx_TodoErr() errors::New("<TODO> %s:%d %s", __FILE__, __LINE__, __FUNCTION__)
 
 #include "R.h"
 #include "chan.h"

@@ -78,10 +78,10 @@ Addr GetSockAddr(SOCKET fd) { return getFdAddr(fd, false); }
 Addr GetPeerAddr(SOCKET fd) { return getFdAddr(fd, true); }
 
 // CloseRead ...
-void CloseRead(SOCKET fd) { co::shutdown(fd, 'r'); }
+error CloseRead(SOCKET fd) { co::shutdown(fd, 'r') == 0; }
 
 // CloseWrite ...
-void CloseWrite(SOCKET fd) { co::shutdown(fd, 'w'); }
+error CloseWrite(SOCKET fd) { co::shutdown(fd, 'w') == 0; }
 
 }  // namespace xx
 }  // namespace net

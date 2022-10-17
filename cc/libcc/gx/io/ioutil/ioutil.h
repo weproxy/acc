@@ -12,20 +12,14 @@ namespace ioutil {
 // ReadAll ...
 template <typename Reader, typename std::enable_if<io::xx::has_read<Reader>::value, int>::type = 0>
 R<slice<byte>, error> ReadAll(Reader r) {
-    return {{}, ERR_TODO};
+    return io::ReadAll(r);
 }
 
 // ReadFile ...
-inline R<slice<byte>, error> ReadFile(const string& filename) {
-    // TOOD..
-    return {{}, ERR_TODO};
-}
+R<slice<byte>, error> ReadFile(const string& filename);
 
 // WriteFile ...
-inline error WriteFile(const string& filename, const void* data, size_t len) {
-    // TOOD..
-    return ERR_TODO;
-}
+error WriteFile(const string& filename, const void* data, size_t size);
 
 }  // namespace ioutil
 }  // namespace gx

@@ -62,11 +62,12 @@ struct tcpPeer_t : public conn_t {
     }
 
     // Close ...
-    virtual void Close() override {
+    virtual error Close() override {
         if (fd_ > 0) {
             co::close(fd_);
             fd_ = INVALID_SOCKET;
         }
+        return nil;
     }
 
     virtual SOCKET Fd() const override { return fd_; }
@@ -123,15 +124,16 @@ struct tcpServ_t : public listener_t {
         co::set_tcp_keepalive(fd);
         co::set_tcp_nodelay(fd);
 
-        return {std::shared_ptr<tcpPeer_t>(new tcpPeer_t(fd)), nil};
+        return {SharedPtr<tcpPeer_t>(new tcpPeer_t(fd)), nil};
     }
 
     // Close ...
-    virtual void Close() override {
+    virtual error Close() override {
         if (fd_ > 0) {
             co::close(fd_);
             fd_ = INVALID_SOCKET;
         }
+        return nil;
     }
 
     virtual SOCKET Fd() const override { return fd_; }
@@ -191,11 +193,12 @@ struct udpConn_t : public packetConn_t {
     }
 
     // Close ...
-    virtual void Close() override {
+    virtual error Close() override {
         if (fd_ > 0) {
             co::close(fd_);
             fd_ = INVALID_SOCKET;
         }
+        return nil;
     }
 
     // SetDeadline ...
@@ -266,7 +269,7 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
         return {nil, errors::New("listen error: %s", co::strerror())};
     }
 
-    std::shared_ptr<xx::tcpServ_t> ln(new xx::tcpServ_t(fd));
+    SharedPtr<xx::tcpServ_t> ln(new xx::tcpServ_t(fd));
 
     return {ln, nil};
 }
@@ -298,7 +301,7 @@ R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
         return {nil, errors::New("bind %s failed: %s", addr.c_str(), co::strerror())};
     }
 
-    std::shared_ptr<xx::udpConn_t> pc(new xx::udpConn_t(fd));
+    SharedPtr<xx::udpConn_t> pc(new xx::udpConn_t(fd));
 
     return {pc, nil};
 }

@@ -6,7 +6,7 @@
 
 #include <functional>
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 
 namespace gx {
 namespace signal {
@@ -28,11 +28,11 @@ void notify(const CallbackFn& cb, T&& sig, Args&&... args) {
 }
 
 // waitNotify ...
-void waitNotify(std::shared_ptr<WaitGroup> wg, const CallbackFn& cb, int sig);
+void waitNotify(SharedPtr<WaitGroup> wg, const CallbackFn& cb, int sig);
 
 // waitNotify ...
 template <typename T, typename... Args>
-void waitNotify(std::shared_ptr<WaitGroup> wg, const CallbackFn& cb, T&& sig, Args&&... args) {
+void waitNotify(SharedPtr<WaitGroup> wg, const CallbackFn& cb, T&& sig, Args&&... args) {
     waitNotify(wg, cb, std::forward<T>(sig));
     waitNotify(wg, cb, std::forward<Args>(args)...);
 }
@@ -49,7 +49,7 @@ void Notify(const CallbackFn& cb, T&&... sig) {
 // WaitNotify ...
 template <typename... T>
 void WaitNotify(const CallbackFn& cb, T&&... sig) {
-    auto wg = std::shared_ptr<WaitGroup>(new WaitGroup(1));
+    auto wg = SharedPtr<WaitGroup>(new WaitGroup(1));
     xx::waitNotify(wg, cb, std::forward<T>(sig)...);
     wg->Wait();
 }

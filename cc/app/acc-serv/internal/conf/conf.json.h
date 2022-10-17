@@ -35,9 +35,8 @@ const char* DEFAULT_CONF = R"({
         },
         {
             "proto": "htp",
-            "enabled": false,
-            "listen": ":19784",
-            "encrypt":true
+            "enabled": true,
+            "listen": ":19784"
         }
     ]
 })";

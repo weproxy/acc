@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 
 namespace gx {
 namespace net {

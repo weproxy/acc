@@ -59,11 +59,12 @@ struct tcpConn_t : public conn_t {
     }
 
     // Close ...
-    virtual void Close() override {
+    virtual error Close() override {
         if (fd_ > 0) {
             co::close(fd_);
             fd_ = INVALID_SOCKET;
         }
+        return nil;
     }
 
     // SetDeadline ...
@@ -147,7 +148,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
 
     co::set_tcp_nodelay(fd);
 
-    std::shared_ptr<xx::tcpConn_t> c(new xx::tcpConn_t(fd));
+    SharedPtr<xx::tcpConn_t> c(new xx::tcpConn_t(fd));
 
     return {c, nil};
 }

@@ -6,7 +6,7 @@
 
 #include <sys/time.h>
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 
 namespace gx {
 namespace time {

@@ -20,13 +20,26 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 namespace gx {
+
+// SharedPtr ...
+template <typename T>
+using SharedPtr = std::shared_ptr<T>;
+
+// UniquePtr ...
+template <typename T>
+using UniquePtr = std::unique_ptr<T>;
+
+// WeakPtr ...
+template <typename T>
+using WeakPtr = std::weak_ptr<T>;
+
 // Vec ...
 template <typename T>
 using Vec = std::vector<T>;
 
 // VecPtr ...
 template <typename T>
-using VecPtr = std::shared_ptr<Vec<T>>;
+using VecPtr = SharedPtr<Vec<T>>;
 
 // Set ...
 template <typename T>
@@ -34,7 +47,7 @@ using Set = std::set<T>;
 
 // SetPtr ...
 template <typename T>
-using SetPtr = std::shared_ptr<Set<T>>;
+using SetPtr = SharedPtr<Set<T>>;
 
 // HashSet ...
 template <typename T>
@@ -50,7 +63,7 @@ using List = std::list<T>;
 
 // ListPtr ...
 template <typename T>
-using ListPtr = std::shared_ptr<List<T>>;
+using ListPtr = SharedPtr<List<T>>;
 
 // Map ...
 template <typename K, typename V>
@@ -58,7 +71,7 @@ using Map = std::map<K, V>;
 
 // MapPtr ...
 template <typename K, typename V>
-using MapPtr = std::shared_ptr<Map<K, V>>;
+using MapPtr = SharedPtr<Map<K, V>>;
 
 // HashMap ...
 template <typename K, typename V>
@@ -67,6 +80,7 @@ using HashMap = std::unordered_map<K, V>;
 // Deque ...
 template <typename T>
 using Deque = std::deque<T>;
+
 }  // namespace gx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +101,7 @@ struct err_t {
 };
 
 // error ...
-using error = std::shared_ptr<err_t>;
+using error = SharedPtr<err_t>;
 
 // nil ...
 #define nil nullptr
@@ -99,8 +113,5 @@ struct strerr_t : public err_t {
     string s_;
     static error New(const string& s) { return error(new strerr_t(s)); }
 };
-
-// ERR_TODO ...
-#define ERR_TODO errors::New("<TODO> %s:%d %s",  __FILE__, __LINE__, __FUNCTION__)
 
 }  // namespace gx

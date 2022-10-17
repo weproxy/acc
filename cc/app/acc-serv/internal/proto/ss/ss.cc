@@ -87,7 +87,7 @@ struct Server : public proto::IServer {
     }
 
     // Close ...
-    virtual void Close() override {
+    virtual error Close() override {
         if (ln_) {
             ln_->Close();
         }
@@ -96,6 +96,7 @@ struct Server : public proto::IServer {
         }
 
         LOGS_D(TAG << " Close()");
+        return nil;
     }
 };
 

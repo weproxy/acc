@@ -79,6 +79,10 @@ struct slice {
     operator T*() { return data(); }
     operator const T*() const { return data(); }
 
+    // string ...
+    operator string() { return string((char*)data(), size()); }
+    operator string() const { return string((char*)data(), size()); }
+
     int len() const { return size(); }
     int cap() const { return vec_ ? vec_->capcity() : 0; }
 
@@ -157,9 +161,29 @@ slice<T> make(int len = 0, int cap = 0) {
 }
 
 // len ...
+inline int len(const string& s) { return s.length(); }
+
+// len ...
 template <typename T = byte>
 int len(const slice<T>& s) {
     return s.size();
+}
+
+// cap ...
+template <typename T = byte>
+int cap(const slice<T>& s) {
+    return s.vec_ ? (s.vec_->capacity() - s.end_) : 0;
+}
+
+// append ...
+inline slice<byte> append(const slice<byte>& dst, const string& src) {
+    slice<byte> s(dst);
+    if (!src.empty()) {
+        s._create_if_null();
+        s.vec_->insert(s.vec_->begin() + s.end_, src.begin(), src.end());
+        s.end_ += len(src);
+    }
+    return s;
 }
 
 // append ...
@@ -183,6 +207,15 @@ slice<T> append(const slice<T>& dst, const slice<T>& src) {
         s.end_ += len(src);
     }
     return s;
+}
+
+// copy ...
+inline int copy(slice<byte>& dst, const string& src) {
+    int i = 0;
+    for (; i < len(dst) && i < len(src); i++) {
+        dst[i] = src[i];
+    }
+    return i;
 }
 
 // copy ...

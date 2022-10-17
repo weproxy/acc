@@ -196,11 +196,12 @@ struct Server : public proto::IServer {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    void Close() override {
+    error Close() override {
         if (ln_) {
             ln_->Close();
         }
         LOGS_D(TAG << " Close()");
+        return nil;
     }
 };
 }  // namespace xx

@@ -91,22 +91,28 @@ void P(X&&... x) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-#define _LOGS_T_(LEVEL, ...)                                \
-    if (logx::xx::reach(LEVEL)) {                           \
-        std::ostringstream s;                               \
-        s << __VA_ARGS__;                                   \
-        logx::xx::logt(LEVEL, __FILE__, __LINE__, s.str()); \
-    }
+#define _LOGS_T_(LEVEL, ...)                                    \
+    do {                                                        \
+        if (logx::xx::reach(LEVEL)) {                           \
+            std::ostringstream s;                               \
+            s << __VA_ARGS__;                                   \
+            logx::xx::logt(LEVEL, __FILE__, __LINE__, s.str()); \
+        }                                                       \
+    } while (0)
 
-#define _LOGX_T_(LEVEL, ...)                                    \
-    if (logx::xx::reach(LEVEL)) {                               \
-        logx::xx::logt(LEVEL, __FILE__, __LINE__, __VA_ARGS__); \
-    }
+#define _LOGX_T_(LEVEL, ...)                                        \
+    do {                                                            \
+        if (logx::xx::reach(LEVEL)) {                               \
+            logx::xx::logt(LEVEL, __FILE__, __LINE__, __VA_ARGS__); \
+        }                                                           \
+    } while (0)
 
-#define _LOGF_T_(LEVEL, fmt, ...)                                    \
-    if (logx::xx::reach(LEVEL)) {                                    \
-        logx::xx::logf(LEVEL, __FILE__, __LINE__, fmt, __VA_ARGS__); \
-    }
+#define _LOGF_T_(LEVEL, fmt, ...)                                        \
+    do {                                                                 \
+        if (logx::xx::reach(LEVEL)) {                                    \
+            logx::xx::logf(LEVEL, __FILE__, __LINE__, fmt, __VA_ARGS__); \
+        }                                                                \
+    } while (0)
 
 // Global ...
 //    LOGS_D("A" << 1 << 2.3f);

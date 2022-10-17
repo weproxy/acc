@@ -9,7 +9,7 @@ APP ?= ${app}
 CMD ?= ${cmd}
 ARG ?= ${arg}
 
-env ?= release
+env ?= debug
 ENV ?= ${env}
 
 ver ?= $(shell date "+%Y%m%d%H%M")

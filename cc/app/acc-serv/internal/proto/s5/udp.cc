@@ -56,7 +56,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     ~udpSess_t() { Close(); }
 
     // Close ...
-    void Close() {
+    error Close() {
         if (rc_) {
             rc_->Close();
             if (afterClosedFn_) {
@@ -65,6 +65,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
             sta_->Done("closed");
             rc_ = nil;
         }
+        return nil;
     }
 
     // Start ...

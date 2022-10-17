@@ -59,9 +59,9 @@ struct StackHandler : public IHandler {
     virtual error Handle(net::Conn c, net::Addr raddr) { return handleTCP(c, raddr); }
 
     // HandlePacket ...
-    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) { return handleUDP(c, raddr); };
+    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) { return handleUDP(c, raddr); }
 
-    virtual void Close(){};
+    virtual error Close() override { return nil; }
 };
 
 }  // namespace proto

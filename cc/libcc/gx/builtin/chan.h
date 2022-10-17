@@ -35,11 +35,12 @@ struct chan {
     ~chan() { Close(); }
 
     // Close ...
-    void Close() {
+    error Close() {
         if (!closed_) {
             closed_ = true;
             cv_.notify_all();
         }
+        return nil;
     }
 
     // << ...
@@ -87,7 +88,7 @@ struct chan {
 // chan ...
 template <typename T>
 struct chan {
-    typedef std::shared_ptr<xx::chan<T>> ptr_t;
+    typedef SharedPtr<xx::chan<T>> ptr_t;
     ptr_t ptr_;
 
     explicit chan(size_t N = 1) : ptr_(ptr_t(new xx::chan<T>(N))) {}
@@ -108,7 +109,7 @@ struct chan {
     operator bool() const { return !!ptr_; }
 
     // Close
-    void Close() { ptr_->Close(); }
+    error Close() { return ptr_->Close(); }
 };
 
 // makechan ...

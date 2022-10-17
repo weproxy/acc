@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
+#include "builder.h"
 
 namespace gx {
 namespace strings {
@@ -113,7 +114,7 @@ inline Vec<string> Split(const string& s, const string& sep) { return xx::genSpl
 inline Vec<string> SplitAfter(const string& s, const string& sep) { return xx::genSplit(s, sep, sep.length(), -1); }
 
 // Fields ...
-Vec<string> Fields(const string& s);
+slice<string> Fields(const string& s);
 
 // Join ...
 template <typename... T>

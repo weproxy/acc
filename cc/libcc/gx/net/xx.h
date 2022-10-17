@@ -71,7 +71,7 @@ inline R<addr_in_t, int> FromAddr(Addr addr) {
 }
 
 // AddrInfo
-typedef std::shared_ptr<addrInfo_t> AddrInfo;
+typedef SharedPtr<addrInfo_t> AddrInfo;
 
 // GetAddrInfo ...
 typedef R<AddrInfo, error> AddrInfoRet;
@@ -86,10 +86,10 @@ Addr GetSockAddr(SOCKET fd);
 Addr GetPeerAddr(SOCKET fd);
 
 // CloseRead ...
-void CloseRead(SOCKET fd);
+error CloseRead(SOCKET fd);
 
 // CloseWrite ...
-void CloseWrite(SOCKET fd);
+error CloseWrite(SOCKET fd);
 
 }  // namespace xx
 }  // namespace net

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
+#include "gx/gx.h"
 #include "gx/errors/errors.h"
 
 namespace gx {
@@ -35,7 +35,7 @@ struct responseWriter_t {
 };
 
 // ResponseWriter ...
-typedef std::shared_ptr<responseWriter_t> ResponseWriter;
+typedef SharedPtr<responseWriter_t> ResponseWriter;
 }  // namespace xx
 
 // ResponseWriter ...

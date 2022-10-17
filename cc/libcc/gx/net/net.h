@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "gx/builtin/builtin.h"
 #include "gx/errors/errors.h"
 #include "gx/fmt/fmt.h"
 #include "gx/io/io.h"
@@ -37,7 +36,7 @@ struct addr_t final {
 };
 
 // Addr ...
-typedef std::shared_ptr<addr_t> Addr;
+typedef SharedPtr<addr_t> Addr;
 }  // namespace xx
 
 using xx::Addr;
@@ -62,9 +61,12 @@ struct conn_t : public io::xx::closer_t {
     virtual R<int, error> Read(slice<byte> b) = 0;
     virtual R<int, error> Write(const slice<byte> b) = 0;
 
-    virtual void Close() { println("conn_t.Close()"); };
-    virtual void CloseRead() { return xx::CloseRead(Fd()); }
-    virtual void CloseWrite() { return xx::CloseWrite(Fd()); }
+    virtual error Close() {
+        println("conn_t.Close()");
+        return nil;
+    };
+    virtual error CloseRead() { return xx::CloseRead(Fd()); }
+    virtual error CloseWrite() { return xx::CloseWrite(Fd()); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
@@ -77,7 +79,7 @@ struct conn_t : public io::xx::closer_t {
 };
 
 // Conn ...
-typedef std::shared_ptr<conn_t> Conn;
+typedef SharedPtr<conn_t> Conn;
 
 // connWrap_t ...
 struct connWrap_t : public conn_t {
@@ -89,9 +91,9 @@ struct connWrap_t : public conn_t {
     virtual R<int, error> Read(slice<byte> buf) override { return wrap_->Read(buf); }
     virtual R<int, error> Write(const slice<byte> buf) override { return wrap_->Write(buf); }
 
-    virtual void Close() override { wrap_->Close(); };
-    virtual void CloseRead() override { wrap_->CloseRead(); }
-    virtual void CloseWrite() override { wrap_->CloseWrite(); }
+    virtual error Close() override { return wrap_->Close(); };
+    virtual error CloseRead() override { return wrap_->CloseRead(); }
+    virtual error CloseWrite() override { return wrap_->CloseWrite(); }
 
     virtual error SetDeadline(const time::Time& t) override { return wrap_->SetDeadline(t); }
     virtual error SetReadDeadline(const time::Time& t) override { return wrap_->SetReadDeadline(t); }
@@ -111,9 +113,9 @@ struct packetConn_t : public io::xx::closer_t {
     virtual R<int, Addr, error> ReadFrom(slice<byte> b) = 0;
     virtual R<int, error> WriteTo(const slice<byte> b, Addr addr) = 0;
 
-    virtual void Close(){};
-    virtual void CloseRead() { return xx::CloseRead(Fd()); }
-    virtual void CloseWrite() { return xx::CloseWrite(Fd()); }
+    virtual error Close() { return nil; };
+    virtual error CloseRead() { return xx::CloseRead(Fd()); }
+    virtual error CloseWrite() { return xx::CloseWrite(Fd()); }
 
     virtual error SetDeadline(const time::Time& t) { return nil; }
     virtual error SetReadDeadline(const time::Time& t) { return nil; }
@@ -125,7 +127,7 @@ struct packetConn_t : public io::xx::closer_t {
 };
 
 // PacketConn ...
-typedef std::shared_ptr<packetConn_t> PacketConn;
+typedef SharedPtr<packetConn_t> PacketConn;
 
 // packetConnWrap_t ...
 struct packetConnWrap_t : public packetConn_t {
@@ -137,9 +139,9 @@ struct packetConnWrap_t : public packetConn_t {
     virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override { return wrap_->ReadFrom(buf); }
     virtual R<int, error> WriteTo(const slice<byte> buf, Addr addr) override { return wrap_->WriteTo(buf, addr); }
 
-    virtual void Close() override { wrap_->Close(); };
-    virtual void CloseRead() override { wrap_->CloseRead(); }
-    virtual void CloseWrite() override { wrap_->CloseWrite(); }
+    virtual error Close() override { return wrap_->Close(); };
+    virtual error CloseRead() override { return wrap_->CloseRead(); }
+    virtual error CloseWrite() override { return wrap_->CloseWrite(); }
 
     virtual error SetDeadline(const time::Time& t) override { return wrap_->SetDeadline(t); }
     virtual error SetReadDeadline(const time::Time& t) override { return wrap_->SetReadDeadline(t); }
@@ -157,7 +159,7 @@ struct listener_t : public io::xx::closer_t {
 
     virtual R<Conn, error> Accept() = 0;
 
-    virtual void Close(){};
+    virtual error Close() { return nil; }
 
     virtual SOCKET Fd() const = 0;
     virtual Addr Addr() const { return xx::GetSockAddr(Fd()); }
@@ -165,7 +167,7 @@ struct listener_t : public io::xx::closer_t {
 };
 
 // Listener ...
-typedef std::shared_ptr<listener_t> Listener;
+typedef SharedPtr<listener_t> Listener;
 }  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +277,7 @@ struct interface_t {
 }  // namespace xx
 
 // Interface ...
-typedef std::shared_ptr<xx::interface_t> Interface;
+typedef SharedPtr<xx::interface_t> Interface;
 
 // Interfaces ...
 R<Vec<Interface>, error> Interfaces();

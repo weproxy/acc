@@ -28,7 +28,10 @@ struct Handler : public proto::IHandler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    void Close() override { LOGS_D(TAG << " Close()"); }
+    error Close() override {
+        LOGS_D(TAG << " Close()");
+        return nil;
+    }
 };
 }  // namespace xx
 
