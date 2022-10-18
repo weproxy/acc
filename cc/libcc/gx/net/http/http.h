@@ -36,7 +36,6 @@ struct Header : public url::Values {
 };
 
 namespace xx {
-
 // response_t ...
 struct response_t {
     // ...
@@ -53,6 +52,7 @@ struct responseWriter_t {
 // ResponseWriter ...
 using ResponseWriter = Ref<responseWriter_t>;
 
+// GetBodyFn ...
 using GetBodyFn = func<R<io::ReadCloser, error>()>;
 
 // request_t ...
@@ -102,6 +102,11 @@ using xx::Response;
 
 // ResponseWriter ...
 using xx::ResponseWriter;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// NewRequest ...
+R<Request, error> NewRequest(const string& method, const string& url, io::Reader body);
 
 }  // namespace http
 }  // namespace gx

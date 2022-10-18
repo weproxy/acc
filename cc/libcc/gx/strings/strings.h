@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "gx/gx.h"
 #include "builder.h"
+#include "gx/unicode/utf8/utf8.h"
 
 namespace gx {
 namespace strings {
@@ -161,7 +161,59 @@ inline int cutsetRightIndex(const string& s, const string& cutset) {
     }
     return i;
 }
+
+// indexFunc ...
+inline int indexFunc(const string& s, const func<bool(rune)>& f, bool truth) {
+    for (int i = 0; i < len(s); i++) {
+        if (f(s[i]) == truth) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// lastIndexFunc ...
+inline int lastIndexFunc(const string& s, const func<bool(rune)>& f, bool truth) {
+    for (int i = len(s); i > 0;) {
+        AUTO_R(r, size, utf8::DecodeLastRuneInString(s.substr(0, i)));
+        i -= size;
+        if (f(s[i]) == truth) {
+            return i;
+        }
+    }
+    return -1;
+}
 }  // namespace xx
+
+// TrimLeftFunc ...
+inline string TrimLeftFunc(const string& s, const func<bool(rune)>& f) {
+    int i = xx::indexFunc(s, f, false);
+    if (i == -1) {
+        return "";
+    }
+    return s.substr(i);
+}
+
+// TrimRightFunc ...
+inline string TrimRightFunc(const string& s, const func<bool(rune)>& f) {
+    int i = xx::lastIndexFunc(s, f, false);
+    if (i >= 0 && byte(s[i]) >= utf8::RuneSelf) {
+        AUTO_R(_, wid, utf8::DecodeRuneInString(s.substr(i)));
+        i += wid;
+    } else {
+        i++;
+    }
+    return s.substr(0, i);
+}
+
+// TrimFunc ...
+inline string TrimFunc(const string& s, const func<bool(rune)>& f) { return TrimRightFunc(TrimLeftFunc(s, f), f); }
+
+// IndexFunc ...
+inline int IndexFunc(const string& s, const func<bool(rune)>& f) { return xx::indexFunc(s, f, true); }
+
+// LastIndexFunc ...
+inline int LastIndexFunc(const string& s, const func<bool(rune)>& f) { return xx::lastIndexFunc(s, f, true); }
 
 // TrimLeft ...
 inline string TrimLeft(const string& s, const string& cutset) {

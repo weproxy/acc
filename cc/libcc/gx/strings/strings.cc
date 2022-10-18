@@ -4,8 +4,6 @@
 
 #include "strings.h"
 
-#include "gx/unicode/utf8/utf8.h"
-
 namespace gx {
 namespace strings {
 

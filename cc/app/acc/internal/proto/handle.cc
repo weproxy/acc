@@ -56,10 +56,10 @@ static error handleUDP(net::PacketConn c, net::Addr raddr) {
 // StackHandler ...
 struct StackHandler : public IHandler {
     // Handle ...
-    virtual error Handle(net::Conn c, net::Addr raddr) { return handleTCP(c, raddr); }
+    virtual error Handle(net::Conn c, net::Addr raddr) override { return handleTCP(c, raddr); }
 
     // HandlePacket ...
-    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) { return handleUDP(c, raddr); }
+    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) override { return handleUDP(c, raddr); }
 
     virtual error Close() override { return nil; }
 };

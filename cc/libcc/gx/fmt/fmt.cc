@@ -49,7 +49,7 @@ error Errorf(const char* fmt, ...) {
     string s = format(fmt, ap);
     va_end(ap);
 
-    return errors::New(s.c_str());
+    return errors::New(s);
 }
 
 }  // namespace fmt

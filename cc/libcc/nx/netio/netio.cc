@@ -9,12 +9,14 @@
 namespace nx {
 namespace netio {
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Copy ...
 R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
     slice<byte> buf = make(1024 * 32);
 
     size_t written = 0;
-    error rerr;
+    error copyErr;
 
     for (;;) {
         if (opt.ReadTimeout) {
@@ -48,16 +50,18 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
         }
 
         if (err) {
-            rerr = err;
+            copyErr = err;
             break;
         }
     }
 
     // println("io::Copy(", r, "->", w, ")", written, "bytes");
 
-    return {written, rerr};
+    return {written, copyErr};
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Relay ...
 error Relay(net::Conn a, net::Conn b, RelayOption opt) {
     WaitGroup wg(1);
@@ -98,12 +102,14 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
     return errA2B ? errA2B : errB2A;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Copy ...
 R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt) {
     slice<byte> buf = make(1024 * 4);
 
     size_t written = 0;
-    error rerr;
+    error copyErr;
 
     for (;;) {
         if (opt.ReadTimeout) {
@@ -127,17 +133,18 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         }
 
         if (err) {
-            rerr = err;
+            copyErr = err;
             break;
         }
     }
 
     // println("io::Copy(", r, "->", w, ")", written, "bytes");
 
-    return {written, rerr};
+    return {written, copyErr};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // Relay ...
 error Relay(net::PacketConn a, net::PacketConn b, RelayOption opt) {
     WaitGroup wg(1);

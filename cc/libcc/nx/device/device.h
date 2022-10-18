@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gx/io/io.h"
+#include "gx/gx.h"
 
 namespace nx {
 namespace device {

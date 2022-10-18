@@ -14,7 +14,9 @@ namespace gx {
 namespace net {
 
 #ifndef _WIN32
+#ifndef SOCKET
 typedef int SOCKET;
+#endif
 #define INVALID_SOCKET -1
 #endif
 

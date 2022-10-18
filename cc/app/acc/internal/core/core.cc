@@ -88,7 +88,7 @@ void test() {
                 break;
             }
 
-            gx::go([c = c]() {
+            gx::go([c]() {
                 DEFER(println(c, "closed"));
                 io::Copy(c, c);
             });

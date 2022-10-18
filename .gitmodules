@@ -19,3 +19,6 @@
 [submodule "cc/libcc/3rd/botan"]
 	path = cc/libcc/3rd/botan
 	url = https://github.com/randombit/botan
+[submodule "cc/libcc/3rd/PcapPlusPlus"]
+	path = cc/libcc/3rd/PcapPlusPlus
+	url = https://github.com/seladb/PcapPlusPlus

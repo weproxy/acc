@@ -20,11 +20,11 @@ struct Handler : public proto::IHandler {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Handle ...
-    virtual error Handle(net::Conn c, net::Addr raddr) { return nil; }
+    virtual error Handle(net::Conn c, net::Addr raddr) override { return nil; }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // HandlePacket ...
-    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) { return nil; }
+    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) override { return nil; }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
