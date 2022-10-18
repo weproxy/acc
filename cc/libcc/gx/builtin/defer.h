@@ -18,7 +18,7 @@ namespace gx {
 // Defer ...
 struct Defer final {
     Defer() = default;
-    Defer(const std::function<void()>& fn) { defer(fn); }
+    Defer(const func<void()>& fn) { defer(fn); }
 
     ~Defer() {
         for (auto& f : l_) {
@@ -26,14 +26,14 @@ struct Defer final {
         }
     }
 
-    Defer& operator()(const std::function<void()>& fn) {
+    Defer& operator()(const func<void()>& fn) {
         defer(fn);
         return *this;
     }
 
-    void defer(const std::function<void()>& fn) { l_.push_front(fn); }
+    void defer(const func<void()>& fn) { l_.push_front(fn); }
 
-    std::list<std::function<void()>> l_;
+    std::list<func<void()>> l_;
 };
 
 #define _GX_DEFER_CAT(x, n) x##n

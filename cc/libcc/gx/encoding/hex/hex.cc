@@ -5,6 +5,7 @@
 #include "hex.h"
 
 #include "gx/errors/errors.h"
+#include "gx/fmt/fmt.h"
 
 namespace gx {
 namespace hex {
@@ -35,7 +36,7 @@ static const char* reverseHexTable =
 static const error ErrLength = errors::New("encoding/hex: odd length hex string");
 
 // InvalidByteError ...
-static error InvalidByteError(byte e) { return errors::New("encoding/hex: invalid byte: %d", e); }
+static error InvalidByteError(byte e) { return fmt::Errorf("encoding/hex: invalid byte: %d", e); }
 
 static int EncodedLen(int n) { return n * 2; }
 static int DecodedLen(int x) { return x / 2; }

@@ -10,7 +10,7 @@ namespace gx {
 namespace errors {
 
 // New ...
-error New(const string& fmt, ...);
+error New(const string& s);
 
 }  // namespace errors
 }  // namespace gx

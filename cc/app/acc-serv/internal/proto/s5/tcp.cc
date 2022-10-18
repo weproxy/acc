@@ -27,38 +27,13 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     sta->Start("connected");
     DEFER(sta->Done("closed"));
 
+    // dial target server
     AUTO_R(rc, er1, net::Dial(raddr));
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
         socks::WriteReply(c, socks::ReplyHostUnreachable);
         return er1;
     }
-
-    if (false)
-    {
-        auto _0 = io::NewCloser(rc);
-        auto _1 = io::NewReader(rc);
-        auto _2 = io::NewWriter(rc);
-        auto _3 = io::NewReadWriter(rc);
-        auto _4 = io::NewReadCloser(rc);
-        auto _5 = io::NewWriteCloser(rc);
-        auto _6 = io::NewReadWriteCloser(rc);
-    }
-#if 0
-    {
-        auto r = [](slice<byte>) -> R<int, error> { return {0, nil}; };
-        auto w = [](const slice<byte>) -> R<int, error> { return {0, nil}; };
-        auto c = [] {};
-
-        auto _0 = io::NewCloser(c);
-        auto _1 = io::NewReader(r);
-        auto _2 = io::NewWriter(w);
-        auto _3 = io::NewReadWriter(r, w);
-        auto _4 = io::NewReadCloser(r, c);
-        auto _5 = io::NewWriteCloser(w, c);
-        auto _6 = io::NewReadWriteCloser(r, w, c);
-    }
-#endif
 
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
@@ -72,19 +47,19 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         return err;
     }
 
-    netio::RelayOption opt;
-    opt.Read.CopingFn = [sta = sta](int n) { sta->AddRecv(n); };
-    opt.Write.CopingFn = [sta = sta](int n) { sta->AddSent(n); };
+    netio::RelayOption opt(time::Second * 2);
+    opt.A2B.CopingFn = [sta](int n) { sta->AddRecv(n); };
+    opt.B2A.CopingFn = [sta](int n) { sta->AddSent(n); };
 
-    AUTO_R(read, written, er2, netio::Relay(c, rc, opt));
-    if (er2) {
-        if (er2 != net::ErrClosed) {
-            LOGS_E(TAG << " relay " << tag << " , err: " << er2);
+    // Relay c <--> rc
+    err = netio::Relay(c, rc, opt);
+    if (err) {
+        if (err != net::ErrClosed) {
+            LOGS_E(TAG << " relay " << tag << " , err: " << err);
         }
-        return er2;
     }
 
-    return nil;
+    return err;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +84,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     }
 
     // handleUDP
-    gx::go([ln = ln, caddr = caddr, raddr = raddr] {
+    gx::go([ln, caddr, raddr] {
         // raddr is not fixed, it maybe be changed after
         handleUDP(ln, caddr, raddr);
     });

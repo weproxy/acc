@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "gx/gx.h"
 #include "gx/bytes/bytes.h"
 #include "gx/errors/errors.h"
+#include "gx/gx.h"
 #include "gx/io/io.h"
 
 namespace gx {
@@ -109,7 +109,8 @@ struct reader_t {
 
         // 0 <= n <= len(b.buf)
         error err;
-        if (int avail = b.w - b.r; avail < n) {
+        int avail = b.w - b.r;
+        if (avail < n) {
             // not enough data in buffer
             n = avail;
             err = b.readErr();
@@ -270,7 +271,8 @@ struct reader_t {
         int s = 0;  // search start index
         for (;;) {
             // Search buffer.
-            if (int i = bytes::IndexByte(b.buf(b.r + s, b.w), delim); i >= 0) {
+            int i = bytes::IndexByte(b.buf(b.r + s, b.w), delim);
+            if (i >= 0) {
                 i += s;
                 line = b.buf(b.r, b.r + i + 1);
                 b.r += i + 1;
@@ -299,7 +301,8 @@ struct reader_t {
         }
 
         // Handle last byte, if any.
-        if (int i = len(line) - 1; i >= 0) {
+        int i = len(line) - 1;
+        if (i >= 0) {
             b.lastByte = int(line[i]);
             b.lastRuneSize = -1;
         }

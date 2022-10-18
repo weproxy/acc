@@ -40,7 +40,7 @@ struct Handler : public proto::IHandler {
 R<proto::Handler, error> New(const string& servURL) {
     LOGS_V(TAG << " servURL: " << servURL);
 
-    auto s = std::shared_ptr<xx::Handler>(new xx::Handler(servURL));
+    auto s = MakeRef<xx::Handler>(servURL);
 
     return {s, nil};
 }

@@ -29,13 +29,13 @@ typedef int32 rune;
 }  // namespace gx
 
 // gx_TodoErr ...
-#define gx_TodoErr() errors::New("<TODO> %s:%d %s", __FILE__, __LINE__, __FUNCTION__)
+#define gx_TodoErr() fmt::Errorf("<TODO> %s:%d %s", __FILE__, __LINE__, __FUNCTION__)
 
-#include "R.h"
 #include "chan.h"
 #include "def.h"
 #include "defer.h"
 #include "go.h"
-#include "slice.h"
 #include "map.h"
+#include "r.h"
+#include "slice.h"
 #include "util.h"

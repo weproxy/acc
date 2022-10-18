@@ -5,8 +5,8 @@
 #pragma once
 
 #include "../def.h"
-#include "gx/io/io.h"
 #include "gx/encoding/json/json.h"
+#include "gx/io/io.h"
 
 namespace app {
 namespace proto {
@@ -23,10 +23,10 @@ struct IServer : public io::xx::closer_t {
 };
 
 // Server ...
-typedef std::shared_ptr<IServer> Server;
+using Server = Ref<IServer>;
 
 // NewServerFn ...
-typedef std::function<R<Server, error>(const json::J& j)> NewServerFn;
+using NewServerFn = func<R<Server, error>(const json::J& j)>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Register ...

@@ -15,9 +15,9 @@ namespace gx {
 template <typename T>
 struct slice {
     int beg_{0}, end_{0};
-    VecPtr<T> vec_{nullptr};
+    VecRef<T> vec_{nullptr};
 
-    explicit slice(int len, int cap = 0) : end_(len), vec_(VecPtr<T>(new Vec<T>(len))) {
+    explicit slice(int len, int cap = 0) : end_(len), vec_(VecRef<T>(new Vec<T>(len))) {
         if (cap > len) {
             vec_->reserve(cap);
         }
@@ -55,7 +55,10 @@ struct slice {
     slice operator()(int beg, int end = -1) const { return Sub(beg, end); }
 
     // operator =
-    slice& operator=(const slice& r) { _assign(r); }
+    slice& operator=(const slice& r) {
+        _assign(r);
+        return *this;
+    }
 
     // operator =
     slice& operator=(slice&& r) {
@@ -109,7 +112,7 @@ struct slice {
     // _create_if_null ...
     void _create_if_null(int len = 0) {
         if (!vec_) {
-            vec_ = VecPtr<T>(new Vec<T>(len));
+            vec_ = VecRef<T>(new Vec<T>(len));
         }
     }
 

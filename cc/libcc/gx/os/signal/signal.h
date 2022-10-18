@@ -13,7 +13,7 @@ namespace signal {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Callback ...
-typedef std::function<void(int)> CallbackFn;
+using CallbackFn = func<void(int)>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace xx {
@@ -28,11 +28,11 @@ void notify(const CallbackFn& cb, T&& sig, Args&&... args) {
 }
 
 // waitNotify ...
-void waitNotify(SharedPtr<WaitGroup> wg, const CallbackFn& cb, int sig);
+void waitNotify(Ref<WaitGroup> wg, const CallbackFn& cb, int sig);
 
 // waitNotify ...
 template <typename T, typename... Args>
-void waitNotify(SharedPtr<WaitGroup> wg, const CallbackFn& cb, T&& sig, Args&&... args) {
+void waitNotify(Ref<WaitGroup> wg, const CallbackFn& cb, T&& sig, Args&&... args) {
     waitNotify(wg, cb, std::forward<T>(sig));
     waitNotify(wg, cb, std::forward<Args>(args)...);
 }
@@ -49,7 +49,7 @@ void Notify(const CallbackFn& cb, T&&... sig) {
 // WaitNotify ...
 template <typename... T>
 void WaitNotify(const CallbackFn& cb, T&&... sig) {
-    auto wg = SharedPtr<WaitGroup>(new WaitGroup(1));
+    auto wg = MakeRef<WaitGroup>(1);
     xx::waitNotify(wg, cb, std::forward<T>(sig)...);
     wg->Wait();
 }

@@ -71,12 +71,12 @@ inline R<addr_in_t, int> FromAddr(Addr addr) {
 }
 
 // AddrInfo
-typedef SharedPtr<addrInfo_t> AddrInfo;
+using AddrInfo = Ref<addrInfo_t>;
 
 // GetAddrInfo ...
-typedef R<AddrInfo, error> AddrInfoRet;
+using AddrInfoRet = R<AddrInfo, error>;
 AddrInfoRet GetAddrInfo(const string& host, const string& port);
-inline AddrInfoRet GetAddrInfo(const string& host, uint16 port) {return GetAddrInfo(host, GX_SS(port));}
+inline AddrInfoRet GetAddrInfo(const string& host, uint16 port) { return GetAddrInfo(host, GX_SS(port)); }
 AddrInfoRet GetAddrInfo(const string& addr);
 
 // GetSockAddr ...

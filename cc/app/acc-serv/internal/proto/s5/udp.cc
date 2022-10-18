@@ -21,7 +21,7 @@ using namespace nx;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // udpSessPtr ...
 struct udpSess_t;
-typedef std::shared_ptr<udpSess_t> udpSessPtr;
+using udpSessPtr = Ref<udpSess_t>;
 
 // key_t ...
 typedef uint64 key_t;
@@ -35,8 +35,8 @@ static key_t makeKey(net::IP ip, uint16 port) {
 static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
 
 // udpSessMapPtr ...
-typedef Map<key_t, udpSessPtr> udpSessMap;
-typedef std::shared_ptr<udpSessMap> udpSessMapPtr;
+using udpSessMap = Map<key_t, udpSessPtr>;
+using udpSessMapPtr = Ref<udpSessMap>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // udpSess_t ...
@@ -50,7 +50,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     net::PacketConn rc_;  // to target server, it is udpConn_t
     net::Addr caddr_;     // source client addr
     stats::Stats sta_;
-    std::function<void()> afterClosedFn_;
+    func<void()> afterClosedFn_;
 
     udpSess_t(net::PacketConn ln, net::PacketConn rc, net::Addr caddr) : ln_(ln), rc_(rc), caddr_(caddr) {}
     ~udpSess_t() { Close(); }
@@ -77,7 +77,8 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         sta_ = sta;
 
         // loopRecvRC
-        gx::go([thiz = shared_from_this()] {
+        auto thiz = shared_from_this();
+        gx::go([thiz] {
             DEFER(thiz->Close());
 
             slice<byte> buf = make(1024 * 4);
@@ -199,7 +200,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     // wrap ...
     static net::PacketConn wrap(net::PacketConn pc) {
         //
-        return std::shared_ptr<udpConn_t>(new udpConn_t(pc));
+        return MakeRef<udpConn_t>(pc);
     }
 };
 
@@ -213,7 +214,11 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
     // sessMap
     udpSessMapPtr sessMap(new udpSessMap());
-    DEFER(for (auto& kv : *sessMap) { kv.second->Close(); });
+    DEFER({
+        for (auto& kv : *sessMap) {
+            kv.second->Close();
+        }
+    });
 
     DEFER(ln->Close());
 
@@ -262,7 +267,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
             (*sessMap)[key] = sess;
 
             // remove it after rc closed
-            sess->afterClosedFn_ = [sessMap, key = key] { sessMap->erase(key); };
+            sess->afterClosedFn_ = [sessMap, key] { sessMap->erase(key); };
 
             // start recv loop...
             sess->Start();

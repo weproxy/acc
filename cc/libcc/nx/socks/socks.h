@@ -105,7 +105,7 @@ extern const error ErrNoSupportedAuth;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // CheckUserPassFn ...
-typedef std::function<error(const string& user, const string& pass)> CheckUserPassFn;
+using CheckUserPassFn = func<error(const string& user, const string& pass)>;
 
 // ServerAuth ...
 template <typename ReadWriter, typename std::enable_if<io::xx::has_read_write<ReadWriter>::value, int>::type = 0>
@@ -138,7 +138,7 @@ error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& che
         return er2;
     }
     if (buf[0] != UserAuthVersion) {
-        return errors::New("invalid auth version: %d", buf[0]);
+        return fmt::Errorf("invalid auth version: %d", buf[0]);
     }
 
     auto userLen = buf[1];

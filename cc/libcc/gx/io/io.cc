@@ -18,7 +18,7 @@ const error ErrUnexpectedEOF = errors::New("unexpected EOF");
 const error ErrNoProgress = errors::New("multiple Read calls return no data or error");
 
 // Discard ...
-SharedPtr<xx::discard_t> Discard(new xx::discard_t());
+Ref<xx::discard_t> Discard(new xx::discard_t());
 
 }  // namespace io
 }  // namespace gx

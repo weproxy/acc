@@ -21,7 +21,10 @@ struct tcpPeer_t : public conn_t {
     virtual ~tcpPeer_t() { Close(); }
 
     // String ...
-    virtual string String() const override { return GX_SS("tcpPeer_t{" << RemoteAddr() << "}"); }
+    virtual string String() const override {
+        // return "";
+        return GX_SS("tcpPeer_t{" << RemoteAddr() << "}");
+    }
 
     // Read ...
     virtual R<int, error> Read(slice<byte> b) override {
@@ -124,7 +127,7 @@ struct tcpServ_t : public listener_t {
         co::set_tcp_keepalive(fd);
         co::set_tcp_nodelay(fd);
 
-        return {SharedPtr<tcpPeer_t>(new tcpPeer_t(fd)), nil};
+        return {MakeRef<tcpPeer_t>(fd), nil};
     }
 
     // Close ...
@@ -247,7 +250,7 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
 
     SOCKET fd = co::tcp_socket(info->ai_family);
     if (fd <= 0) {
-        return {nil, errors::New("create socket error: %s", co::strerror())};
+        return {nil, fmt::Errorf("create socket error: %s", co::strerror())};
     }
 
     co::set_reuseaddr(fd);
@@ -261,17 +264,15 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
     int r = co::bind(fd, info->ai_addr, (int)info->ai_addrlen);
     if (r < 0) {
         co::close(fd);
-        return {nil, errors::New("bind %s failed: %s", addr.c_str(), co::strerror())};
+        return {nil, fmt::Errorf("bind %s failed: %s", addr.c_str(), co::strerror())};
     }
 
     r = co::listen(fd, 64 * 1024);
     if (r < 0) {
-        return {nil, errors::New("listen error: %s", co::strerror())};
+        return {nil, fmt::Errorf("listen error: %s", co::strerror())};
     }
 
-    SharedPtr<xx::tcpServ_t> ln(new xx::tcpServ_t(fd));
-
-    return {ln, nil};
+    return {MakeRef<xx::tcpServ_t>(fd), nil};
 }
 
 // ListenPacket ...
@@ -284,7 +285,7 @@ R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
 
     SOCKET fd = co::udp_socket(info->ai_family);
     if (fd <= 0) {
-        return {nil, errors::New("create socket error: %s", co::strerror())};
+        return {nil, fmt::Errorf("create socket error: %s", co::strerror())};
     }
 
     co::set_reuseaddr(fd);
@@ -298,12 +299,10 @@ R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
     int r = co::bind(fd, info->ai_addr, (int)info->ai_addrlen);
     if (r < 0) {
         co::close(fd);
-        return {nil, errors::New("bind %s failed: %s", addr.c_str(), co::strerror())};
+        return {nil, fmt::Errorf("bind %s failed: %s", addr.c_str(), co::strerror())};
     }
 
-    SharedPtr<xx::udpConn_t> pc(new xx::udpConn_t(fd));
-
-    return {pc, nil};
+    return {MakeRef<xx::udpConn_t>(fd), nil};
 }
 
 }  // namespace net

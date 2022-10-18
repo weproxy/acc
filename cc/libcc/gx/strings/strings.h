@@ -255,7 +255,7 @@ inline bool EqualFold(const string& s, const string& t) {
 }
 
 // Map ...
-inline string Map(const std::function<void(char&)>& mapping, const string& s) {
+inline string Map(const func<void(char&)>& mapping, const string& s) {
     string t(s);
     for (char& c : t) {
         mapping(c);

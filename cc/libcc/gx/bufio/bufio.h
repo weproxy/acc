@@ -33,11 +33,11 @@ namespace bufio {
 
 // Reader ...
 template <typename T, typename std::enable_if<gx::io::xx::has_read<T>::value, int>::type = 0>
-using Reader = SharedPtr<xx::reader_t<T>>;
+using Reader = Ref<xx::reader_t<T>>;
 
 // Writer ...
 template <typename T, typename std::enable_if<gx::io::xx::has_write<T>::value, int>::type = 0>
-using Writer = SharedPtr<xx::writer_t<T>>;
+using Writer = Ref<xx::writer_t<T>>;
 
 // NewReader ...
 template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>

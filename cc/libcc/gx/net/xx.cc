@@ -33,7 +33,7 @@ AddrInfoRet GetAddrInfo(const string& host, const string& port) {
     AddrInfo info(new addrInfo_t());
     int r = getaddrinfo(host.empty() ? "0.0.0.0" : host.c_str(), port.c_str(), NULL, &info->i);
     if (r < 0) {
-        return {{}, errors::New("invalid address: %s", host.c_str())};
+        return {{}, fmt::Errorf("invalid address: %s", host.c_str())};
     }
 
     return {info, nil};
@@ -78,10 +78,10 @@ Addr GetSockAddr(SOCKET fd) { return getFdAddr(fd, false); }
 Addr GetPeerAddr(SOCKET fd) { return getFdAddr(fd, true); }
 
 // CloseRead ...
-error CloseRead(SOCKET fd) { co::shutdown(fd, 'r') == 0; }
+error CloseRead(SOCKET fd) { return 0 == co::shutdown(fd, 'r') ? nil : errors::New(co::strerror()); }
 
 // CloseWrite ...
-error CloseWrite(SOCKET fd) { co::shutdown(fd, 'w') == 0; }
+error CloseWrite(SOCKET fd) { return 0 == co::shutdown(fd, 'w') ? nil : errors::New(co::strerror()); }
 
 }  // namespace xx
 }  // namespace net

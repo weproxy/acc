@@ -14,14 +14,14 @@ namespace proto {
 //
 // _protos ...
 using ProtoMap = Map<string, NewHandlerFn>;
-static std::unique_ptr<ProtoMap> _protos;
+static Box<ProtoMap> _protos;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Register ...
 void Register(const string& proto, const NewHandlerFn& fn) {
     LOGS_D(TAG << " Register(" << proto << ")");
     if (!_protos) {
-        _protos = std::unique_ptr<ProtoMap>(new ProtoMap);
+        _protos = MakeBox<ProtoMap>();
     }
     (*_protos)[proto] = fn;
 }

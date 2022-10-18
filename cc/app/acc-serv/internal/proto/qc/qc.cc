@@ -31,8 +31,7 @@ struct Server : public proto::IServer {
 // New ...
 static R<proto::Server, error> New(const json::J& j) {
     LOGS_V(TAG << " Conf: " << j);
-    auto s = std::shared_ptr<Server>(new Server);
-    return {s, nil};
+    return {MakeRef<Server>(), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

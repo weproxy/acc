@@ -15,7 +15,7 @@ namespace xx {
 static Map<int, CallbackFn> _cbs;
 
 // _wgs ...
-static Map<int, SharedPtr<WaitGroup>> _wgs;
+static Map<int, Ref<WaitGroup>> _wgs;
 
 // sig_handler ..
 static void sig_handler(int sig) {
@@ -33,13 +33,13 @@ static void sig_handler(int sig) {
 }
 
 // notify ...
-void notify(const std::function<void(int)>& cb, int sig) {
+void notify(const CallbackFn& cb, int sig) {
     _cbs[sig] = cb;
     os::signal(sig, sig_handler);
 }
 
 // waitNotify ...
-void waitNotify(SharedPtr<WaitGroup> wg, const std::function<void(int)>& cb, int sig) {
+void waitNotify(Ref<WaitGroup> wg, const CallbackFn& cb, int sig) {
     _wgs[sig] = wg;
     notify(cb, sig);
 }

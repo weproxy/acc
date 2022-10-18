@@ -123,7 +123,7 @@ std::ostream& operator<<(std::ostream& s, const gx::Vec<T>& t) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& s, const gx::VecPtr<T>& t) {
+std::ostream& operator<<(std::ostream& s, const gx::VecRef<T>& t) {
     s << *t;
     return s;
 }
@@ -143,7 +143,7 @@ std::ostream& operator<<(std::ostream& s, const gx::Set<T>& t) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& s, const gx::SetPtr<T>& t) {
+std::ostream& operator<<(std::ostream& s, const gx::SetRef<T>& t) {
     s << *t;
     return s;
 }
@@ -163,7 +163,7 @@ std::ostream& operator<<(std::ostream& s, const gx::List<T>& t) {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& s, const gx::ListPtr<T>& t) {
+std::ostream& operator<<(std::ostream& s, const gx::ListRef<T>& t) {
     s << *t;
     return s;
 }
@@ -183,12 +183,46 @@ std::ostream& operator<<(std::ostream& s, const gx::Map<K, V>& t) {
 }
 
 template <typename K, typename V>
-std::ostream& operator<<(std::ostream& s, const gx::MapPtr<K, V>& t) {
+std::ostream& operator<<(std::ostream& s, const gx::MapRef<K, V>& t) {
     s << *t;
     return s;
 }
 }  // namespace std
 
+////////////////////////////////////////////////////////////////////////////////
+//
+#ifndef _TCLEAN_
+#define _TCLEAN_ "\033[0m"
+#define _TWEAK_ "\033[2m"
+#define _TULINE_ "\033[4m"
+
+#define _TBLACK_ "\033[30m"
+#define _TRED_ "\033[31m"
+#define _TGREEN_ "\033[32m"
+#define _TYELLOW_ "\033[33m"
+#define _TBLUE_ "\033[34m"
+#define _TMAGENTA_ "\033[35m"
+#define _TCYAN_ "\033[36m"
+#define _TWHITE_ "\033[37m"
+#endif
+
+// GX_LOG ...
+#define GX_LOG_(tag, color, ...)                                                  \
+    do {                                                                          \
+        std::ostringstream ss;                                                    \
+        ss << _TCLEAN_ _TWEAK_ << __FILE__ << ":" << __LINE__ << " " << _TCLEAN_; \
+        ss << tag << color << __VA_ARGS__ << _TCLEAN_ << std::endl;               \
+        std::cout << ss.str();                                                    \
+    } while (0)
+
+#define GX_LOGD(...) GX_LOG_("[D]", _TWHITE_, __VA_ARGS__)
+#define GX_LOGI(...) GX_LOG_("[I]", _TGREEN_, __VA_ARGS__)
+#define GX_LOGW(...) GX_LOG_("[W]", _TYELLOW_, __VA_ARGS__)
+#define GX_LOGE(...) GX_LOG_("[E]", _TRED_, __VA_ARGS__)
+#define GX_LOGV(...) GX_LOG_("[V]", _TCYAN_ _TWEAK_, __VA_ARGS__)
+
+////////////////////////////////////////////////////////////////////////////////
+//
 namespace gx {
 namespace unitest {
 void test_defer();

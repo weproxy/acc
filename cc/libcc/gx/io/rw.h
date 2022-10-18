@@ -119,7 +119,7 @@ struct readCloserFn_t : public readCloser_t {
 
 // writeCloserFn_t
 struct writeCloserFn_t : public writeCloser_t {
-    writeCloserFn_t(const WriteFn& w, const CloseFn& c) : w_(w_), c_(c) {}
+    writeCloserFn_t(const WriteFn& w, const CloseFn& c) : w_(w), c_(c) {}
     virtual R<int, error> Write(const slice<byte> b) override {
         if (w_) {
             return w_(b);

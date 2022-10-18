@@ -43,7 +43,7 @@ struct response_t {
 };
 
 // Response ...
-using Response = SharedPtr<response_t>;
+using Response = Ref<response_t>;
 
 // responseWriter_t ...
 struct responseWriter_t {
@@ -51,7 +51,9 @@ struct responseWriter_t {
 };
 
 // ResponseWriter ...
-using ResponseWriter = SharedPtr<responseWriter_t>;
+using ResponseWriter = Ref<responseWriter_t>;
+
+using GetBodyFn = func<R<io::ReadCloser, error>()>;
 
 // request_t ...
 struct request_t {
@@ -66,7 +68,7 @@ struct request_t {
 
     io::ReadCloser Body;
 
-    std::function<R<io::ReadCloser, error>()> GetBody;
+    GetBodyFn GetBody;
 
     int64 ContentLength{0};
 
@@ -88,7 +90,7 @@ struct request_t {
 };
 
 // Response ...
-using Request = SharedPtr<request_t>;
+using Request = Ref<request_t>;
 
 };  // namespace xx
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "gx/errors/errors.h"
+#include "gx/fmt/fmt.h"
 
 namespace gx {
 namespace url {
@@ -26,23 +27,22 @@ struct uinfo_t {
 }  // namespace xx
 
 // Userinfo ...
-using Userinfo = SharedPtr<xx::uinfo_t>;
+using Userinfo = Ref<xx::uinfo_t>;
 
 // Values ...
 struct Values {
-    typedef string Key;
-    typedef slice<string> Val;
+    using K = string;
+    using V = slice<string>;
 
-    map<Key, Val> map_;
+    map<K, V> map_;
 
-    Values() : map_(makemap<Key, Val>()) {}
-
-    slice<string>& operator[](const string& key) { return map_[key]; }
-    const slice<string>& operator[](const string& key) const { map_[key]; }
+    V& operator[](const K& key) { return map_[key]; }
+    const V& operator[](const K& key) const { return map_[key]; }
 
     string String() const { return GX_SS(map_); }
 
-    const string& Get(const string& key) {
+    // Get ...
+    string Get(const K& key) const {
         AUTO_R(vs, ok, map_(key));
         if (!ok || len(vs) == 0) {
             return "";
@@ -50,22 +50,29 @@ struct Values {
         return vs[0];
     }
 
-    void Set(const string& key, const string& value) {
+    // Set ...
+    void Set(const K& key, const string& val) {
         if (map_) {
-            map_[key] = slice<string>{value};
+            map_[key] = V{val};
         }
     }
-    void Add(const string& key, const string& value) {
+
+    // Add ...
+    void Add(const K& key, const string& val) {
         if (map_) {
-            map_[key] = append(map_[key], value);
+            map_[key] = append(map_[key], val);
         }
     }
-    void Del(const string& key) {
+
+    // Del ...
+    void Del(const K& key) {
         if (map_) {
-            map_.del(key);
+            map_.Del(key);
         }
     }
-    bool Has(const string& key) const {
+
+    // Has ...
+    bool Has(const K& key) const {
         AUTO_R(_, ok, map_(key));
         return ok;
     }
@@ -112,7 +119,7 @@ struct url_t {
 }  // namespace xx
 
 // URL ...
-using URL = SharedPtr<xx::url_t>;
+using URL = Ref<xx::url_t>;
 
 }  // namespace url
 }  // namespace gx
@@ -125,11 +132,11 @@ namespace gx {
 namespace url {
 
 // EscapeError ...
-inline error EscapeError(const string& s) { return errors::New("invalid URL escape \"%s\"", s.c_str()); }
+inline error EscapeError(const string& s) { return fmt::Errorf("invalid URL escape \"%s\"", s.c_str()); }
 
 // InvalidHostError ...
 inline error InvalidHostError(const string& s) {
-    return errors::New("invalid character \"%s\" in host name", s.c_str());
+    return fmt::Errorf("invalid character \"%s\" in host name", s.c_str());
 }
 
 // User ...

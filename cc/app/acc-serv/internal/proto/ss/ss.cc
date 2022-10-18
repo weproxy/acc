@@ -52,7 +52,7 @@ struct Server : public proto::IServer {
         ln_ = ln;
         pc_ = pc;
 
-        gx::go([ln = ln_] {
+        gx::go([ln] {
             for (;;) {
                 AUTO_R(c, err, ln->Accept());
                 if (err) {
@@ -62,11 +62,11 @@ struct Server : public proto::IServer {
 
                 LOGS_V(TAG << " accept() " << c->RemoteAddr());
 
-                gx::go([c = c] { handleConn(c); });
+                gx::go([c] { handleConn(c); });
             }
         });
 
-        gx::go([pc = pc_] {
+        gx::go([pc] {
             slice<byte> buf = make(1024 * 8);
 
             for (;;) {
@@ -112,9 +112,7 @@ static R<proto::Server, error> New(const json::J& j) {
         return {nil, errors::New("invalid addr")};
     }
 
-    auto s = std::shared_ptr<xx::Server>(new xx::Server(addr));
-
-    return {s, nil};
+    return {MakeRef<xx::Server>(string(addr)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

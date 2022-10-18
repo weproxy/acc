@@ -13,7 +13,7 @@ set_xmakever("2.3.1")
 
 -- set common flags
 set_languages("c++11")
-set_warnings("-Wc++14-extensions all")     -- -Wall
+set_warnings("error")     -- -Wall
 
 add_rules("mode.debug")
 if is_mode("debug") then

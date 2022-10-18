@@ -66,7 +66,7 @@ struct addr_t {
 }  // namespace xx
 
 // Addr ...
-typedef std::shared_ptr<xx::addr_t> Addr;
+using Addr = Ref<xx::addr_t>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ToNetAddr ...

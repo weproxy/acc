@@ -19,10 +19,12 @@ typedef int SOCKET;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // error
 extern const error ErrClosed;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // addr_t ...
 namespace xx {
 struct addr_t final {
@@ -36,7 +38,7 @@ struct addr_t final {
 };
 
 // Addr ...
-typedef SharedPtr<addr_t> Addr;
+using Addr = Ref<addr_t>;
 }  // namespace xx
 
 using xx::Addr;
@@ -53,6 +55,7 @@ inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return Addr(new xx
 namespace gx {
 namespace net {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // conn_t ...
 namespace xx {
 struct conn_t : public io::xx::closer_t {
@@ -64,7 +67,7 @@ struct conn_t : public io::xx::closer_t {
     virtual error Close() {
         println("conn_t.Close()");
         return nil;
-    };
+    }
     virtual error CloseRead() { return xx::CloseRead(Fd()); }
     virtual error CloseWrite() { return xx::CloseWrite(Fd()); }
 
@@ -79,7 +82,7 @@ struct conn_t : public io::xx::closer_t {
 };
 
 // Conn ...
-typedef SharedPtr<conn_t> Conn;
+using Conn = Ref<conn_t>;
 
 // connWrap_t ...
 struct connWrap_t : public conn_t {
@@ -106,6 +109,7 @@ struct connWrap_t : public conn_t {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // packetConn_t ...
 struct packetConn_t : public io::xx::closer_t {
     virtual ~packetConn_t() {}
@@ -127,7 +131,7 @@ struct packetConn_t : public io::xx::closer_t {
 };
 
 // PacketConn ...
-typedef SharedPtr<packetConn_t> PacketConn;
+using PacketConn = Ref<packetConn_t>;
 
 // packetConnWrap_t ...
 struct packetConnWrap_t : public packetConn_t {
@@ -153,6 +157,7 @@ struct packetConnWrap_t : public packetConn_t {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 // listener_t ...
 struct listener_t : public io::xx::closer_t {
     virtual ~listener_t() {}
@@ -167,7 +172,7 @@ struct listener_t : public io::xx::closer_t {
 };
 
 // Listener ...
-typedef SharedPtr<listener_t> Listener;
+using Listener = Ref<listener_t>;
 }  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -176,12 +181,15 @@ using xx::Conn;
 using xx::Listener;
 using xx::PacketConn;
 
+using ControlFn = func<error(const string& addr, SOCKET fd)>;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// Dialer ...
 struct Dialer final {
     Addr LocalAddr;
     time::Duration Timeout;
-    std::function<error(const string& addr, SOCKET fd)> Control;
+    ControlFn Control;
 
    public:
     // Dial ...
@@ -198,10 +206,9 @@ inline R<Conn, error> Dial(const Addr addr, int ms = 5000) { return DefaultDiale
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
 // ListenConfig ...
 struct ListenConfig final {
-    std::function<error(const string& addr, SOCKET fd)> Control;
+    ControlFn Control;
 
    public:
     // Listen ...
@@ -226,7 +233,6 @@ inline R<PacketConn, error> ListenPacket(const Addr addr) { return DefaultListen
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
 // SplitHostPort ...
 R<string, int, error> SplitHostPort(const string& addr);
 
@@ -242,7 +248,6 @@ R<Vec<IP>, error> LookupIP(const string& host);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-
 // Flags ...
 enum Flags {
     FlagUp = 1 << 1,            // interface is up
@@ -277,7 +282,7 @@ struct interface_t {
 }  // namespace xx
 
 // Interface ...
-typedef SharedPtr<xx::interface_t> Interface;
+using Interface = Ref<xx::interface_t>;
 
 // Interfaces ...
 R<Vec<Interface>, error> Interfaces();

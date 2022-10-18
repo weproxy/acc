@@ -20,34 +20,45 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 namespace gx {
-
-// SharedPtr ...
+// Ref ...
 template <typename T>
-using SharedPtr = std::shared_ptr<T>;
+using Ref = std::shared_ptr<T>;
 
-// UniquePtr ...
+// Box ...
 template <typename T>
-using UniquePtr = std::unique_ptr<T>;
+using Box = std::unique_ptr<T>;
 
-// WeakPtr ...
+// Weak ...
 template <typename T>
-using WeakPtr = std::weak_ptr<T>;
+using Weak = std::weak_ptr<T>;
+
+// func ...
+template <typename T>
+using func = std::function<T>;
 
 // Vec ...
 template <typename T>
 using Vec = std::vector<T>;
 
-// VecPtr ...
+// VecRef ...
 template <typename T>
-using VecPtr = SharedPtr<Vec<T>>;
+using VecRef = Ref<Vec<T>>;
+
+// VecBox ...
+template <typename T>
+using VecBox = Box<Vec<T>>;
 
 // Set ...
 template <typename T>
 using Set = std::set<T>;
 
-// SetPtr ...
+// SetRef ...
 template <typename T>
-using SetPtr = SharedPtr<Set<T>>;
+using SetRef = Ref<Set<T>>;
+
+// SetBox ...
+template <typename T>
+using SetBox = Box<Set<T>>;
 
 // HashSet ...
 template <typename T>
@@ -61,17 +72,25 @@ using MultiSet = std::multiset<T>;
 template <typename T>
 using List = std::list<T>;
 
-// ListPtr ...
+// ListRef ...
 template <typename T>
-using ListPtr = SharedPtr<List<T>>;
+using ListRef = Ref<List<T>>;
+
+// ListRef ...
+template <typename T>
+using ListBox = Box<List<T>>;
 
 // Map ...
 template <typename K, typename V>
 using Map = std::map<K, V>;
 
-// MapPtr ...
+// MapRef ...
 template <typename K, typename V>
-using MapPtr = SharedPtr<Map<K, V>>;
+using MapRef = Ref<Map<K, V>>;
+
+// MapBox ...
+template <typename K, typename V>
+using MapBox = Box<Map<K, V>>;
 
 // HashMap ...
 template <typename K, typename V>
@@ -81,6 +100,30 @@ using HashMap = std::unordered_map<K, V>;
 template <typename T>
 using Deque = std::deque<T>;
 
+}  // namespace gx
+
+////////////////////////////////////////////////////////////////////////////////
+#if __cplusplus < 201402L  // < C++14
+namespace std {
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+}  // namespace std
+#endif
+
+namespace gx {
+// MakeRef ...
+template <typename T, typename... Args>
+Ref<T> MakeRef(Args&&... args) {
+    return std::make_shared<T, Args...>(std::forward<Args>(args)...);
+}
+
+// MakeBox ...
+template <typename T, typename... Args>
+Box<T> MakeBox(Args&&... args) {
+    return std::make_unique<T, Args...>(std::forward<Args>(args)...);
+}
 }  // namespace gx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +144,7 @@ struct err_t {
 };
 
 // error ...
-using error = SharedPtr<err_t>;
+using error = Ref<err_t>;
 
 // nil ...
 #define nil nullptr

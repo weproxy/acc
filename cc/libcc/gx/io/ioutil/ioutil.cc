@@ -4,6 +4,8 @@
 
 #include "ioutil.h"
 
+#include "gx/fmt/fmt.h"
+
 namespace gx {
 namespace ioutil {
 

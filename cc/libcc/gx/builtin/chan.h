@@ -12,7 +12,7 @@
 #include <thread>
 #include <tuple>
 
-#include "R.h"
+#include "r.h"
 #include "def.h"
 #include "go.h"
 
@@ -88,15 +88,16 @@ struct chan {
 // chan ...
 template <typename T>
 struct chan {
-    typedef SharedPtr<xx::chan<T>> ptr_t;
-    ptr_t ptr_;
+    using D = xx::chan<T>;
+    using P = Ref<D>;
+    P p_;
 
-    explicit chan(size_t N = 1) : ptr_(ptr_t(new xx::chan<T>(N))) {}
+    explicit chan(size_t N = 1) : p_(MakeRef<D>(N)) {}
     ~chan() { Close(); }
 
     // <<, >>
-    error operator<<(const T& t) const { return (*ptr_) << t; }
-    error operator>>(T& t) const { return (*ptr_) >> t; }
+    error operator<<(const T& t) const { return (*p_) << t; }
+    error operator>>(T& t) const { return (*p_) >> t; }
 
     // ()
     R<T, error> operator()() const {
@@ -106,10 +107,10 @@ struct chan {
     }
 
     // bool() ...
-    operator bool() const { return !!ptr_; }
+    operator bool() const { return !!p_; }
 
     // Close
-    error Close() { return ptr_->Close(); }
+    error Close() { return p_->Close(); }
 };
 
 // makechan ...

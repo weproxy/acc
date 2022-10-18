@@ -4,6 +4,8 @@
 
 #include "server.h"
 
+#include "gx/fmt/fmt.h"
+
 namespace app {
 namespace server {
 
@@ -12,7 +14,7 @@ R<io::Closer, error> Start() {
     error err;
 
     if (1) {
-        err = errors::New("failed on port: %d", 1122);
+        err = fmt::Errorf("failed on port: %d", 1122);
     }
 
     return {nil, err};

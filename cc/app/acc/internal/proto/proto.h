@@ -10,15 +10,15 @@
 
 namespace app {
 namespace proto {
-using nx::stack::IHandler;
 using nx::stack::Handler;
+using nx::stack::IHandler;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TAG ...
 constexpr const char* TAG = "[proto]";
 
 // NewHandlerFn ...
-typedef std::function<R<Handler, error>(const string& servURL)> NewHandlerFn;
+using NewHandlerFn = func<R<Handler, error>(const string& servURL)>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Register ...

@@ -114,7 +114,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
 
     SOCKET fd = co::tcp_socket(info->ai_family);
     if (fd < 0) {
-        return {nil, errors::New("create socket error: %s", co::strerror())};
+        return {nil, fmt::Errorf("create socket error: %s", co::strerror())};
     }
 
     if (this->LocalAddr) {
@@ -128,7 +128,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
         int r = co::bind(fd, info->ai_addr, (int)info->ai_addrlen);
         if (r < 0) {
             co::close(fd);
-            return {nil, errors::New("bind error: %s", co::strerror())};
+            return {nil, fmt::Errorf("bind error: %s", co::strerror())};
         }
     }
 
@@ -143,14 +143,12 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
     int r = co::connect(fd, info->ai_addr, (int)info->ai_addrlen, ms);
     if (r != 0) {
         co::close(fd);
-        return {nil, errors::New("dial %s error: %s", addr.c_str(), co::strerror())};
+        return {nil, fmt::Errorf("dial %s error: %s", addr.c_str(), co::strerror())};
     }
 
     co::set_tcp_nodelay(fd);
 
-    SharedPtr<xx::tcpConn_t> c(new xx::tcpConn_t(fd));
-
-    return {c, nil};
+    return {MakeRef<xx::tcpConn_t>(fd), nil};
 }
 
 // Dial ...

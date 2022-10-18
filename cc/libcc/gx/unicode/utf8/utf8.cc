@@ -11,39 +11,39 @@ namespace xx {
 const int surrogateMin = 0xD800;
 const int surrogateMax = 0xDFFF;
 
-const int t1 = 0b00000000;
-const int tx = 0b10000000;
-const int t2 = 0b11000000;
-const int t3 = 0b11100000;
-const int t4 = 0b11110000;
-const int t5 = 0b11111000;
+const uint8 t1 = 0b00000000;
+const uint8 tx = 0b10000000;
+const uint8 t2 = 0b11000000;
+const uint8 t3 = 0b11100000;
+const uint8 t4 = 0b11110000;
+const uint8 t5 = 0b11111000;
 
-const int maskx = 0b00111111;
-const int mask2 = 0b00011111;
-const int mask3 = 0b00001111;
-const int mask4 = 0b00000111;
+const uint8 maskx = 0b00111111;
+const uint8 mask2 = 0b00011111;
+const uint8 mask3 = 0b00001111;
+const uint8 mask4 = 0b00000111;
 
 const int rune1Max = (1 << 7) - 1;
 const int rune2Max = (1 << 11) - 1;
 const int rune3Max = (1 << 16) - 1;
 
-// The default lowest and highest continuation byte.
-const int locb = 0b10000000;
-const int hicb = 0b10111111;
+// The default lowest and highest continuation uint8.
+const uint8 locb = 0b10000000;
+const uint8 hicb = 0b10111111;
 
 // These names of these constants are chosen to give nice alignment in the
 // table below. The first nibble is an index into acceptRanges or F for
 // special one-byte cases. The second nibble is the Rune length or the
 // Status for the special one-byte case.
-const int xx = 0xF1;  // invalid: size 1
-const int as = 0xF0;  // ASCII: size 1
-const int s1 = 0x02;  // accept 0, size 2
-const int s2 = 0x13;  // accept 1, size 3
-const int s3 = 0x03;  // accept 0, size 3
-const int s4 = 0x23;  // accept 2, size 3
-const int s5 = 0x34;  // accept 3, size 4
-const int s6 = 0x04;  // accept 0, size 4
-const int s7 = 0x44;  // accept 4, size 4
+const uint8 xx = 0xF1;  // invalid: size 1
+const uint8 as = 0xF0;  // ASCII: size 1
+const uint8 s1 = 0x02;  // accept 0, size 2
+const uint8 s2 = 0x13;  // accept 1, size 3
+const uint8 s3 = 0x03;  // accept 0, size 3
+const uint8 s4 = 0x23;  // accept 2, size 3
+const uint8 s5 = 0x34;  // accept 3, size 4
+const uint8 s6 = 0x04;  // accept 0, size 4
+const uint8 s7 = 0x44;  // accept 4, size 4
 
 // first is information about the first byte in a UTF-8 sequence.
 static const uint8 first[256] = {
@@ -111,7 +111,7 @@ int EncodeRune(slice<byte> p, rune r) {
         p[1] = xx::tx | byte(r) & xx::maskx;
         return 2;
     } else {
-        if (i > MaxRune, xx::surrogateMin <= i && i <= xx::surrogateMax) {
+        if (i > MaxRune || (xx::surrogateMin <= i && i <= xx::surrogateMax)) {
             r = RuneError;
         }
         if (i <= xx::rune3Max) {
@@ -136,15 +136,15 @@ static slice<byte> appendRuneNonASCII(const slice<byte> p, rune r) {
     if (i <= xx::rune2Max) {
         return append(p, xx::t2 | byte(r >> 6), xx::tx | byte(r) & xx::maskx);
     } else {
-        if (i > MaxRune, xx::surrogateMin <= i && i <= xx::surrogateMax) {
+        if (i > MaxRune || (xx::surrogateMin <= i && i <= xx::surrogateMax)) {
             r = RuneError;
         }
 
         if (i <= xx::rune3Max) {
             return append(p, xx::t3 | byte(r >> 12), xx::tx | byte(r >> 6) & xx::maskx, xx::tx | byte(r) & xx::maskx);
         } else {
-            return append(p, xx::t4 | byte(r >> 18), xx::tx | byte(r >> 12) & xx::maskx, xx::tx | byte(r >> 6) & xx::maskx,
-                          xx::tx | byte(r) & xx::maskx);
+            return append(p, xx::t4 | byte(r >> 18), xx::tx | byte(r >> 12) & xx::maskx,
+                          xx::tx | byte(r >> 6) & xx::maskx, xx::tx | byte(r) & xx::maskx);
         }
     }
 }
@@ -217,13 +217,13 @@ int RuneCountInString(const string& s) {
             continue;
         }
         const auto& accept = xx::acceptRanges[x >> 4];
-        if (s[i + 1] < accept.lo || accept.hi < s[i + 1]) {
+        if (byte(s[i + 1]) < accept.lo || accept.hi < byte(s[i + 1])) {
             size = 1;
         } else if (size == 2) {
-        } else if (s[i + 2] < xx::locb || xx::hicb < s[i + 2]) {
+        } else if (byte(s[i + 2]) < xx::locb || xx::hicb < byte(s[i + 2])) {
             size = 1;
         } else if (size == 3) {
-        } else if (s[i + 3] < xx::locb || xx::hicb < s[i + 3]) {
+        } else if (byte(s[i + 3]) < xx::locb || xx::hicb < byte(s[i + 3])) {
             size = 1;
         }
         i += size;
@@ -246,7 +246,7 @@ bool Valid(const slice<byte> p1) {
         // on many platforms. See test/codegen/memcombine.go.
         uint32 first32 = uint32(p[0]) | uint32(p[1]) << 8 | uint32(p[2]) << 16 | uint32(p[3]) << 24;
         uint32 second32 = uint32(p[4]) | uint32(p[5]) << 8 | uint32(p[6]) << 16 | uint32(p[7]) << 24;
-        if ((first32 | second32) & 0x80808080 != 0) {
+        if ((first32 | (second32) & 0x80808080) != 0) {
             // Found a non ASCII byte (>= RuneSelf).
             break;
         }
@@ -293,7 +293,7 @@ bool ValidString(const string& s1) {
         // on many platforms. See test/codegen/memcombine.go.
         uint32 first32 = uint32(s[0]) | uint32(s[1]) << 8 | uint32(s[2]) << 16 | uint32(s[3]) << 24;
         uint32 second32 = uint32(s[4]) | uint32(s[5]) << 8 | uint32(s[6]) << 16 | uint32(s[7]) << 24;
-        if ((first32 | second32) & 0x80808080 != 0) {
+        if ((first32 | (second32) & 0x80808080) != 0) {
             // Found a non ASCII byte (>= RuneSelf).
             break;
         }
@@ -315,13 +315,13 @@ bool ValidString(const string& s1) {
             return false;  // Short or invalid.
         }
         const auto& accept = xx::acceptRanges[x >> 4];
-        if (s[i + 1] < accept.lo || accept.hi < s[i + 1]) {
+        if (byte(s[i + 1]) < accept.lo || accept.hi < byte(s[i + 1])) {
             return false;
         } else if (size == 2) {
-        } else if (s[i + 2] < xx::locb || xx::hicb < s[i + 2]) {
+        } else if (byte(s[i + 2]) < xx::locb || xx::hicb < byte(s[i + 2])) {
             return false;
         } else if (size == 3) {
-        } else if (s[i + 3] < xx::locb || xx::hicb < s[i + 3]) {
+        } else if (byte(s[i + 3]) < xx::locb || xx::hicb < byte(s[i + 3])) {
             return false;
         }
         i += size;
@@ -371,9 +371,9 @@ bool FullRuneInString(const string& s) {
     }
     // Must be short or invalid.
     const auto& accept = xx::acceptRanges[x >> 4];
-    if (n > 1 && (s[1] < accept.lo || accept.hi < s[1])) {
+    if (n > 1 && (byte(s[1]) < accept.lo || accept.hi < byte(s[1]))) {
         return true;
-    } else if (n > 2 && (s[2] < xx::locb || xx::hicb < s[2])) {
+    } else if (n > 2 && (byte(s[2]) < xx::locb || xx::hicb < byte(s[2]))) {
         return true;
     }
     return false;

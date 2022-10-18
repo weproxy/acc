@@ -57,7 +57,7 @@ struct conf_t {
 //
 
 // Conf ...
-typedef std::shared_ptr<xx::conf_t> Conf;
+using Conf = Ref<xx::conf_t>;
 
 // NewFromJSON ...
 R<Conf, error> NewFromJSON(const string& jsonContent);

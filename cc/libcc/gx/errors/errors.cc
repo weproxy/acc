@@ -15,24 +15,7 @@ struct strerr_t : public err_t {
 };
 
 // New ...
-error New(const string& fmt, ...) {
-    string s;
-
-    va_list ap;
-    va_start(ap, fmt);
-
-    // vasprintf 会自动分配，调用者负责释放
-    char* ptr = 0;
-    int len = vasprintf(&ptr, fmt.c_str(), ap);
-    if (ptr) {
-        s.assign(ptr, len);
-        std::free(ptr);
-    }
-
-    va_end(ap);
-
-    return SharedPtr<strerr_t>(new strerr_t(s));
-}
+error New(const string& s) { return MakeRef<strerr_t>(s); }
 
 }  // namespace errors
 }  // namespace gx

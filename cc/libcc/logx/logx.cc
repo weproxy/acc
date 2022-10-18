@@ -29,6 +29,7 @@ static struct global_init {
 
 namespace logx {
 
+#ifndef _TCLEAN_
 #define _TCLEAN_ "\033[0m"
 #define _TWEAK_ "\033[2m"
 #define _TULINE_ "\033[4m"
@@ -41,6 +42,7 @@ namespace logx {
 #define _TMAGENTA_ "\033[35m"
 #define _TCYAN_ "\033[36m"
 #define _TWHITE_ "\033[37m"
+#endif
 
 namespace xx {
 // conf ...

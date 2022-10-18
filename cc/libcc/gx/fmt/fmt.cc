@@ -10,12 +10,12 @@ namespace gx {
 namespace fmt {
 
 // format ...
-static string format(const string& fmt, va_list& ap) {
+static string format(const char* fmt, va_list& ap) {
     string s;
 
     // vasprintf 会自动分配，调用者负责释放
     char* ptr = 0;
-    int len = vasprintf(&ptr, fmt.c_str(), ap);
+    int len = vasprintf(&ptr, fmt, ap);
     if (ptr) {
         s.assign(ptr, len);
         std::free(ptr);
@@ -25,8 +25,8 @@ static string format(const string& fmt, va_list& ap) {
 }
 
 // Sprintf ...
-string Sprintf(const string& fmt, ...) {
-    if (fmt.empty()) {
+string Sprintf(const char* fmt, ...) {
+    if (!fmt || !fmt[0]) {
         return "";
     }
 
@@ -39,8 +39,8 @@ string Sprintf(const string& fmt, ...) {
 }
 
 // Errorf ...
-error Errorf(const string& fmt, ...) {
-    if (fmt.empty()) {
+error Errorf(const char* fmt, ...) {
+    if (!fmt || !fmt[0]) {
         return errors::New("error");
     }
 
@@ -49,7 +49,7 @@ error Errorf(const string& fmt, ...) {
     string s = format(fmt, ap);
     va_end(ap);
 
-    return errors::New(s);
+    return errors::New(s.c_str());
 }
 
 }  // namespace fmt

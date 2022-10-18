@@ -92,6 +92,8 @@ bool shouldEscape(byte c, encoding mode) {
                     return true;
                 case encodeFragment:  // §4.1
                     return false;
+                default:
+                    break;
             }
             break;
     }
@@ -191,7 +193,7 @@ R<string, error> unescape(const string& ss, encoding mode) {
                 i++;
                 break;
             default:
-                if ((mode == encodeHost || mode == encodeZone) && s[i] < 0x80 && shouldEscape(s[i], mode)) {
+                if ((mode == encodeHost || mode == encodeZone) && byte(s[i]) < 0x80 && shouldEscape(s[i], mode)) {
                     return {"", InvalidHostError(s.substr(i, i + 1))};
                 }
                 i++;
@@ -362,7 +364,7 @@ R<URL, error> parse(const string& rawURL, bool viaRequest) {
         return {nil, errors::New("empty url")};
     }
 
-    URL url = SharedPtr<url_t>(new url_t());
+    URL url = Ref<url_t>(new url_t());
 
     if (rawURL == "*") {
         url->Path = "*";

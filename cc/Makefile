@@ -50,3 +50,6 @@ build: pre config
 
 run: build
 	xmake run
+
+clean: config
+	xmake clean

@@ -10,10 +10,10 @@ namespace gx {
 namespace fmt {
 
 // Sprintf ...
-string Sprintf(const string& fmt, ...);
+string Sprintf(const char* fmt, ...);
 
 // Errorf ...
-error Errorf(const string& fmt, ...);
+error Errorf(const char* fmt, ...);
 
 }  // namespace fmt
 }  // namespace gx

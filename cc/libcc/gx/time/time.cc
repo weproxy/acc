@@ -40,7 +40,7 @@ Time Now() {
 }
 
 // AfterFunc ...
-bool AfterFunc(const Time& t, const std::function<void()>& fn) { return false; }
+bool AfterFunc(const Time& t, const func<void()>& fn) { return false; }
 
 // Sleep
 void Sleep(const Duration& d) { sleep::ms(d.Milliseconds()); }

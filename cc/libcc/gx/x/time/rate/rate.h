@@ -21,7 +21,7 @@ struct limiter_t {
 };
 
 // Limiter ...
-typedef SharedPtr<limiter_t> Limiter;
+typedef Ref<limiter_t> Limiter;
 
 }  // namespace rate
 }  // namespace gx

@@ -2,8 +2,6 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#pragma once
-
 #include "netio.h"
 
 #include "gx/time/time.h"
@@ -19,6 +17,9 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
     error rerr;
 
     for (;;) {
+        if (opt.ReadTimeout) {
+            r->SetReadDeadline(time::Now().Add(opt.ReadTimeout));
+        }
         AUTO_R(nr, err, r->Read(buf));
         if (nr > 0) {
             if (opt.Limit) {
@@ -31,6 +32,9 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
                 }
             }
 
+            if (opt.WriteTimeout) {
+                w->SetWriteDeadline(time::Now().Add(opt.WriteTimeout));
+            }
             AUTO_R(nw, er2, w->Write(buf(0, nr)));
             if (nw > 0) {
                 written += nw;
@@ -55,43 +59,43 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
 }
 
 // Relay ...
-R<size_t /*r*/, size_t /*w*/, error> Relay(net::Conn c, net::Conn rc, RelayOption opt) {
+error Relay(net::Conn a, net::Conn b, RelayOption opt) {
     WaitGroup wg(1);
 
-    size_t written = 0;
-    error werr;
+    error errA2B;
 
-    // rc <- c
+    // a -> b
     gx::go([&] {
-        DEFER([&] {
-            rc->CloseWrite();
-            rc->SetReadDeadline(time::Now());
+        DEFER({
+            b->CloseWrite();
+            b->SetReadDeadline(time::Now());
             wg.Done();
-        }());
+        });
 
-        if (opt.ToWrite.Data) {
-            AUTO_R(w, e, rc->Write(opt.ToWrite.Data));
+        if (opt.ToB.Data) {
+            if (opt.A2B.WriteTimeout) {
+                b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
+            }
+            AUTO_R(_, e, b->Write(opt.ToB.Data));
             if (e) {
-                written += w;
-                werr = e;
+                errA2B = e;
                 return;
             }
         }
 
-        AUTO_R(w, e, netio::Copy(rc, c, opt.Read));
-        written += w;
-        werr = e;
+        AUTO_R(_, e, netio::Copy(b, a, opt.A2B));
+        errA2B = e;
     });
 
-    // c <- rc
-    AUTO_R(read, rerr, netio::Copy(c, rc, opt.Write));
+    // a <- b
+    AUTO_R(_, errB2A, netio::Copy(a, b, opt.B2A));
 
-    c->CloseWrite();
-    c->SetReadDeadline(time::Now());
+    a->CloseWrite();
+    a->SetReadDeadline(time::Now());
 
     wg.Wait();
 
-    return {read, written, werr ? werr : rerr};
+    return errA2B ? errA2B : errB2A;
 }
 
 // Copy ...
@@ -102,8 +106,14 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
     error rerr;
 
     for (;;) {
+        if (opt.ReadTimeout) {
+            r->SetReadDeadline(time::Now().Add(opt.ReadTimeout));
+        }
         AUTO_R(nr, addr, err, r->ReadFrom(buf));
         if (nr > 0) {
+            if (opt.WriteTimeout) {
+                w->SetWriteDeadline(time::Now().Add(opt.WriteTimeout));
+            }
             AUTO_R(nw, er2, w->WriteTo(buf(0, nr), addr));
             if (nw > 0) {
                 written += nw;
@@ -129,43 +139,43 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Relay ...
-R<size_t /*r*/, size_t /*w*/, error> Relay(net::PacketConn c, net::PacketConn rc, RelayOption opt) {
+error Relay(net::PacketConn a, net::PacketConn b, RelayOption opt) {
     WaitGroup wg(1);
 
-    size_t written = 0;
-    error werr;
+    error errA2B;
 
-    // rc <- c
+    // a -> b
     gx::go([&] {
-        DEFER([&] {
-            rc->CloseWrite();
-            rc->SetReadDeadline(time::Now());
+        DEFER({
+            b->CloseWrite();
+            b->SetReadDeadline(time::Now());
             wg.Done();
-        }());
+        });
 
-        if (opt.ToWrite.Data && opt.ToWrite.Addr) {
-            AUTO_R(w, e, rc->WriteTo(opt.ToWrite.Data, opt.ToWrite.Addr));
+        if (opt.ToB.Data && opt.ToB.Addr) {
+            if (opt.A2B.WriteTimeout) {
+                b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
+            }
+            AUTO_R(_, e, b->WriteTo(opt.ToB.Data, opt.ToB.Addr));
             if (e) {
-                written += w;
-                werr = e;
+                errA2B = e;
                 return;
             }
         }
 
-        AUTO_R(w, e, netio::Copy(rc, c, opt.Read));
-        written += w;
-        werr = e;
+        AUTO_R(_, e, netio::Copy(b, a, opt.A2B));
+        errA2B = e;
     });
 
-    // c <- rc
-    AUTO_R(read, rerr, netio::Copy(c, rc, opt.Write));
+    // a <- b
+    AUTO_R(_, errB2A, netio::Copy(a, b, opt.B2A));
 
-    c->CloseWrite();
-    c->SetReadDeadline(time::Now());
+    a->CloseWrite();
+    a->SetReadDeadline(time::Now());
 
     wg.Wait();
 
-    return {read, written, werr ? werr : rerr};
+    return errA2B ? errA2B : errB2A;
 }
 
 }  // namespace netio

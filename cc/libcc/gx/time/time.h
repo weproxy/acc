@@ -16,7 +16,7 @@ namespace time {
 struct Duration {
     Duration(int64 d = 0) : d_(d) {}
 
-    // operator int64()
+    // operator int64() ...
     operator int64() const { return d_; }
 
     double Hours() const;
@@ -59,7 +59,7 @@ struct Time {
     // Sub ...
     Duration Sub(const Time& t) const;
 
-    // bool operator
+    // operator bool() ...
     operator bool() const { return !IsZero(); }
 
     // String ...
@@ -73,7 +73,7 @@ struct Time {
     int64 UnixMicro() const { return t_.tv_sec * 1e6 + t_.tv_nsec / 1e3; }
     int64 UnixNano() const { return t_.tv_sec * 1e9 + t_.tv_nsec; }
 
-//    private:
+    //    private:
     struct timespec t_;
 };
 
@@ -96,7 +96,7 @@ Time Now();
 inline bool IsZero(const Time& t) { return t.IsZero(); }
 
 // AfterFunc ...
-bool AfterFunc(const Time& t, const std::function<void()>& fn);
+bool AfterFunc(const Time& t, const func<void()>& fn);
 
 // Sleep
 void Sleep(const Duration& d);

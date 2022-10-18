@@ -6,15 +6,15 @@
 
 #include <atomic>
 
-#include "nx/nx.h"
 #include "gx/time/time.h"
 #include "gx/x/time/rate/rate.h"
+#include "nx/nx.h"
 
 namespace nx {
 namespace stats {
 using namespace gx;
 
-constexpr char* TAG = "[stats]";
+constexpr const char* TAG = "[stats]";
 
 enum Type {
     TypeDirect = 0,
@@ -289,7 +289,7 @@ struct stats_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Stats ...
-typedef std::shared_ptr<xx::stats_t> Stats;
+using Stats = Ref<xx::stats_t>;
 
 // NewStats ...
 inline Stats NewStats(Type typ, const string& tag, bool tcp) { return Stats(new xx::stats_t(typ, tag, tcp)); }

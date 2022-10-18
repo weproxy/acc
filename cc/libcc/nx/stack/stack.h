@@ -20,7 +20,7 @@ struct IHandler : public io::xx::closer_t {
 };
 
 // Handler ...
-typedef std::shared_ptr<IHandler> Handler;
+using Handler = Ref<IHandler>;
 
 // ...
 }  // namespace stack
