@@ -67,12 +67,7 @@ struct readWriteCloser_t : public reader_t, public writer_t, public closer_t {};
 // readerFn_t
 struct readerFn_t : public reader_t {
     readerFn_t(const ReadFn& r) : r_(r) {}
-    virtual R<int, error> Read(slice<byte> b) override {
-        if (r_) {
-            return r_(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(slice<byte> b) override { return r_(b); }
 
    protected:
     ReadFn r_;
@@ -81,12 +76,7 @@ struct readerFn_t : public reader_t {
 // writerFn_t
 struct writerFn_t : public writer_t {
     writerFn_t(const WriteFn& w) : w_(w) {}
-    virtual R<int, error> Write(const slice<byte> b) override {
-        if (w_) {
-            return w_(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Write(const slice<byte> b) override { return w_(b); }
 
    protected:
     WriteFn w_;
@@ -104,18 +94,8 @@ struct closerFn_t : public closer_t {
 // readWriterFn_t
 struct readWriterFn_t : public readWriter_t {
     readWriterFn_t(const ReadFn& r, const WriteFn& w) : r_(r), w_(w) {}
-    virtual R<int, error> Read(slice<byte> b) override {
-        if (r_) {
-            return r_(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual R<int, error> Write(const slice<byte> b) override {
-        if (w_) {
-            return w_(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(slice<byte> b) override { return r_(b); }
+    virtual R<int, error> Write(const slice<byte> b) override { return w_(b); }
 
    protected:
     ReadFn r_;
@@ -125,13 +105,8 @@ struct readWriterFn_t : public readWriter_t {
 // readCloserFn_t
 struct readCloserFn_t : public readCloser_t {
     readCloserFn_t(const ReadFn& r, const CloseFn& c) : r_(r), c_(c) {}
-    virtual R<int, error> Read(slice<byte> b) override {
-        if (r_) {
-            return r_(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual error Close() override { return c_ ? c_() : nil; }
+    virtual R<int, error> Read(slice<byte> b) override { return r_(b); }
+    virtual error Close() override { return c_(); }
 
    protected:
     ReadFn r_;
@@ -141,13 +116,8 @@ struct readCloserFn_t : public readCloser_t {
 // writeCloserFn_t
 struct writeCloserFn_t : public writeCloser_t {
     writeCloserFn_t(const WriteFn& w, const CloseFn& c) : w_(w), c_(c) {}
-    virtual R<int, error> Write(const slice<byte> b) override {
-        if (w_) {
-            return w_(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual error Close() override { return c_ ? c_() : nil; }
+    virtual R<int, error> Write(const slice<byte> b) override { return w_(b); }
+    virtual error Close() override { return c_(); }
 
    protected:
     WriteFn w_;
@@ -157,18 +127,8 @@ struct writeCloserFn_t : public writeCloser_t {
 // readWriteCloserFn_t
 struct readWriteCloserFn_t : public readWriteCloser_t {
     readWriteCloserFn_t(const ReadFn& r, const WriteFn& w, const CloseFn& c) : r_(r), w_(w), c_(c) {}
-    virtual R<int, error> Read(slice<byte> b) override {
-        if (r_) {
-            return r_(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual R<int, error> Write(const slice<byte> b) override {
-        if (w_) {
-            return w_(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(slice<byte> b) override { return r_(b); }
+    virtual R<int, error> Write(const slice<byte> b) override { return w_(b); }
     virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
@@ -211,12 +171,7 @@ struct stringWriter_t {
 // byteReaderFn_t
 struct byteReaderFn_t : public byteReader_t {
     byteReaderFn_t(const ReadByteFn& r) : r_(r) {}
-    virtual R<byte, error> ReadByte() override {
-        if (r_) {
-            return r_();
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<byte, error> ReadByte() override { return r_(); }
 
    protected:
     ReadByteFn r_;
@@ -225,18 +180,8 @@ struct byteReaderFn_t : public byteReader_t {
 // byteScannerFn_t
 struct byteScannerFn_t : public byteScanner_t {
     byteScannerFn_t(const ReadByteFn& r, const UnreadByteFn& f) : r_(r), f_(f) {}
-    virtual R<byte, error> ReadByte() override {
-        if (r_) {
-            return r_();
-        }
-        return {0, ErrEOF};
-    }
-    virtual error UnreadByte() override {
-        if (f_) {
-            return f_();
-        }
-        return ErrEOF;
-    }
+    virtual R<byte, error> ReadByte() override { return r_(); }
+    virtual error UnreadByte() override { return f_(); }
 
    protected:
     ReadByteFn r_;
@@ -246,12 +191,7 @@ struct byteScannerFn_t : public byteScanner_t {
 // byteWriterFn_t
 struct byteWriterFn_t : public byteWriter_t {
     byteWriterFn_t(const WriteByteFn& w) : w_(w) {}
-    virtual error WriteByte(byte c) override {
-        if (w_) {
-            return w_(c);
-        }
-        return ErrEOF;
-    }
+    virtual error WriteByte(byte c) override { return w_(c); }
 
    protected:
     WriteByteFn w_;
@@ -260,12 +200,7 @@ struct byteWriterFn_t : public byteWriter_t {
 // runeReaderFn_t
 struct runeReaderFn_t : public runeReader_t {
     runeReaderFn_t(const ReadByteFn& r) : r_(r) {}
-    virtual R<rune, error> ReadRune() override {
-        if (r_) {
-            return r_();
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<rune, error> ReadRune() override { return r_(); }
 
    protected:
     ReadRuneFn r_;
@@ -274,18 +209,8 @@ struct runeReaderFn_t : public runeReader_t {
 // runeScannerFn_t
 struct runeScannerFn_t : public runeScanner_t {
     runeScannerFn_t(const ReadRuneFn& r, const UnreadRuneFn& f) : r_(r), f_(f) {}
-    virtual R<rune, error> ReadRune() override {
-        if (r_) {
-            return r_();
-        }
-        return {0, ErrEOF};
-    }
-    virtual error UnreadRune() override {
-        if (f_) {
-            return f_();
-        }
-        return ErrEOF;
-    }
+    virtual R<rune, error> ReadRune() override { return r_(); }
+    virtual error UnreadRune() override { return f_(); }
 
    protected:
     ReadRuneFn r_;
@@ -295,12 +220,7 @@ struct runeScannerFn_t : public runeScanner_t {
 // stringWriterFn_t
 struct stringWriterFn_t : public stringWriter_t {
     stringWriterFn_t(const WriteStringFn& w) : w_(w) {}
-    virtual R<int, error> WriteString(const string& s) override {
-        if (w_) {
-            return w_(s);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> WriteString(const string& s) override { return w_(s); }
 
    protected:
     WriteStringFn w_;
@@ -500,44 +420,44 @@ inline StringWriter NewStringWriterFn(const WriteStringFn& w) { return NewRef<xx
 //
 // NewReader ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
-inline Reader NewReader(T t) {
+Reader NewReader(T t) {
     return NewRef<xx::readerObj_t<T>>(t);
 }
 
 // NewWriter ...
 template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
-inline Writer NewWriter(T t) {
+Writer NewWriter(T t) {
     return NewRef<xx::writerObj_t<T>>(t);
 }
 
 // NewCloser ...
 template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
-inline Closer NewCloser(T t) {
+Closer NewCloser(T t) {
     return NewRef<xx::closerObj_t<T>>(t);
 }
 
 // NewReadWriter ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
-inline ReadWriter NewReadWriter(T t) {
+ReadWriter NewReadWriter(T t) {
     return NewRef<xx::readWriterObj_t<T>>(t);
 }
 
 // NewReadCloser ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
-inline ReadCloser NewReadCloser(T t) {
+ReadCloser NewReadCloser(T t) {
     return NewRef<xx::readCloserObj_t<T>>(t);
 }
 
 // NewWriteCloser ...
 template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
-inline WriteCloser NewWriteCloser(T t) {
+WriteCloser NewWriteCloser(T t) {
     return NewRef<xx::writeCloserObj_t<T>>(t);
 }
 
 // NewReadWriteCloser ...
 template <typename T, typename std::enable_if<
                           xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
-inline ReadWriteCloser NewReadWriteCloser(T t) {
+ReadWriteCloser NewReadWriteCloser(T t) {
     return NewRef<xx::readWriteCloserObj_t<T>>(t);
 }
 

@@ -12,27 +12,39 @@
 namespace gx {
 namespace bufio {
 
+extern const error ErrInvalidUnreadByte;
+extern const error ErrInvalidUnreadRune;
+extern const error ErrBufferFull;
+extern const error ErrNegativeCount;
+
+// defaultBufSize ..
+constexpr int defaultBufSize = 4096;
+constexpr int minReadBufferSize = 16;
+constexpr int maxConsecutiveEmptyReads = 100;
+
+extern const error errNegativeRead;
+
 namespace xx {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // reader_t ...
-template <typename IReader, typename std::enable_if<gx::io::xx::has_read<IReader>::value, int>::type = 0>
+template <typename Reader, typename std::enable_if<gx::io::xx::has_read<Reader>::value, int>::type = 0>
 struct reader_t {
     slice<byte> buf;   //
-    IReader rd;        // reader provided by the client
+    Reader rd;        // reader provided by the client
     int r{0}, w{0};    // buf read and write positions
     error err;         //
     int lastByte;      // last byte read for UnreadByte; -1 means invalid
     int lastRuneSize;  // size of last rune read for UnreadRune; -1 means invalid
 
-    reader_t(IReader r) : rd(r) {}
+    reader_t(Reader r) : rd(r) {}
 
     // Size ...
     int Size() { return len(buf); }
 
     // Reset ...
-    void Reset(IReader r) {
+    void Reset(Reader r) {
         if (!buf) {
             buf = make(defaultBufSize);
         }
@@ -40,7 +52,7 @@ struct reader_t {
     }
 
     // reset ...
-    void reset(slice<byte> buf, IReader r) {
+    void reset(slice<byte> buf, Reader r) {
         auto& b = *this;
         b.buf = buf;
         b.rd = r;
@@ -422,20 +434,20 @@ struct reader_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // writer_t ...
-template <typename IWriter, typename std::enable_if<gx::io::xx::has_write<IWriter>::value, int>::type = 0>
+template <typename Writer, typename std::enable_if<gx::io::xx::has_write<Writer>::value, int>::type = 0>
 struct writer_t {
     error err;
     slice<byte> buf;
     int n{0};
-    IWriter wr;
+    Writer wr;
 
-    writer_t(IWriter w) : wr(w) {}
+    writer_t(Writer w) : wr(w) {}
 
     // Size ...
     int Size() { return len(buf); }
 
     // Reset ...
-    void Reset(IWriter w) {
+    void Reset(Writer w) {
         auto& b = *this;
 
         if (b.buf == nil) {
@@ -569,12 +581,10 @@ struct writer_t {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // readWriter_t ...
-template <typename IReader, typename IWriter,
-          typename std::enable_if<gx::io::xx::has_read<IReader>::value && gx::io::xx::has_write<IReader>::IWriter,
+template <typename Reader, typename Writer,
+          typename std::enable_if<gx::io::xx::has_read<Reader>::value && gx::io::xx::has_write<Reader>::Writer,
                                   int>::type = 0>
-struct readWriter_t {
-    IReader rd;
-    IWriter wr;
+struct readWriter_t : public reader_t<Reader>, public writer_t<Writer> {
 };
 
 }  // namespace xx
