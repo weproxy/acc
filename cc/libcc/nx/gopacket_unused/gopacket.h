@@ -54,7 +54,7 @@ struct packet {
     // layers contains each layer we've already decoded
     slice<Layer> layers;
     // last is the last layer added to the packet
-    Layer* last;
+    Ref<Layer> last;
     // metadata is the PacketMetadata for this packet
     PacketMetadata metadata;
 

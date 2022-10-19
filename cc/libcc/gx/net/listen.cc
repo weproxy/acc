@@ -116,7 +116,7 @@ struct tcpServ_t : public listener_t {
             return {nil, ErrClosed};
         }
 
-        addr_in_t addr;
+        AddrIn addr;
         int addrlen = sizeof(addr);
 
         SOCKET fd = co::accept(fd_, &addr, &addrlen);
@@ -127,7 +127,7 @@ struct tcpServ_t : public listener_t {
         co::set_tcp_keepalive(fd);
         co::set_tcp_nodelay(fd);
 
-        return {MakeRef<tcpPeer_t>(fd), nil};
+        return {NewRef<tcpPeer_t>(fd), nil};
     }
 
     // Close ...
@@ -159,7 +159,7 @@ struct udpConn_t : public packetConn_t {
             return {0, nil, ErrClosed};
         }
 
-        addr_in_t addr;
+        AddrIn addr;
         int addrlen = sizeof(addr);
 
         int r = co::recvfrom(fd_, b.data(), len(b), &addr, &addrlen, timeoutMs(dealine_.d, dealine_.r));
@@ -272,7 +272,7 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
         return {nil, fmt::Errorf("listen error: %s", co::strerror())};
     }
 
-    return {MakeRef<xx::tcpServ_t>(fd), nil};
+    return {NewRef<xx::tcpServ_t>(fd), nil};
 }
 
 // ListenPacket ...
@@ -302,7 +302,7 @@ R<PacketConn, error> ListenConfig::ListenPacket(const string& addr) {
         return {nil, fmt::Errorf("bind %s failed: %s", addr.c_str(), co::strerror())};
     }
 
-    return {MakeRef<xx::udpConn_t>(fd), nil};
+    return {NewRef<xx::udpConn_t>(fd), nil};
 }
 
 }  // namespace net

@@ -46,10 +46,10 @@ bool validOptionalPort(const string& port);
 bool stringContainsCTLByte(const string& s);
 
 // parse ...
-R<URL, error> parse(const string& rawURL, bool viaRequest);
+R<Ref<URL>, error> parse(const string& rawURL, bool viaRequest);
 
 // parseAuthority ...
-R<Userinfo, string, error> parseAuthority(const string& authority);
+R<Ref<Userinfo>, string, error> parseAuthority(const string& authority);
 
 // parseHost ...
 R<string, error> parseHost(const string& host);

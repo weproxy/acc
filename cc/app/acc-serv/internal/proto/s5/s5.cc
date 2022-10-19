@@ -14,7 +14,6 @@ namespace proto {
 namespace s5 {
 using namespace nx;
 
-namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // checkUserPass ...
@@ -24,7 +23,7 @@ static error checkUserPass(const string& user, const string& pass) {
 }
 
 // handshake ...
-static R<socks::Command, socks::Addr, error> handshake(net::Conn c) {
+static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
     c->SetDeadline(time::Now().Add(time::Second * 5));
     DEFER(c->SetDeadline(time::Time{}));
 
@@ -156,12 +155,12 @@ static error handleConn(net::Conn c) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Server ...
-struct Server : public proto::IServer {
+// server_t ...
+struct server_t : public proto::server_t {
     string addr_;
     net::Listener ln_;
 
-    Server(const string& addr) : addr_(addr) {}
+    server_t(const string& addr) : addr_(addr) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
@@ -204,7 +203,6 @@ struct Server : public proto::IServer {
         return nil;
     }
 };
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
@@ -216,7 +214,7 @@ R<proto::Server, error> New(const json::J& j) {
         return {nil, errors::New("invalid addr")};
     }
 
-    return {MakeRef<xx::Server>(string(addr)), nil};
+    return {NewRef<server_t>(string(addr)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

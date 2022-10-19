@@ -9,8 +9,8 @@
 namespace gx {
 namespace net {
 
-const int IPv4len = 4;
-const int IPv6len = 16;
+constexpr int IPv4len = 4;
+constexpr int IPv6len = 16;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //

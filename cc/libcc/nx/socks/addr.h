@@ -13,7 +13,7 @@ using namespace gx;
 
 ////////////////////////////////////////////////////////////////////////////////
 // MaxAddrLen ...
-const int MaxAddrLen = 1 + 1 + 255 + 2;
+constexpr int MaxAddrLen = 1 + 1 + 255 + 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 // error ...
@@ -29,12 +29,11 @@ enum AddrType {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace xx {
-struct addr_t {
+struct Addr {
     slice<byte> B;
 
-    addr_t() = default;
-    addr_t(const slice<byte> b) : B(b) {}
+    Addr() = default;
+    Addr(const slice<byte> b) : B(b) {}
 
     operator bool() const { return (bool)B; }
     uint8 operator[](size_t i) const { return B[i]; }
@@ -63,18 +62,14 @@ struct addr_t {
     // String ...
     const string String() const;
 };
-}  // namespace xx
-
-// Addr ...
-using Addr = Ref<xx::addr_t>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ToNetAddr ...
-inline net::Addr ToNetAddr(Addr addr) { return addr->ToNetAddr(); }
+inline net::Addr ToNetAddr(Ref<Addr> addr) { return addr->ToNetAddr(); }
 
 // FromNetAddr ...
-inline Addr FromNetAddr(net::Addr addr) {
-    Addr r(new xx::addr_t());
+inline Ref<Addr> FromNetAddr(net::Addr addr) {
+    Ref<Addr> r(new Addr);
     r->FromNetAddr(addr);
     return r;
 }
@@ -84,7 +79,7 @@ inline Addr FromNetAddr(net::Addr addr) {
 //     +------+------+------+
 //     |  1   |  x   |  2   |
 template <typename Reader, typename std::enable_if<io::xx::has_read<Reader>::value, int>::type = 0>
-R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
+R<size_t /*readlen*/, Ref<Addr>, error> ReadAddr(Reader r) {
     slice<byte> B = make(MaxAddrLen);
 
     // 2bytes = ATYP + (MAYBE)DOMAIN_LEN
@@ -110,18 +105,18 @@ R<size_t /*readlen*/, Addr, error> ReadAddr(Reader r) {
         return {n, nil, er2};
     }
 
-    return {n, Addr(new xx::addr_t(B(0, m))), nil};
+    return {n, NewRef<Addr>(B(0, m)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
-R<Addr, error> ParseAddr(const slice<byte> buf);
+R<Ref<Addr>, error> ParseAddr(const slice<byte> buf);
 
 // CopyAddr ...
-R<int, error> CopyAddr(slice<byte> buf, Addr addr);
+R<int, error> CopyAddr(slice<byte> buf, Ref<Addr> addr);
 
 // AppendAddr ...
-R<int, error> AppendAddr(slice<byte> buf, Addr addr);
+R<int, error> AppendAddr(slice<byte> buf, Ref<Addr> addr);
 
 }  // namespace socks
 }  // namespace nx

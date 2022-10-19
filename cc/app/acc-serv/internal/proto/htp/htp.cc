@@ -23,7 +23,7 @@ static error handleConn(net::Conn c) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server ...
-struct Server : public proto::IServer {
+struct Server : public proto::server_t {
     string addr_;
     net::Listener ln_;
 
@@ -82,7 +82,7 @@ R<proto::Server, error> New(const json::J& j) {
         return {nil, errors::New("invalid addr")};
     }
 
-    return {MakeRef<xx::Server>(string(addr)), nil};
+    return {NewRef<xx::Server>(string(addr)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

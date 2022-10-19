@@ -15,13 +15,10 @@ struct Reservation {
     int Delay() { return 0; }
 };
 
-// limiter_t ...
-struct limiter_t {
+// Limiter ...
+struct Limiter {
     Reservation ReserveN(const time::Time& now, int n);
 };
-
-// Limiter ...
-typedef Ref<limiter_t> Limiter;
 
 }  // namespace rate
 }  // namespace gx

@@ -148,7 +148,7 @@ R<Conn, error> Dialer::Dial(const string& addr, int ms) {
 
     co::set_tcp_nodelay(fd);
 
-    return {MakeRef<xx::tcpConn_t>(fd), nil};
+    return {NewRef<xx::tcpConn_t>(fd), nil};
 }
 
 // Dial ...

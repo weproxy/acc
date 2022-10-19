@@ -35,30 +35,23 @@ struct Header : public url::Values {
     Header Clone() { return {}; }
 };
 
-namespace xx {
-// response_t ...
-struct response_t {
-    // ...
-};
-
 // Response ...
-using Response = Ref<response_t>;
-
-// responseWriter_t ...
-struct responseWriter_t {
+struct Response {
     // ...
 };
 
 // ResponseWriter ...
-using ResponseWriter = Ref<responseWriter_t>;
+struct ResponseWriter {
+    // ...
+};
 
 // GetBodyFn ...
 using GetBodyFn = func<R<io::ReadCloser, error>()>;
 
-// request_t ...
-struct request_t {
-    string Method;  // GET, POST, PUT, etc.
-    url::URL URL;   // https://xxx etc.
+// Request ...
+struct Request {
+    string Method;      // GET, POST, PUT, etc.
+    Ref<url::URL> URL;  // https://xxx etc.
 
     string Proto;       // "HTTP/1.0"
     int ProtoMajor{0};  // 1
@@ -89,24 +82,10 @@ struct request_t {
     Response Response;
 };
 
-// Response ...
-using Request = Ref<request_t>;
-
-};  // namespace xx
-
-// Request ...
-using xx::Request;
-
-// Response ...
-using xx::Response;
-
-// ResponseWriter ...
-using xx::ResponseWriter;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // NewRequest ...
-R<Request, error> NewRequest(const string& method, const string& url, io::Reader body);
+R<Ref<Request>, error> NewRequest(const string& method, const string& url, io::Reader body);
 
 }  // namespace http
 }  // namespace gx

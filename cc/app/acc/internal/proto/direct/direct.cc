@@ -9,14 +9,15 @@
 #include "logx/logx.h"
 #include "nx/socks/socks.h"
 
-NAMESPACE_BEG_DIRECT
+namespace app {
+namespace proto {
+namespace direct {
 using namespace nx;
 
-namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Handler ...
-struct Handler : public proto::IHandler {
-    Handler(const string& servURL) {}
+// handler_t ...
+struct handler_t : public proto::handler_t {
+    handler_t(const string& servURL) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Handle ...
@@ -33,14 +34,13 @@ struct Handler : public proto::IHandler {
         return nil;
     }
 };
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
 R<proto::Handler, error> New(const string& servURL) {
     LOGS_V(TAG << " servURL: " << servURL);
 
-    auto s = MakeRef<xx::Handler>(servURL);
+    auto s = NewRef<handler_t>(servURL);
 
     return {s, nil};
 }
@@ -53,4 +53,6 @@ static auto _ = [] {
     return true;
 }();
 
-NAMESPACE_END_DIRECT
+}  // namespace direct
+}  // namespace proto
+}  // namespace app

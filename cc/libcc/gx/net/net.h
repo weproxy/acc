@@ -38,15 +38,13 @@ struct addr_t final {
     IP IP;
     uint16 Port{0};
 };
-
-// Addr ...
-using Addr = Ref<addr_t>;
 }  // namespace xx
 
-using xx::Addr;
+// Addr ...
+using Addr = Ref<xx::addr_t>;
 
 // MakeAddr ...
-inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return Addr(new xx::addr_t(ip, port)); }
+inline Addr MakeAddr(const IP& ip = IPv4zero, int port = 0) { return NewRef<xx::addr_t>(ip, port); }
 }  // namespace net
 }  // namespace gx
 
@@ -269,9 +267,8 @@ struct HardwareAddr {
 // ParseMAC ...
 R<HardwareAddr, error> ParseMAC(const string& s);
 
-// IInterface
-namespace xx {
-struct interface_t {
+// Interface ...
+struct Interface {
     int Index{-1};
     int MTU{0};
     string Name;
@@ -279,24 +276,20 @@ struct interface_t {
     Flags Flags;
 
     // Addrs ...
-    R<Vec<Addr>, error> Addrs() const;
+    R<slice<Addr>, error> Addrs() const;
 };
-}  // namespace xx
-
-// Interface ...
-using Interface = Ref<xx::interface_t>;
 
 // Interfaces ...
-R<Vec<Interface>, error> Interfaces();
+R<slice<Ref<Interface>>, error> Interfaces();
 
 // InterfaceAddrs ...
-R<Vec<Addr>, error> InterfaceAddrs();
+R<slice<Addr>, error> InterfaceAddrs();
 
 // InterfaceByIndex ...
-R<Interface, error> InterfaceByIndex(int index);
+R<Ref<Interface>, error> InterfaceByIndex(int index);
 
 // InterfaceByName ...
-R<Interface, error> InterfaceByName(const string& name);
+R<Ref<Interface>, error> InterfaceByName(const string& name);
 
 }  // namespace net
 }  // namespace gx

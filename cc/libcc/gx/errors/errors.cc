@@ -15,7 +15,7 @@ struct strerr_t : public err_t {
 };
 
 // New ...
-error New(const string& s) { return MakeRef<strerr_t>(s); }
+error New(const string& s) { return NewRef<strerr_t>(s); }
 
 }  // namespace errors
 }  // namespace gx

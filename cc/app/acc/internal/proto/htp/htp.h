@@ -6,16 +6,9 @@
 
 #include "../proto.h"
 
-#define NAMESPACE_BEG_HTP \
-    namespace app {       \
-    namespace proto {     \
-    namespace htp {
-#define NAMESPACE_END_HTP \
-    }                     \
-    }                     \
-    }
-
-NAMESPACE_BEG_HTP
+namespace app {
+namespace proto {
+namespace htp {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TAG ...
@@ -25,4 +18,6 @@ constexpr const char* TAG = "[htp]";
 // New ...
 R<proto::Handler, error> New(const string& servURL);
 
-NAMESPACE_END_HTP
+}  // namespace htp
+}  // namespace proto
+}  // namespace app

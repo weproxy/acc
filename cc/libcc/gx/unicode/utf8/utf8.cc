@@ -8,45 +8,45 @@ namespace gx {
 namespace utf8 {
 
 namespace xx {
-const int surrogateMin = 0xD800;
-const int surrogateMax = 0xDFFF;
+constexpr int surrogateMin = 0xD800;
+constexpr int surrogateMax = 0xDFFF;
 
-const uint8 t1 = 0b00000000;
-const uint8 tx = 0b10000000;
-const uint8 t2 = 0b11000000;
-const uint8 t3 = 0b11100000;
-const uint8 t4 = 0b11110000;
-const uint8 t5 = 0b11111000;
+constexpr uint8 t1 = 0b00000000;
+constexpr uint8 tx = 0b10000000;
+constexpr uint8 t2 = 0b11000000;
+constexpr uint8 t3 = 0b11100000;
+constexpr uint8 t4 = 0b11110000;
+constexpr uint8 t5 = 0b11111000;
 
-const uint8 maskx = 0b00111111;
-const uint8 mask2 = 0b00011111;
-const uint8 mask3 = 0b00001111;
-const uint8 mask4 = 0b00000111;
+constexpr uint8 maskx = 0b00111111;
+constexpr uint8 mask2 = 0b00011111;
+constexpr uint8 mask3 = 0b00001111;
+constexpr uint8 mask4 = 0b00000111;
 
-const int rune1Max = (1 << 7) - 1;
-const int rune2Max = (1 << 11) - 1;
-const int rune3Max = (1 << 16) - 1;
+constexpr int rune1Max = (1 << 7) - 1;
+constexpr int rune2Max = (1 << 11) - 1;
+constexpr int rune3Max = (1 << 16) - 1;
 
 // The default lowest and highest continuation uint8.
-const uint8 locb = 0b10000000;
-const uint8 hicb = 0b10111111;
+constexpr uint8 locb = 0b10000000;
+constexpr uint8 hicb = 0b10111111;
 
 // These names of these constants are chosen to give nice alignment in the
 // table below. The first nibble is an index into acceptRanges or F for
 // special one-byte cases. The second nibble is the Rune length or the
 // Status for the special one-byte case.
-const uint8 xx = 0xF1;  // invalid: size 1
-const uint8 as = 0xF0;  // ASCII: size 1
-const uint8 s1 = 0x02;  // accept 0, size 2
-const uint8 s2 = 0x13;  // accept 1, size 3
-const uint8 s3 = 0x03;  // accept 0, size 3
-const uint8 s4 = 0x23;  // accept 2, size 3
-const uint8 s5 = 0x34;  // accept 3, size 4
-const uint8 s6 = 0x04;  // accept 0, size 4
-const uint8 s7 = 0x44;  // accept 4, size 4
+constexpr uint8 xx = 0xF1;  // invalid: size 1
+constexpr uint8 as = 0xF0;  // ASCII: size 1
+constexpr uint8 s1 = 0x02;  // accept 0, size 2
+constexpr uint8 s2 = 0x13;  // accept 1, size 3
+constexpr uint8 s3 = 0x03;  // accept 0, size 3
+constexpr uint8 s4 = 0x23;  // accept 2, size 3
+constexpr uint8 s5 = 0x34;  // accept 3, size 4
+constexpr uint8 s6 = 0x04;  // accept 0, size 4
+constexpr uint8 s7 = 0x44;  // accept 4, size 4
 
 // first is information about the first byte in a UTF-8 sequence.
-static const uint8 first[256] = {
+static constexpr uint8 first[256] = {
     //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
     as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as,  // 0x00-0x0F
     as, as, as, as, as, as, as, as, as, as, as, as, as, as, as, as,  // 0x10-0x1F

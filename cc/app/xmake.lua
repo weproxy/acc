@@ -32,8 +32,8 @@ target(NAME)
     -- add_includedirs(APPDIR.."/internal")
     add_includedirs(APPDIR)
 
-    add_files(CMDDIR.."/**.cc|**_test.cc")
-    add_files(SRCDIR.."/**.cc|**_test.cc")
+    add_files(CMDDIR.."/**.cc|**_test.cc|**unused**")
+    add_files(SRCDIR.."/**.cc|**_test.cc|**unused**")
 
     add_deps("biz", "fx", "gx", "nx", "logx", "co")
 target_end()

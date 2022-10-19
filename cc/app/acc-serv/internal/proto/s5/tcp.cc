@@ -14,8 +14,6 @@
 namespace app {
 namespace proto {
 namespace s5 {
-
-namespace xx {
 using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +109,6 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 
     return nil;
 }
-}  // namespace xx
 
 }  // namespace s5
 }  // namespace proto

@@ -15,9 +15,9 @@ extern const error ErrBufferFull;
 extern const error ErrNegativeCount;
 
 // defaultBufSize ..
-const int defaultBufSize = 4096;
-const int minReadBufferSize = 16;
-const int maxConsecutiveEmptyReads = 100;
+constexpr int defaultBufSize = 4096;
+constexpr int minReadBufferSize = 16;
+constexpr int maxConsecutiveEmptyReads = 100;
 
 extern const error errNegativeRead;
 

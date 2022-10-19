@@ -352,7 +352,7 @@ bool stringContainsCTLByte(const string& s) {
 }
 
 // parse ...
-R<URL, error> parse(const string& rawURL, bool viaRequest) {
+R<Ref<URL>, error> parse(const string& rawURL, bool viaRequest) {
     string rest;
     error err;
 
@@ -364,7 +364,7 @@ R<URL, error> parse(const string& rawURL, bool viaRequest) {
         return {nil, errors::New("empty url")};
     }
 
-    URL url = Ref<url_t>(new url_t());
+    auto url = NewRef<URL>();
 
     if (rawURL == "*") {
         url->Path = "*";
@@ -445,7 +445,7 @@ R<URL, error> parse(const string& rawURL, bool viaRequest) {
 }
 
 // parseAuthority ...
-R<Userinfo, string, error> parseAuthority(const string& authority) {
+R<Ref<Userinfo>, string, error> parseAuthority(const string& authority) {
     string host;
     error err;
 
@@ -466,7 +466,7 @@ R<Userinfo, string, error> parseAuthority(const string& authority) {
     if (i < 0) {
         return {nil, host, nil};
     }
-    Userinfo user;
+    Ref<Userinfo> user;
     string userinfo = authority.substr(0, i);
     if (!validUserinfo(userinfo)) {
         return {nil, "", errors::New("net/url: invalid userinfo")};
@@ -543,45 +543,6 @@ R<string, error> parseHost(const string& host) {
         return {"", err};
     }
     return {_host, nil};
-}
-
-// setPath ...
-error url_t::setPath(const string& p) {
-    AUTO_R(path, err, unescape(p, encodePath));
-    if (err != nil) {
-        return err;
-    }
-    auto& u = *this;
-
-    u.Path = path;
-    string escp = escape(path, encodePath);
-    if (p == escp) {
-        // Default encoding is fine.
-        u.RawPath = "";
-    } else {
-        u.RawPath = p;
-    }
-    return nil;
-}
-
-// setFragment ...
-error url_t::setFragment(const string& f) {
-    AUTO_R(frag, err, unescape(f, encodeFragment));
-    if (err != nil) {
-        return err;
-    }
-
-    auto& u = *this;
-
-    u.Fragment = frag;
-    string escf = escape(frag, encodeFragment);
-    if (f == escf) {
-        // Default encoding is fine.
-        u.RawFragment = "";
-    } else {
-        u.RawFragment = f;
-    }
-    return nil;
 }
 
 // splitHostPort ...

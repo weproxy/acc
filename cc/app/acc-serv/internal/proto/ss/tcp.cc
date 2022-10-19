@@ -10,9 +10,9 @@
 #include "nx/stats/stats.h"
 #include "ss.h"
 
-NAMESPACE_BEG_SS
-
-namespace xx {
+namespace app {
+namespace proto {
+namespace ss {
 using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +50,6 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     return nil;
 }
 
-}  // namespace xx
-
-NAMESPACE_END_SS
+}  // namespace ss
+}  // namespace proto
+}  // namespace app

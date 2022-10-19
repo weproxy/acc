@@ -11,7 +11,6 @@ namespace net {
 
 // error ...
 static const error errNotFound = errors::New("not found");
-static const error errFuncNotImpl = errors::New("func not impl");
 
 // String ...
 string HardwareAddr::String(bool upper) const {
@@ -19,22 +18,20 @@ string HardwareAddr::String(bool upper) const {
                         B[3], B[4], B[5]);
 }
 
-namespace xx {
 // Addrs ...
-R<Vec<Addr>, error> interface_t::Addrs() const { return {{}, errFuncNotImpl}; }
-}  // namespace xx
+R<slice<Addr>, error> Interface::Addrs() const { return {{}, gx_TodoErr()}; }
 
 // Interfaces ...
-R<Vec<Interface>, error> Interfaces() { return {{}, errFuncNotImpl}; }
+R<slice<Ref<Interface>>, error> Interfaces() { return {{}, gx_TodoErr()}; }
 
 // InterfaceAddrs ...
-R<Vec<Addr>, error> InterfaceAddrs() { return {{}, errFuncNotImpl}; }
+R<slice<Addr>, error> InterfaceAddrs() { return {{}, gx_TodoErr()}; }
 
 // InterfaceByIndex ...
-R<Interface, error> InterfaceByIndex(int index) { return {nil, errFuncNotImpl}; }
+R<Ref<Interface>, error> InterfaceByIndex(int index) { return {nil, gx_TodoErr()}; }
 
 // InterfaceByName ...
-R<Interface, error> InterfaceByName(const string& name) { return {nil, errFuncNotImpl}; }
+R<Ref<Interface>, error> InterfaceByName(const string& name) { return {nil, gx_TodoErr()}; }
 
 }  // namespace net
 }  // namespace gx

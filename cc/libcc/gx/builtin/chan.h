@@ -92,7 +92,7 @@ struct chan {
     using P = Ref<D>;
     P p_;
 
-    explicit chan(size_t N = 1) : p_(MakeRef<D>(N)) {}
+    explicit chan(size_t N = 1) : p_(NewRef<D>(N)) {}
     ~chan() { Close(); }
 
     // <<, >>

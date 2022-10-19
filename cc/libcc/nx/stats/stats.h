@@ -199,41 +199,42 @@ struct dnsT {
 extern connT _Conn;
 extern rateT _Rate;
 extern dnsT _DNS;
+}  // namespace xx
 
-// stats_t ...
-struct stats_t {
-    aint64 sent{0}, recv{0};
-    aint64 sentx{0}, recvx{0};
+// Stats ...
+struct Stats {
+    xx::aint64 sent{0}, recv{0};
+    xx::aint64 sentx{0}, recvx{0};
     bool tcp{false};
     time::Time start;
     string tag;
     Type typ;
-    connT& conn;
-    rateT& rate;
+    xx::connT& conn;
+    xx::rateT& rate;
     string target;
     string server;
 
-    stats_t(Type typ_, const string& tag_, bool tcp_) : tcp(tcp_), typ(typ_), tag(tag_), conn(_Conn), rate(_Rate) {}
+    Stats(Type typ_, const string& tag_, bool tcp_) : tcp(tcp_), typ(typ_), tag(tag_), conn(xx::_Conn), rate(xx::_Rate) {}
 
     const string& Tag() const { return tag; }
-    stats_t& SetTag(const string& s) {
+    Stats& SetTag(const string& s) {
         tag = s;
         return *this;
     }
 
     const string& Target() const { return target; }
-    stats_t& SetTarget(const string& s) {
+    Stats& SetTarget(const string& s) {
         target = s;
         return *this;
     }
 
     const string& Server() const { return server; }
-    stats_t& SetServer(const string& s) {
+    Stats& SetServer(const string& s) {
         server = s;
         return *this;
     }
 
-    stats_t& AddSent(int n) {
+    Stats& AddSent(int n) {
         if (tcp) {
             rate.AddTCPSent(typ, n);
         } else {
@@ -243,7 +244,7 @@ struct stats_t {
         return *this;
     }
 
-    stats_t& AddRecv(int n) {
+    Stats& AddRecv(int n) {
         if (tcp) {
             rate.AddTCPRecv(typ, n);
         } else {
@@ -253,7 +254,7 @@ struct stats_t {
         return *this;
     }
 
-    stats_t& AddSentX(int n) {
+    Stats& AddSentX(int n) {
         if (tcp) {
             rate.AddTCPSent(typ, n);
         } else {
@@ -263,7 +264,7 @@ struct stats_t {
         return *this;
     }
 
-    stats_t& AddRecvX(int n) {
+    Stats& AddRecvX(int n) {
         if (tcp) {
             rate.AddTCPRecv(typ, n);
         } else {
@@ -275,30 +276,25 @@ struct stats_t {
 
     time::Duration Elapsed() const { return time::Since(start); }
 
-    const stats_t& LogD(const string& msg) const;
-    const stats_t& LogI(const string& msg) const;
-    const stats_t& LogW(const string& msg) const;
-    const stats_t& LogE(const string& msg) const;
+    const Stats& LogD(const string& msg) const;
+    const Stats& LogI(const string& msg) const;
+    const Stats& LogW(const string& msg) const;
+    const Stats& LogE(const string& msg) const;
 
-    stats_t& Start(const string& msg = {});
-    stats_t& Done(const string& msg = {});
+    Stats& Start(const string& msg = {});
+    Stats& Done(const string& msg = {});
 };
-
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Stats ...
-using Stats = Ref<xx::stats_t>;
-
 // NewStats ...
-inline Stats NewStats(Type typ, const string& tag, bool tcp) { return Stats(new xx::stats_t(typ, tag, tcp)); }
+inline Ref<Stats> NewStats(Type typ, const string& tag, bool tcp) { return NewRef<Stats>(typ, tag, tcp); }
 
 // NewTCPStats ...
-inline Stats NewTCPStats(Type typ, const string& tag) { return NewStats(typ, tag, true); }
+inline Ref<Stats> NewTCPStats(Type typ, const string& tag) { return NewStats(typ, tag, true); }
 
 // NewUDPStats ...
-inline Stats NewUDPStats(Type typ, const string& tag) { return NewStats(typ, tag, false); }
+inline Ref<Stats> NewUDPStats(Type typ, const string& tag) { return NewStats(typ, tag, false); }
 
 }  // namespace stats
 }  // namespace nx

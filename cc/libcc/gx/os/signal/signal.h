@@ -49,7 +49,7 @@ void Notify(const CallbackFn& cb, T&&... sig) {
 // WaitNotify ...
 template <typename... T>
 void WaitNotify(const CallbackFn& cb, T&&... sig) {
-    auto wg = MakeRef<WaitGroup>(1);
+    auto wg = NewRef<WaitGroup>(1);
     xx::waitNotify(wg, cb, std::forward<T>(sig)...);
     wg->Wait();
 }

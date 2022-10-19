@@ -8,17 +8,20 @@
 
 using namespace gx;
 
-extern void unitest_run();
-
 // main ...
 int main(int argc, char* argv[]) {
     LOGX_I("[main] ...");
     DEFER(LOGX_I("[main] exit"));
 
-    if (true) {
+#if 0
+    extern void unitest_run();
+    {
+        LOGF_D("a.a=%d, a.b=%d", a.a, a.b);
+
         unitest_run();
         return 0;
     }
+#endif
 
     int r;
     WaitGroup wg(1);

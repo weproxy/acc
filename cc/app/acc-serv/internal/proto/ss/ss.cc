@@ -8,9 +8,9 @@
 #include "gx/net/net.h"
 #include "logx/logx.h"
 
-NAMESPACE_BEG_SS
-
-namespace xx {
+namespace app {
+namespace proto {
+namespace ss {
 
 extern error handleTCP(net::Conn c, net::Addr raddr);
 extern error handleUDP(net::PacketConn pc, net::Addr caddr, const slice<byte> buf);
@@ -24,13 +24,13 @@ static error handleConn(net::Conn c) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Server ...
-struct Server : public proto::IServer {
+// server_t ...
+struct server_t : public proto::server_t {
     string addr_;
     net::Listener ln_;
     net::PacketConn pc_;
 
-    Server(const string& addr) : addr_(addr) {}
+    server_t(const string& addr) : addr_(addr) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
@@ -100,11 +100,9 @@ struct Server : public proto::IServer {
     }
 };
 
-}  // namespace xx
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
-static R<proto::Server, error> New(const json::J& j) {
+R<proto::Server, error> New(const json::J& j) {
     LOGS_V(TAG << " Conf: " << j);
 
     auto addr = j["listen"];
@@ -112,7 +110,7 @@ static R<proto::Server, error> New(const json::J& j) {
         return {nil, errors::New("invalid addr")};
     }
 
-    return {MakeRef<xx::Server>(string(addr)), nil};
+    return {NewRef<server_t>(string(addr)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,4 +121,6 @@ static auto _ = [] {
     return true;
 }();
 
-NAMESPACE_END_SS
+}  // namespace ss
+}  // namespace proto
+}  // namespace app

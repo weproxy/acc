@@ -6,16 +6,9 @@
 
 #include "../proto.h"
 
-#define NAMESPACE_BEG_DIRECT \
-    namespace app {          \
-    namespace proto {        \
-    namespace direct {
-#define NAMESPACE_END_DIRECT \
-    }                        \
-    }                        \
-    }
-
-NAMESPACE_BEG_DIRECT
+namespace app {
+namespace proto {
+namespace direct {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TAG ...
@@ -25,4 +18,6 @@ constexpr const char* TAG = "[direct]";
 // New ...
 R<proto::Handler, error> New(const string& servURL);
 
-NAMESPACE_END_DIRECT
+}  // namespace direct
+}  // namespace proto
+}  // namespace app

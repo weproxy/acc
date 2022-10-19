@@ -24,7 +24,7 @@ using CopingFn = func<void(int)>;
 
 // CopyOption ...
 struct CopyOption {
-    rate::Limiter Limit;
+    Ref<rate::Limiter> Limit;
     CopingFn CopingFn;
     time::Duration ReadTimeout;
     time::Duration WriteTimeout;

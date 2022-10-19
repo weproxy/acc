@@ -93,19 +93,16 @@ string EncodeToString(const void* src, size_t srcLen) {
 }
 
 // DecodeString ...
-R<Vec<byte>, error> DecodeString(const string& s) {
+R<slice<byte>, error> DecodeString(const string& s) {
     const byte* src = (const byte*)s.data();
     int srcLen = s.size();
 
-    byte* dst = (uint8*)malloc(srcLen);
-
-    AUTO_R(dstLen, err, xx::Decode(dst, srcLen, src, srcLen));
+    slice<byte> r(0, srcLen);
+    AUTO_R(dstLen, err, xx::Decode(r.data(), srcLen, src, srcLen));
     if (err) {
         return {{}, err};
     }
-    Vec<byte> r(dst, dst + dstLen);
-
-    free(dst);
+    r.end_ = dstLen;
 
     return {r, nil};
 }

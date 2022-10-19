@@ -8,7 +8,7 @@ namespace gx {
 namespace rate {
 
 // ReserveN ...
-Reservation limiter_t::ReserveN(const time::Time& now, int n) { return {}; }
+Reservation Limiter::ReserveN(const time::Time& now, int n) { return {}; }
 
 }  // namespace rate
 }  // namespace gx

@@ -5,5 +5,5 @@
 -- target
 target("nx")
     set_kind("static")
-    add_files("**.cc|**_test.cc")
+    add_files("**.cc|**_test.cc|**unused**")
 target_end()

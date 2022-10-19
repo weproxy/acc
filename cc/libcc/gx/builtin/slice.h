@@ -56,13 +56,13 @@ struct slice {
 
     // operator =
     slice& operator=(const slice& r) {
-        _assign(r);
+        assign(r);
         return *this;
     }
 
     // operator =
     slice& operator=(slice&& r) {
-        _assign(r);
+        assign(r);
         r._reset();
         return *this;
     }
@@ -112,15 +112,23 @@ struct slice {
     // _create_if_null ...
     void _create_if_null(int len = 0) {
         if (!vec_) {
-            vec_ = VecRef<T>(new Vec<T>(len));
+            vec_ = NewRef<Vec<T>>(len);
         }
     }
 
-    // _assign ...
-    void _assign(const slice& r) {
+    // assign ...
+    void assign(const slice& r) {
         vec_ = r.vec_;
         beg_ = r.beg_;
         end_ = r.end_;
+    }
+
+    // assign ...
+    void assign(const T* p, int len) {
+        _create_if_null(len);
+        vec_->insert(vec_->begin(), p, p + len);
+        beg_ = 0;
+        end_ = len;
     }
 
     // _reset ...

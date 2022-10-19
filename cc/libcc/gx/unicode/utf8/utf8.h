@@ -10,10 +10,10 @@ namespace gx {
 namespace utf8 {
 
 // const ...
-const int RuneError = 0xFFFD;    // the "error" Rune or "Unicode replacement character"
-const int RuneSelf = 0x80;       // characters below RuneSelf are represented as themselves in a single byte.
-const int MaxRune = 0x0010FFFF;  // Maximum valid Unicode code point.
-const int UTFMax = 4;            // maximum number of bytes of a UTF-8 encoded Unicode character.
+constexpr int RuneError = 0xFFFD;    // the "error" Rune or "Unicode replacement character"
+constexpr int RuneSelf = 0x80;       // characters below RuneSelf are represented as themselves in a single byte.
+constexpr int MaxRune = 0x0010FFFF;  // Maximum valid Unicode code point.
+constexpr int UTFMax = 4;            // maximum number of bytes of a UTF-8 encoded Unicode character.
 
 // RuneLen ...
 int RuneLen(rune r);

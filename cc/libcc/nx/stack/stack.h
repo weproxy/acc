@@ -12,15 +12,17 @@ namespace stack {
 using namespace gx;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// IHandler ...
-struct IHandler : public io::xx::closer_t {
+// handler_t ...
+struct handler_t : public io::xx::closer_t {
     virtual error Handle(net::Conn c, net::Addr raddr) = 0;
     virtual error HandlePacket(net::PacketConn c, net::Addr raddr) = 0;
     virtual error Close() override = 0;
 };
 
-// Handler ...
-using Handler = Ref<IHandler>;
+using Handler = Ref<handler_t>;
+
+// SetHandler ...
+void SetHandler(Handler h);
 
 // ...
 }  // namespace stack

@@ -36,7 +36,7 @@ void test() {
     gx::go([] {
         const char* host = "www.baidu.com";
         // const char* host = "www.qq.com";
-        const int port = 80;
+        constexpr int port = 80;
 
         AUTO_R(c, err, net::Dial(fmt::Sprintf("%s:%d", host, port)));
         if (err) {

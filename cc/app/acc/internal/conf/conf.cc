@@ -8,35 +8,32 @@
 
 namespace app {
 namespace conf {
-namespace xx {
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(auth_t, s5, ss)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(server_t, auth, tcp, udp, geo)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(rule_t, host, serv)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(conf_t, server, rules)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Auth, s5, ss)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, auth, tcp, udp, geo)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Rule, host, serv)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Conf, server, rules)
 
 // _default ...
-static Conf _default(new conf_t());
+static Ref<Conf> _default(NewRef<Conf>());
 
 // Default ...
-Conf Default() { return _default; }
+Ref<Conf> Default() { return _default; }
 
 // String ...
-string conf_t::String() const {
+string Conf::String() const {
     AUTO_R(str, err, gx::json::Marshal(*this));
     return err ? "{}" : str;
 }
 
 // ParseJSON ...
-error conf_t::ParseJSON(const string& jsonContent) {
+error Conf::ParseJSON(const string& jsonContent) {
     return gx::json::Unmarshal(jsonContent, this);
 }
 
-}  // namespace xx
-
 // NewFromJSON ...
-R<Conf, error> NewFromJSON(const string& jsonContent) {
-    Conf c(new xx::conf_t);
+R<Ref<Conf>, error> NewFromJSON(const string& jsonContent) {
+    auto c = NewRef<Conf>();
     auto err = c->ParseJSON(jsonContent);
     if (err) {
         return {nil, err};

@@ -21,9 +21,8 @@ const error ErrInvalidAddrType = errors::New("invalid address type");
 const error ErrInvalidAddrLen = errors::New("invalid address length");
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace xx {
 // IP ...
-net::IP addr_t::IP() const {
+net::IP Addr::IP() const {
     if (len(B) > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
@@ -38,7 +37,7 @@ net::IP addr_t::IP() const {
 }
 
 // Port ...
-int addr_t::Port() const {
+int Addr::Port() const {
     if (len(B) > 0) {
         switch (B[0]) {
             case AddrTypeIPv4:
@@ -55,10 +54,10 @@ int addr_t::Port() const {
 }
 
 // ToNetAddr ...
-net::Addr addr_t::ToNetAddr() const { return net::MakeAddr(IP(), Port()); }
+net::Addr Addr::ToNetAddr() const { return net::MakeAddr(IP(), Port()); }
 
 // FromNetAddr ...
-void addr_t::FromNetAddr(net::Addr addr) {
+void Addr::FromNetAddr(net::Addr addr) {
     auto ip4 = addr->IP.To4();
     if (ip4) {
         B = make(1 + net::IPv4len + 2);
@@ -78,7 +77,7 @@ void addr_t::FromNetAddr(net::Addr addr) {
 }
 
 // String ...
-const string addr_t::String() const {
+const string Addr::String() const {
     if (len(B) <= 0) {
         return "<nil>";
     }
@@ -86,14 +85,13 @@ const string addr_t::String() const {
     return GX_SS(IP() << ":" << Port());
 }
 
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
 //	| ATYP | ADDR | PORT |
 //	+------+------+------+
 //	|  1   |  x   |  2   |
-R<Addr, error> ParseAddr(const slice<byte> B) {
+R<Ref<Addr>, error> ParseAddr(const slice<byte> B) {
     if (len(B) < 1 + 1 + 1 + 2) {
         return {nil, ErrInvalidAddrLen};
     }
@@ -112,11 +110,11 @@ R<Addr, error> ParseAddr(const slice<byte> B) {
     if (len(B) < m) {
         return {nil, ErrInvalidAddrLen};
     }
-    return {Addr(new xx::addr_t(B(0, m))), nil};
+    return {NewRef<Addr>(B(0, m)), nil};
 }
 
 // CopyAddr ...
-R<int, error> CopyAddr(slice<byte> buf, Addr addr) {
+R<int, error> CopyAddr(slice<byte> buf, Ref<Addr> addr) {
     if (addr || len(buf) >= len(addr->B)) {
         memcpy(buf.data(), addr->B.data(), len(addr->B));
         return {len(addr->B), nil};
@@ -125,7 +123,7 @@ R<int, error> CopyAddr(slice<byte> buf, Addr addr) {
 }
 
 // AppendAddr ...
-R<int, error> AppendAddr(slice<byte> buf, Addr addr) {
+R<int, error> AppendAddr(slice<byte> buf, Ref<Addr> addr) {
     if (addr) {
         for (int i = 0; i < len(addr->B); i++) {
             append(buf, addr->B[i]);

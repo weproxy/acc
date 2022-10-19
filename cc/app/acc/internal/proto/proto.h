@@ -5,13 +5,12 @@
 #pragma once
 
 #include "../def.h"
-#include "gx/net/net.h"
 #include "nx/stack/stack.h"
 
 namespace app {
 namespace proto {
 using nx::stack::Handler;
-using nx::stack::IHandler;
+using nx::stack::handler_t;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TAG ...

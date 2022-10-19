@@ -13,7 +13,7 @@ namespace kc {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server ...
-struct Server : public proto::IServer {
+struct Server : public proto::server_t {
     //  Start ...
     virtual error Start() override {
         LOGS_D(TAG << " Start()");
@@ -29,9 +29,9 @@ struct Server : public proto::IServer {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
-static R<proto::Server, error> New(const json::J& j) {
+R<proto::Server, error> New(const json::J& j) {
     LOGS_V(TAG << " Conf: " << j);
-    return {MakeRef<Server>(), nil};
+    return {NewRef<Server>(), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -11,7 +11,7 @@ namespace gx {
 namespace url {
 
 // Paarse ...
-R<URL, error> Parse(const string& rawURL) {
+R<Ref<URL>, error> Parse(const string& rawURL) {
     AUTO_R(u, frag, _, strings::Cut(rawURL, "#"));
     AUTO_R(url, err, xx::parse(u, false));
     if (err) {
@@ -29,7 +29,7 @@ R<URL, error> Parse(const string& rawURL) {
 }
 
 // ParseRequestURI ...
-R<URL, error> ParseRequestURI(const string& rawURL) {
+R<Ref<URL>, error> ParseRequestURI(const string& rawURL) {
     AUTO_R(url, err, xx::parse(rawURL, true));
     if (err) {
         return {nil, errors::New(GX_SS("parse " << rawURL << " " << err))};
@@ -39,21 +39,20 @@ R<URL, error> ParseRequestURI(const string& rawURL) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-namespace xx {
 // String ...
-string uinfo_t::String() const {
-    auto s = escape(username, encodeUserPassword);
+string Userinfo::String() const {
+    auto s = escape(username, xx::encodeUserPassword);
     if (passwordSet) {
-        s += ":" + escape(password, encodeUserPassword);
+        s += ":" + xx::escape(password, xx::encodeUserPassword);
     }
     return s;
 }
 
 // EscapedPath ...
-string url_t::EscapedPath() const {
+string URL::EscapedPath() const {
     auto& u = *this;
-    if (u.RawPath != "" && validEncoded(u.RawPath, encodePath)) {
-        AUTO_R(p, err, unescape(u.RawPath, encodePath));
+    if (u.RawPath != "" && xx::validEncoded(u.RawPath, xx::encodePath)) {
+        AUTO_R(p, err, xx::unescape(u.RawPath, xx::encodePath));
         if (err == nil && p == u.Path) {
             return u.RawPath;
         }
@@ -61,23 +60,23 @@ string url_t::EscapedPath() const {
     if (u.Path == "*") {
         return "*";  // don't escape (Issue 11202)
     }
-    return escape(u.Path, encodePath);
+    return xx::escape(u.Path, xx::encodePath);
 }
 
 // EscapedFragment ...
-string url_t::EscapedFragment() const {
+string URL::EscapedFragment() const {
     auto& u = *this;
-    if (u.RawFragment != "" && validEncoded(u.RawFragment, encodeFragment)) {
-        AUTO_R(f, err, unescape(u.RawFragment, encodeFragment));
+    if (u.RawFragment != "" && xx::validEncoded(u.RawFragment, xx::encodeFragment)) {
+        AUTO_R(f, err, xx::unescape(u.RawFragment, xx::encodeFragment));
         if (err == nil && f == u.Fragment) {
             return u.RawFragment;
         }
     }
-    return escape(u.Fragment, encodeFragment);
+    return xx::escape(u.Fragment, xx::encodeFragment);
 }
 
 // String ...
-string url_t::String() const {
+string URL::String() const {
     auto& u = *this;
     strings::Builder buf;
 
@@ -101,7 +100,7 @@ string url_t::String() const {
                     buf.WriteByte('@');
                 }
                 if (u.Host != "") {
-                    buf.WriteString(escape(u.Host, encodeHost));
+                    buf.WriteString(xx::escape(u.Host, xx::encodeHost));
                 }
             }
         }
@@ -130,13 +129,13 @@ string url_t::String() const {
 }
 
 // Query ...
-Values url_t::Query() {
+Values URL::Query() {
     AUTO_R(v, _, ParseQuery(this->RawQuery));
     return v;
 }
 
 // RequestURI ...
-string url_t::RequestURI() const {
+string URL::RequestURI() const {
     auto& u = *this;
     string result = u.Opaque;
     if (result == "") {
@@ -156,17 +155,57 @@ string url_t::RequestURI() const {
 }
 
 // Hostname ...
-string url_t::Hostname() const {
-    AUTO_R(host, _, splitHostPort(this->Host));
+string URL::Hostname() const {
+    AUTO_R(host, _, xx::splitHostPort(this->Host));
     return host;
 }
 
 // Port ...
-string url_t::Port() const {
-    AUTO_R(_, port, splitHostPort(this->Host));
+string URL::Port() const {
+    AUTO_R(_, port, xx::splitHostPort(this->Host));
     return port;
 }
 
+// setPath ...
+error URL::setPath(const string& p) {
+    AUTO_R(path, err, xx::unescape(p, xx::encodePath));
+    if (err != nil) {
+        return err;
+    }
+    auto& u = *this;
+
+    u.Path = path;
+    string escp = xx::escape(path, xx::encodePath);
+    if (p == escp) {
+        // Default encoding is fine.
+        u.RawPath = "";
+    } else {
+        u.RawPath = p;
+    }
+    return nil;
+}
+
+// setFragment ...
+error URL::setFragment(const string& f) {
+    AUTO_R(frag, err, xx::unescape(f, xx::encodeFragment));
+    if (err != nil) {
+        return err;
+    }
+
+    auto& u = *this;
+
+    u.Fragment = frag;
+    string escf = xx::escape(frag, xx::encodeFragment);
+    if (f == escf) {
+        // Default encoding is fine.
+        u.RawFragment = "";
+    } else {
+        u.RawFragment = f;
+    }
+    return nil;
+}
+
+namespace xx {
 // parseQuery ...
 static error parseQuery(Values m, const string& query1) {
     string query(query1);

@@ -47,32 +47,32 @@ using ReadWriteCloser = Ref<xx::readWriteCloser_t>;
 ////////////////////////////////////////////////////////////////////////////////
 //
 // NewReaderFn ...
-inline Reader NewReaderFn(const ReadFn& fn) { return MakeRef<xx::readerFn_t>(fn); }
+inline Reader NewReaderFn(const ReadFn& fn) { return NewRef<xx::readerFn_t>(fn); }
 
 // NewWriterFn ...
-inline Writer NewWriterFn(const WriteFn& fn) { return MakeRef<xx::writerFn_t>(fn); }
+inline Writer NewWriterFn(const WriteFn& fn) { return NewRef<xx::writerFn_t>(fn); }
 
 // NewCloserFn ...
-inline Closer NewCloserFn(const CloseFn& fn) { return MakeRef<xx::closerFn_t>(fn); }
+inline Closer NewCloserFn(const CloseFn& fn) { return NewRef<xx::closerFn_t>(fn); }
 
 // NewReadWriterFn ...
 inline ReadWriter NewReadWriterFn(const ReadFn& r, const WriteFn& w) {
-    return MakeRef<xx::readWriterFn_t>(r, w);
+    return NewRef<xx::readWriterFn_t>(r, w);
 }
 
 // NewReadCloserFn ...
 inline ReadCloser NewReadCloserFn(const ReadFn& r, const CloseFn& c) {
-    return MakeRef<xx::readCloserFn_t>(r, c);
+    return NewRef<xx::readCloserFn_t>(r, c);
 }
 
 // NewWriteCloserFn ...
 inline WriteCloser NewWriteCloserFn(const WriteFn& w, const CloseFn& c) {
-    return MakeRef<xx::writeCloserFn_t>(w, c);
+    return NewRef<xx::writeCloserFn_t>(w, c);
 }
 
 // NewReadWriteCloserFn ...
 inline ReadWriteCloser NewReadWriteCloserFn(const ReadFn& r, const WriteFn& w, const CloseFn& c) {
-    return MakeRef<xx::readWriteCloserFn_t>(r, w, c);
+    return NewRef<xx::readWriteCloserFn_t>(r, w, c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,51 +80,51 @@ inline ReadWriteCloser NewReadWriteCloserFn(const ReadFn& r, const WriteFn& w, c
 // NewReader ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
 inline Reader NewReader(T t) {
-    return MakeRef<xx::readerObj_t<T>>(t);
+    return NewRef<xx::readerObj_t<T>>(t);
 }
 
 // NewWriter ...
 template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
 inline Writer NewWriter(T t) {
-    return MakeRef<xx::writerObj_t<T>>(t);
+    return NewRef<xx::writerObj_t<T>>(t);
 }
 
 // NewCloser ...
 template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
 inline Closer NewCloser(T t) {
-    return MakeRef<xx::closerObj_t<T>>(t);
+    return NewRef<xx::closerObj_t<T>>(t);
 }
 
 // NewReadWriter ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
 inline ReadWriter NewReadWriter(T t) {
-    return MakeRef<xx::readWriterObj_t<T>>(t);
+    return NewRef<xx::readWriterObj_t<T>>(t);
 }
 
 // NewReadCloser ...
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 inline ReadCloser NewReadCloser(T t) {
-    return MakeRef<xx::readCloserObj_t<T>>(t);
+    return NewRef<xx::readCloserObj_t<T>>(t);
 }
 
 // NewWriteCloser ...
 template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
 inline WriteCloser NewWriteCloser(T t) {
-    return MakeRef<xx::writeCloserObj_t<T>>(t);
+    return NewRef<xx::writeCloserObj_t<T>>(t);
 }
 
 // NewReadWriteCloser ...
 template <typename T, typename std::enable_if<
                           xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 inline ReadWriteCloser NewReadWriteCloser(T t) {
-    return MakeRef<xx::readWriteCloserObj_t<T>>(t);
+    return NewRef<xx::readWriteCloserObj_t<T>>(t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ReadAll ..
 template <typename Reader, typename std::enable_if<xx::has_read<Reader>::value, int>::type = 0>
 ReadCloser NopCloser(Reader r) {
-    return MakeRef<xx::nopCloser_t>();
+    return NewRef<xx::nopCloser_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

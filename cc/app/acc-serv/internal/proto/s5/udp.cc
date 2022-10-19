@@ -14,15 +14,9 @@
 namespace app {
 namespace proto {
 namespace s5 {
-
-namespace xx {
 using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// udpSessPtr ...
-struct udpSess_t;
-using udpSessPtr = Ref<udpSess_t>;
-
 // key_t ...
 typedef uint64 key_t;
 
@@ -33,10 +27,6 @@ static key_t makeKey(net::IP ip, uint16 port) {
     return a << 16 | b;
 }
 static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
-
-// udpSessMapPtr ...
-using udpSessMap = Map<key_t, udpSessPtr>;
-using udpSessMapPtr = Ref<udpSessMap>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // udpSess_t ...
@@ -49,7 +39,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     net::PacketConn ln_;  // to source client, it is net::PacketConn
     net::PacketConn rc_;  // to target server, it is udpConn_t
     net::Addr caddr_;     // source client addr
-    stats::Stats sta_;
+    Ref<stats::Stats> sta_;
     func<void()> afterClosedFn_;
 
     udpSess_t(net::PacketConn ln, net::PacketConn rc, net::Addr caddr) : ln_(ln), rc_(rc), caddr_(caddr) {}
@@ -121,6 +111,9 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         }
     }
 };
+
+// udpSessMap ...
+using udpSessMap = Map<key_t, Ref<udpSess_t>>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // udpConn_t
@@ -200,7 +193,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     // wrap ...
     static net::PacketConn wrap(net::PacketConn pc) {
         //
-        return MakeRef<udpConn_t>(pc);
+        return NewRef<udpConn_t>(pc);
     }
 };
 
@@ -213,7 +206,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 //
 error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
     // sessMap
-    udpSessMapPtr sessMap(new udpSessMap());
+    auto sessMap = NewRef<udpSessMap>();
     DEFER({
         for (auto& kv : *sessMap) {
             kv.second->Close();
@@ -243,7 +236,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         auto data = buf(0, n);
 
         // lookfor or create sess
-        udpSessPtr sess;
+        Ref<udpSess_t> sess;
 
         // use source client addr as key
         // <TODO-Notice>
@@ -263,7 +256,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
             auto rc = udpConn_t::wrap(c);
 
             // store to sessMap
-            sess = udpSessPtr(new udpSess_t(ln, rc, caddr));
+            sess = NewRef<udpSess_t>(ln, rc, caddr);
             (*sessMap)[key] = sess;
 
             // remove it after rc closed
@@ -281,8 +274,6 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
     return nil;
 }
-
-}  // namespace xx
 
 }  // namespace s5
 }  // namespace proto

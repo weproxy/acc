@@ -13,12 +13,12 @@ namespace xx {
 // timeoutMs ...
 int timeoutMs(const time::Time& t1, const time::Time& t2);
 
-// addrInfo_t ...
-struct addrInfo_t {
+// AddrInfo ...
+struct AddrInfo {
     struct addrinfo* i;
 
-    addrInfo_t() : i(0) {}
-    ~addrInfo_t() {
+    AddrInfo() : i(0) {}
+    ~AddrInfo() {
         if (i) {
             freeaddrinfo(i);
         }
@@ -28,14 +28,14 @@ struct addrInfo_t {
     const struct addrinfo* operator->() const { return i; }
 };
 
-// addr_in_t ...
+// AddrIn ...
 typedef union {
     struct sockaddr_in v4;
     struct sockaddr_in6 v6;
-} addr_in_t;
+} AddrIn;
 
 // ToAddr ...
-inline Addr ToAddr(const addr_in_t& addr) {
+inline Addr ToAddr(const AddrIn& addr) {
     IP ip;
     uint16 port;
     if (addr.v4.sin_family == AF_INET) {
@@ -51,8 +51,8 @@ inline Addr ToAddr(const addr_in_t& addr) {
 }
 
 // FromAddr ...
-inline R<addr_in_t, int> FromAddr(Addr addr) {
-    addr_in_t ain;
+inline R<AddrIn, int> FromAddr(Addr addr) {
+    AddrIn ain;
     memset(&ain, 0, sizeof(ain));
 
     auto ip4 = addr->IP.To4();
@@ -70,14 +70,10 @@ inline R<addr_in_t, int> FromAddr(Addr addr) {
     }
 }
 
-// AddrInfo
-using AddrInfo = Ref<addrInfo_t>;
-
 // GetAddrInfo ...
-using AddrInfoRet = R<AddrInfo, error>;
-AddrInfoRet GetAddrInfo(const string& host, const string& port);
-inline AddrInfoRet GetAddrInfo(const string& host, uint16 port) { return GetAddrInfo(host, GX_SS(port)); }
-AddrInfoRet GetAddrInfo(const string& addr);
+R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, const string& port);
+inline R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, uint16 port) { return GetAddrInfo(host, GX_SS(port)); }
+R<Ref<AddrInfo>, error> GetAddrInfo(const string& addr);
 
 // GetSockAddr ...
 Addr GetSockAddr(SOCKET fd);

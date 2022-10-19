@@ -24,7 +24,7 @@ using namespace gx;
 //
 // The end result of this, though, is that an endpoint/flow can't be created
 // using more than MaxEndpointSize bytes per address.
-const int MaxEndpointSize = 16;
+constexpr int MaxEndpointSize = 16;
 
 // EndpointType is the type of a gopacket Endpoint.  This type determines how
 // the bytes stored in the endpoint should be interpreted.
@@ -33,25 +33,19 @@ using EndpointType = int64;
 // Endpoint is the set of bytes used to address packets at various layers.
 // See LinkLayer, NetworkLayer, and TransportLayer specifications.
 // Endpoints are usable as map keys.
-struct endpoint_t {
+struct Endpoint {
     EndpointType typ;
     int len;
     byte raw[MaxEndpointSize];
 };
 
-// Endpoint ...
-using Endpoint = Ref<endpoint_t>;
-
 // Flow represents the direction of traffic for a packet layer, as a source and destination Endpoint.
 // Flows are usable as map keys.
-struct flow_t {
+struct Flow {
     EndpointType typ;
     int slen, dlen;
     byte src[MaxEndpointSize], dst[MaxEndpointSize];
 };
-
-// Flow ...
-using Flow = Ref<flow_t>;
 
 }  // namespace gopacket
 }  // namespace nx

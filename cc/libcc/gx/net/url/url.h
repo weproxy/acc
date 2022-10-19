@@ -9,25 +9,21 @@
 
 namespace gx {
 namespace url {
-// uinfo_t ...
-namespace xx {
-struct uinfo_t {
+
+// Userinfo ...
+struct Userinfo {
     string username;
     string password;
     bool passwordSet{false};
 
-    uinfo_t() = default;
-    uinfo_t(const string& u, const string& p, bool b) : username(u), password(p), passwordSet(b) {}
+    Userinfo() = default;
+    Userinfo(const string& u, const string& p, bool b) : username(u), password(p), passwordSet(b) {}
 
     const string& Username() const { return username; }
     R<const string&, bool> Password() const { return {password, passwordSet}; }
 
     string String() const;
 };
-}  // namespace xx
-
-// Userinfo ...
-using Userinfo = Ref<xx::uinfo_t>;
 
 // Values ...
 struct Values {
@@ -85,12 +81,11 @@ struct Values {
 // ParseQuery ...
 R<Values, error> ParseQuery(const string& query);
 
-// url_t ...
-namespace xx {
-struct url_t {
+// URL ...
+struct URL {
     string Scheme;
     string Opaque;           // encoded opaque data
-    Userinfo User;           // username and password information
+    Ref<Userinfo> User;      // username and password information
     string Host;             // host or host:port
     string Path;             // path (relative paths may omit leading slash)
     string RawPath;          // encoded path hint (see EscapedPath method)
@@ -116,10 +111,6 @@ struct url_t {
     string Hostname() const;
     string Port() const;
 };
-}  // namespace xx
-
-// URL ...
-using URL = Ref<xx::url_t>;
 
 }  // namespace url
 }  // namespace gx
@@ -140,18 +131,18 @@ inline error InvalidHostError(const string& s) {
 }
 
 // User ...
-inline Userinfo User(const string& username) { return Userinfo(new xx::uinfo_t(username, "", false)); }
+inline Ref<Userinfo> User(const string& username) { return NewRef<Userinfo>(username, "", false); }
 
 // UserPassword ...
-inline Userinfo UserPassword(const string& username, const string& password) {
-    return Userinfo(new xx::uinfo_t(username, password, true));
+inline Ref<Userinfo> UserPassword(const string& username, const string& password) {
+    return NewRef<Userinfo>(username, password, true);
 }
 
 // Parse ...
-R<URL, error> Parse(const string& rawURL);
+R<Ref<URL>, error> Parse(const string& rawURL);
 
 // ParseRequestURI ...
-R<URL, error> ParseRequestURI(const string& rawURL);
+R<Ref<URL>, error> ParseRequestURI(const string& rawURL);
 
 // QueryEscape ...
 inline string QueryEscape(const string& s) { return xx::escape(s, xx::encodeQueryComponent); }

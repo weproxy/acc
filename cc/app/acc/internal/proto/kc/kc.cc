@@ -8,13 +8,15 @@
 #include "gx/time/time.h"
 #include "logx/logx.h"
 
-NAMESPACE_BEG_KC
+namespace app {
+namespace proto {
+namespace kc {
+using namespace nx;
 
-namespace xx {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Handler ...
-struct Handler : public proto::IHandler {
-    Handler(const string& servURL) {}
+// handler_t ...
+struct handler_t : public proto::handler_t {
+    handler_t(const string& servURL) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Handle ...
@@ -31,13 +33,12 @@ struct Handler : public proto::IHandler {
         return nil;
     }
 };
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
 R<proto::Handler, error> New(const string& servURL) {
     LOGS_V(TAG << " servURL: " << servURL);
-    return {MakeRef<xx::Handler>(servURL), nil};
+    return {NewRef<handler_t>(servURL), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,4 +49,6 @@ static auto _ = [] {
     return true;
 }();
 
-NAMESPACE_END_KC
+}  // namespace kc
+}  // namespace proto
+}  // namespace app

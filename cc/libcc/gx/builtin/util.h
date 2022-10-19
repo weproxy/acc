@@ -11,7 +11,15 @@
 //
 // override std::ostream <<
 namespace std {
-//
+#if 0
+// to_string ...
+template <typename T, typename std::enable_if<gx::xx::has_string<T>::value, int>::type = 0>
+string to_string(T t) {
+    return gx::xx::to_string(t);
+}
+#endif
+
+// << byte
 inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
     char b[8];
     if (' ' <= c && c <= '~') {
@@ -29,6 +37,7 @@ inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
     return s;
 };
 
+// << char
 inline std::ostream& operator<<(std::ostream& s, char c) {
     // ...
     return operator<<(s, (unsigned char)c);
@@ -43,6 +52,7 @@ std::ostream& operator<<(std::ostream& s, T t) {
     s << gx::xx::to_string(t);
     return s;
 };
+
 }  // namespace std
 
 // override std::ostream <<

@@ -16,14 +16,14 @@ namespace proto {
 constexpr const char* TAG = "[proto]";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// IServer ...
-struct IServer : public io::xx::closer_t {
+// server_t ...
+struct server_t : public io::xx::closer_t {
     virtual error Start() = 0;
     virtual error Close() = 0;
 };
 
 // Server ...
-using Server = Ref<IServer>;
+using Server = Ref<server_t>;
 
 // NewServerFn ...
 using NewServerFn = func<R<Server, error>(const json::J& j)>;

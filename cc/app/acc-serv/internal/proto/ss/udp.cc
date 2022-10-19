@@ -8,9 +8,9 @@
 #include "nx/socks/socks.h"
 #include "ss.h"
 
-NAMESPACE_BEG_SS
-
-namespace xx {
+namespace app {
+namespace proto {
+namespace ss {
 using namespace nx;
 
 // handleUDP ...
@@ -25,6 +25,6 @@ error handleUDP(net::PacketConn pc, net::Addr caddr, const slice<byte> buf) {
     return nil;
 }
 
-}  // namespace xx
-
-NAMESPACE_END_SS
+}  // namespace ss
+}  // namespace proto
+}  // namespace app

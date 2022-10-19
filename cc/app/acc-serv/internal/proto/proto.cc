@@ -23,7 +23,7 @@ static Map<string, Server> _servers;
 void Register(const string& proto, const NewServerFn& fn) {
     LOGS_D(TAG << " Register(" << proto << ")");
     if (!_protos) {
-        _protos = MakeBox<ProtoMap>();
+        _protos = NewBox<ProtoMap>();
     }
     (*_protos)[proto] = fn;
 }

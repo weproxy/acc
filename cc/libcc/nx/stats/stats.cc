@@ -70,33 +70,34 @@ void connT::calc() {
 
     LOGS_P(oss.str());
 }
+}  // namespace xx
 
 // LogD ...
-const stats_t& stats_t::LogD(const string& msg) const {
+const Stats& Stats::LogD(const string& msg) const {
     LOGS_D(tag << " " << msg << ", " << Elapsed());
     return *this;
 }
 
 // LogI ...
-const stats_t& stats_t::LogI(const string& msg) const {
+const Stats& Stats::LogI(const string& msg) const {
     LOGS_I(tag << " " << msg << ", " << Elapsed());
     return *this;
 }
 
 // LogW ...
-const stats_t& stats_t::LogW(const string& msg) const {
+const Stats& Stats::LogW(const string& msg) const {
     LOGS_W(tag << " " << msg << ", " << Elapsed());
     return *this;
 }
 
 // LogE ...
-const stats_t& stats_t::LogE(const string& msg) const {
+const Stats& Stats::LogE(const string& msg) const {
     LOGS_E(tag << " " << msg << ", " << Elapsed());
     return *this;
 }
 
 // Start ...
-stats_t& stats_t::Start(const string& msg) {
+Stats& Stats::Start(const string& msg) {
     start = time::Now();
 
     if (!msg.empty()) {
@@ -113,7 +114,7 @@ stats_t& stats_t::Start(const string& msg) {
 }
 
 // Done ...
-stats_t& stats_t::Done(const string& msg) {
+Stats& Stats::Done(const string& msg) {
     if (tcp) {
         conn.AddTCP(typ, -1);
     } else {
@@ -133,6 +134,7 @@ stats_t& stats_t::Done(const string& msg) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // init ...
+namespace xx {
 static auto _ = [] {
     gx::go([] {
         LOGS_V(TAG << " init()");
@@ -146,6 +148,5 @@ static auto _ = [] {
     return 0;
 }();
 }  // namespace xx
-
 }  // namespace stats
 }  // namespace nx

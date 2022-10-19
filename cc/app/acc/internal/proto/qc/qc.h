@@ -6,16 +6,9 @@
 
 #include "../proto.h"
 
-#define NAMESPACE_BEG_QC \
-    namespace app {      \
-    namespace proto {    \
-    namespace qc {
-#define NAMESPACE_END_QC \
-    }                    \
-    }                    \
-    }
-
-NAMESPACE_BEG_QC
+namespace app {
+namespace proto {
+namespace qc {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TAG ...
@@ -25,4 +18,6 @@ constexpr const char* TAG = "[qc]";
 // New ...
 R<proto::Handler, error> New(const string& servURL);
 
-NAMESPACE_END_QC
+}  // namespace qc
+}  // namespace proto
+}  // namespace app

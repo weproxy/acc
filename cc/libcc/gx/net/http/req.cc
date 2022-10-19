@@ -58,7 +58,7 @@ static string removeEmptyPort(const string& host) {
 }  // namespace xx
 
 // NewRequest ...
-R<Request, error> NewRequest(const string& method1, const string& url, io::Reader body) {
+R<Ref<Request>, error> NewRequest(const string& method1, const string& url, io::Reader body) {
     const string& method = method1 == "" ? MethodGet : method1;
 
     if (!xx::validMethod(method)) {
@@ -72,7 +72,7 @@ R<Request, error> NewRequest(const string& method1, const string& url, io::Reade
 
     u->Host = xx::removeEmptyPort(u->Host);
 
-    Request req = MakeRef<xx::request_t>();
+    auto req = NewRef<Request>();
     req->Method = method;
     req->URL = u;
     req->Proto = "HTTP/1.1";

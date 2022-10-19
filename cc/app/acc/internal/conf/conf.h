@@ -8,32 +8,31 @@
 
 namespace app {
 namespace conf {
-namespace xx {
 
-// auth_t ...
-struct auth_t {
+// Auth ...
+struct Auth {
     string s5;
     string ss;
 };
 
-// server_t ...
-struct server_t {
-    auth_t auth;
+// Server ...
+struct Server {
+    Auth auth;
     strvec tcp;
     strvec udp;
     Map<string, strvec> geo;
 };
 
-// rule_t ...
-struct rule_t {
+// Rule ...
+struct Rule {
     strvec host;
     strvec serv;
 };
 
-// conf_t ...
-struct conf_t {
-    server_t server;
-    Vec<rule_t> rules;
+// Conf ...
+struct Conf {
+    Server server;
+    Vec<Rule> rules;
 
     // String ...
     string String() const;
@@ -47,23 +46,18 @@ struct conf_t {
     error Fix();
 
    private:
-    Vec<rule_t> dnsRules;
-    Vec<rule_t> netRules;
+    Vec<Rule> dnsRules;
+    Vec<Rule> netRules;
 };
-
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 
-// Conf ...
-using Conf = Ref<xx::conf_t>;
-
 // NewFromJSON ...
-R<Conf, error> NewFromJSON(const string& jsonContent);
+R<Ref<Conf>, error> NewFromJSON(const string& jsonContent);
 
 // Default ...
-Conf Default();
+Ref<Conf> Default();
 
 }  // namespace conf
 }  // namespace app

@@ -113,15 +113,15 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 #endif
 
 namespace gx {
-// MakeRef ...
+// NewRef ...
 template <typename T, typename... Args>
-Ref<T> MakeRef(Args&&... args) {
+Ref<T> NewRef(Args&&... args) {
     return std::make_shared<T, Args...>(std::forward<Args>(args)...);
 }
 
-// MakeBox ...
+// NewBox ...
 template <typename T, typename... Args>
-Box<T> MakeBox(Args&&... args) {
+Box<T> NewBox(Args&&... args) {
     return std::make_unique<T, Args...>(std::forward<Args>(args)...);
 }
 }  // namespace gx

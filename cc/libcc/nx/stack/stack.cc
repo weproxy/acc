@@ -6,6 +6,12 @@
 
 namespace nx {
 namespace stack {
-// ...
+
+// Handler ...
+static Handler _h;
+
+// SetHandler ...
+void SetHandler(Handler h) { _h = h; }
+
 }  // namespace stack
 }  // namespace nx

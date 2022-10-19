@@ -15,7 +15,7 @@ inline string EncodeToString(const slice<byte>& s) { return EncodeToString(s.dat
 inline string EncodeToString(const string& s) { return EncodeToString(s.data(), s.length()); }
 
 // DecodeString ...
-R<Vec<byte>, error> DecodeString(const string& s);
+R<slice<byte>, error> DecodeString(const string& s);
 
 }  // namespace hex
 }  // namespace gx
