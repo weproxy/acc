@@ -4,15 +4,13 @@
 
 #include "bytes.h"
 
+#include "gx/errors/errors.h"
+#include "gx/unicode/utf8/utf8.h"
+
 namespace gx {
 namespace bytes {
 // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
 error ErrTooLarge = errors::New("bytes.Buffer: too large");
-
-namespace xx {
-error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read");
-error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read");
-}  // namespace xx
 
 // IndexByte returns the index of the first instance of c in b, or -1 if c is not present in b.
 int IndexByte(const slice<byte>& s, byte c) {
