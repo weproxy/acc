@@ -12,7 +12,7 @@
 #include <thread>
 #include <tuple>
 
-#include "r.h"
+#include "autor.h"
 #include "def.h"
 #include "go.h"
 

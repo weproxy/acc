@@ -31,11 +31,11 @@ typedef int32 rune;
 // gx_TodoErr ...
 #define gx_TodoErr() fmt::Errorf("<TODO> %s:%d %s", __FILE__, __LINE__, __FUNCTION__)
 
+#include "autor.h"
 #include "chan.h"
 #include "def.h"
 #include "defer.h"
 #include "go.h"
 #include "map.h"
-#include "r.h"
 #include "slice.h"
 #include "util.h"
