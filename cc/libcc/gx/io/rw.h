@@ -4,11 +4,32 @@
 
 #pragma once
 
-#include "io.h"
 #include "xx.h"
 
 namespace gx {
 namespace io {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// error ...
+extern const error ErrShortWrite;
+extern const error ErrShortBuffer;
+extern const error errInvalidWrite;
+extern const error ErrEOF;
+extern const error ErrUnexpectedEOF;
+extern const error ErrNoProgress;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+using ReadFn = func<R<int, error>(slice<byte>)>;
+using WriteFn = func<R<int, error>(const slice<byte>)>;
+using CloseFn = func<error()>;
+//
+using ReadByteFn = func<R<byte, error>()>;
+using UnreadByteFn = func<error()>;
+using WriteByteFn = func<error(byte)>;
+using ReadRuneFn = func<R<rune, error>()>;
+using UnreadRuneFn = func<error()>;
+using WriteStringFn = func<R<int, error>(const string&)>;
+
 namespace xx {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +177,135 @@ struct readWriteCloserFn_t : public readWriteCloser_t {
     CloseFn c_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// byteReader_t ...
+struct byteReader_t {
+    virtual R<byte, error> ReadByte() = 0;
+};
+
+// byteWriter_t ...
+struct byteWriter_t {
+    virtual error WriteByte(byte c) = 0;
+};
+
+// byteScanner_t ...
+struct byteScanner_t : public byteReader_t {
+    virtual error UnreadByte() = 0;
+};
+
+// runeReader_t ...
+struct runeReader_t {
+    virtual R<rune, error> ReadRune() = 0;
+};
+
+// runeScanner_t ...
+struct runeScanner_t : public runeReader_t {
+    virtual error UnreadRune() = 0;
+};
+
+// stringWriter_t ...
+struct stringWriter_t {
+    virtual R<int, error> WriteString(const string& s) = 0;
+};
+
+// byteReaderFn_t
+struct byteReaderFn_t : public byteReader_t {
+    byteReaderFn_t(const ReadByteFn& r) : r_(r) {}
+    virtual R<byte, error> ReadByte() override {
+        if (r_) {
+            return r_();
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    ReadByteFn r_;
+};
+
+// byteScannerFn_t
+struct byteScannerFn_t : public byteScanner_t {
+    byteScannerFn_t(const ReadByteFn& r, const UnreadByteFn& f) : r_(r), f_(f) {}
+    virtual R<byte, error> ReadByte() override {
+        if (r_) {
+            return r_();
+        }
+        return {0, ErrEOF};
+    }
+    virtual error UnreadByte() override {
+        if (f_) {
+            return f_();
+        }
+        return ErrEOF;
+    }
+
+   protected:
+    ReadByteFn r_;
+    UnreadByteFn f_;
+};
+
+// byteWriterFn_t
+struct byteWriterFn_t : public byteWriter_t {
+    byteWriterFn_t(const WriteByteFn& w) : w_(w) {}
+    virtual error WriteByte(byte c) override {
+        if (w_) {
+            return w_(c);
+        }
+        return ErrEOF;
+    }
+
+   protected:
+    WriteByteFn w_;
+};
+
+// runeReaderFn_t
+struct runeReaderFn_t : public runeReader_t {
+    runeReaderFn_t(const ReadByteFn& r) : r_(r) {}
+    virtual R<rune, error> ReadRune() override {
+        if (r_) {
+            return r_();
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    ReadRuneFn r_;
+};
+
+// runeScannerFn_t
+struct runeScannerFn_t : public runeScanner_t {
+    runeScannerFn_t(const ReadRuneFn& r, const UnreadRuneFn& f) : r_(r), f_(f) {}
+    virtual R<rune, error> ReadRune() override {
+        if (r_) {
+            return r_();
+        }
+        return {0, ErrEOF};
+    }
+    virtual error UnreadRune() override {
+        if (f_) {
+            return f_();
+        }
+        return ErrEOF;
+    }
+
+   protected:
+    ReadRuneFn r_;
+    UnreadRuneFn f_;
+};
+
+// stringWriterFn_t
+struct stringWriterFn_t : public stringWriter_t {
+    stringWriterFn_t(const WriteStringFn& w) : w_(w) {}
+    virtual R<int, error> WriteString(const string& s) override {
+        if (w_) {
+            return w_(s);
+        }
+        return {0, ErrEOF};
+    }
+
+   protected:
+    WriteStringFn w_;
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // readerObj_t
 template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
@@ -280,5 +430,141 @@ struct nopCloser_t : public readCloser_t {
 };
 
 }  // namespace xx
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// ...
+using Reader = Ref<xx::reader_t>;
+using Writer = Ref<xx::writer_t>;
+using Closer = Ref<xx::closer_t>;
+using ReadWriter = Ref<xx::readWriter_t>;
+using ReadCloser = Ref<xx::readCloser_t>;
+using WriteCloser = Ref<xx::writeCloser_t>;
+using ReadWriteCloser = Ref<xx::readWriteCloser_t>;
+//
+using ByteReader = Ref<xx::byteReader_t>;
+using ByteScanner = Ref<xx::byteScanner_t>;
+using ByteWriter = Ref<xx::byteWriter_t>;
+using RuneReader = Ref<xx::runeReader_t>;
+using RuneScanner = Ref<xx::runeScanner_t>;
+using StringWriter = Ref<xx::stringWriter_t>;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// NewReaderFn ...
+inline Reader NewReaderFn(const ReadFn& fn) { return NewRef<xx::readerFn_t>(fn); }
+
+// NewWriterFn ...
+inline Writer NewWriterFn(const WriteFn& fn) { return NewRef<xx::writerFn_t>(fn); }
+
+// NewCloserFn ...
+inline Closer NewCloserFn(const CloseFn& fn) { return NewRef<xx::closerFn_t>(fn); }
+
+// NewReadWriterFn ...
+inline ReadWriter NewReadWriterFn(const ReadFn& r, const WriteFn& w) { return NewRef<xx::readWriterFn_t>(r, w); }
+
+// NewReadCloserFn ...
+inline ReadCloser NewReadCloserFn(const ReadFn& r, const CloseFn& c) { return NewRef<xx::readCloserFn_t>(r, c); }
+
+// NewWriteCloserFn ...
+inline WriteCloser NewWriteCloserFn(const WriteFn& w, const CloseFn& c) { return NewRef<xx::writeCloserFn_t>(w, c); }
+
+// NewReadWriteCloserFn ...
+inline ReadWriteCloser NewReadWriteCloserFn(const ReadFn& r, const WriteFn& w, const CloseFn& c) {
+    return NewRef<xx::readWriteCloserFn_t>(r, w, c);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// NewByteReaderFn ...
+inline ByteReader NewByteReaderFn(const ReadByteFn& r) { return NewRef<xx::byteReaderFn_t>(r); }
+
+// NewByteScannerFn ...
+inline ByteScanner NewByteScannerFn(const ReadByteFn& r, const UnreadByteFn& f) {
+    return NewRef<xx::byteScannerFn_t>(r, f);
+}
+
+// NewByteWriterFn ...
+inline ByteWriter NewByteWriterFn(const WriteByteFn& w) { return NewRef<xx::byteWriterFn_t>(w); }
+
+// NewRuneReaderFn ...
+inline RuneReader NewRuneReaderFn(const ReadRuneFn& r) { return NewRef<xx::runeReaderFn_t>(r); }
+
+// NewRuneScannerFn ...
+inline RuneScanner NewByteScannerFn(const ReadRuneFn& r, const UnreadRuneFn& f) {
+    return NewRef<xx::runeScannerFn_t>(r, f);
+}
+
+// NewStringWriterFn ...
+inline StringWriter NewStringWriterFn(const WriteStringFn& w) { return NewRef<xx::stringWriterFn_t>(w); }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// NewReader ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
+inline Reader NewReader(T t) {
+    return NewRef<xx::readerObj_t<T>>(t);
+}
+
+// NewWriter ...
+template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
+inline Writer NewWriter(T t) {
+    return NewRef<xx::writerObj_t<T>>(t);
+}
+
+// NewCloser ...
+template <typename T, typename std::enable_if<xx::has_close<T>::value, int>::type = 0>
+inline Closer NewCloser(T t) {
+    return NewRef<xx::closerObj_t<T>>(t);
+}
+
+// NewReadWriter ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
+inline ReadWriter NewReadWriter(T t) {
+    return NewRef<xx::readWriterObj_t<T>>(t);
+}
+
+// NewReadCloser ...
+template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+inline ReadCloser NewReadCloser(T t) {
+    return NewRef<xx::readCloserObj_t<T>>(t);
+}
+
+// NewWriteCloser ...
+template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
+inline WriteCloser NewWriteCloser(T t) {
+    return NewRef<xx::writeCloserObj_t<T>>(t);
+}
+
+// NewReadWriteCloser ...
+template <typename T, typename std::enable_if<
+                          xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
+inline ReadWriteCloser NewReadWriteCloser(T t) {
+    return NewRef<xx::readWriteCloserObj_t<T>>(t);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A LimitedReader reads from R but limits the amount of
+// data returned to just N bytes. Each call to Read
+// updates N to reflect the new amount remaining.
+// Read returns EOF when N <= 0 or when the underlying R returns EOF.
+struct LimitedReader : public xx::reader_t {
+    Reader R;    // underlying reader
+    int64 N{0};  // max bytes remaining
+
+    LimitedReader(Reader r, int64 n) : R(r), N(n) {}
+
+    // Read ...
+    virtual gx::R<int, error> Read(slice<byte> p) override {
+        if (N <= 0) {
+            return {0, ErrEOF};
+        }
+        if (int64(len(p)) > N) {
+            p = p(0, N);
+        }
+        AUTO_R(n, err, R->Read(p));
+        N -= int64(n);
+        return {n, err};
+    }
+};
+
 }  // namespace io
 }  // namespace gx

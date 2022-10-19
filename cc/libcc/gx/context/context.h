@@ -5,7 +5,5 @@
 #pragma once
 
 namespace gx {
-namespace context {
-
-}  // namespace context
+namespace context {}  // namespace context
 }  // namespace gx

@@ -69,7 +69,7 @@ int fmtInt(byte buf[], int w, uint64 v) {
         w--;
         buf[w] = '0';
     } else {
-        for (; v > 0;) {
+        while (v > 0) {
             w--;
             buf[w] = byte(v % 10) + '0';
             v /= 10;

@@ -8,6 +8,14 @@
 
 using namespace gx;
 
+// #define _GXR_SET_V_(v) LOGS_D("_GXR_SET_V_")
+// #define _GXR_SET_Vx(v) LOGS_D("_GXR_SET_Vx")
+
+// #define GET_MACRO_(v, x1, x2) #v[0] == '_' ? x1 : x2
+// #define GET_MACRO(v, x1, x2) GET_MACRO_(v, x1, x2)
+
+// #define _SET_V(v) _GX_EXPAND(GET_MACRO(v, _GXR_SET_V_, _GXR_SET_Vx))(v)
+
 // main ...
 int main(int argc, char* argv[]) {
     LOGX_I("[main] ...");
@@ -16,9 +24,10 @@ int main(int argc, char* argv[]) {
 #if 0
     extern void unitest_run();
     {
-        LOGF_D("a.a=%d, a.b=%d", a.a, a.b);
+        // LOGS_D("_GXR_SET_V(\"_\") =" << _SET_V(_));
+        _SET_V(a_b);
 
-        unitest_run();
+        // unitest_run();
         return 0;
     }
 #endif

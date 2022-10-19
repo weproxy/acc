@@ -4,118 +4,58 @@
 
 #pragma once
 
+#include "gx/gx.h"
+
 namespace gx {
 namespace bytes {
 
-// IndexByte ...
-inline int IndexByte(const slice<byte>& s, byte c) {
-    const byte* b = s.data();
-    for (int i = 0; i < len(s); i++) {
-        if (b[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
+// IndexByte returns the index of the first instance of c in b, or -1 if c is not present in b.
+int IndexByte(const slice<byte>& s, byte c);
 
-// Index ...
-inline int Index(const slice<byte>& s, const slice<byte>& subslice) {
-    int sl = s.length(), rl = subslice.length();
-
-    if (rl == 0) {
-        return 0;
-    } else if (rl == 1) {
-        return IndexByte(s, subslice[0]);
-    } else if (rl == sl) {
-        return memcmp(s.data(), subslice.data(), rl) == 0 ? 0 : -1;
-    }
-
-    const byte *a = s.data(), *b = subslice.data();
-    for (int i = 0; i < sl - rl; i++) {
-        if (memcmp(a + i, b, rl) == 0) {
-            return i;
-        }
-    }
-
-    return -1;
-}
+// Index returns the index of the first instance of sep in s, or -1 if sep is not present in s.
+int Index(const slice<byte>& s, const slice<byte>& subslice);
 
 // LastIndexByte ...
-inline int LastIndexByte(const slice<byte>& s, byte c) {
-    const byte* a = s.data();
-    for (int i = len(s) - 1; i >= 0; i--) {
-        if (a[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
+int LastIndexByte(const slice<byte>& s, byte c);
 
-// LastIndex ...
-inline int LastIndex(const slice<byte>& s, const slice<byte>& sep) {
-    int sl = s.length(), rl = sep.length();
+// LastIndex returns the index of the last instance of sep in s, or -1 if sep is not present in s.
+int LastIndex(const slice<byte>& s, const slice<byte>& sep);
 
-    if (rl == 0) {
-        return 0;
-    } else if (rl == 1) {
-        return LastIndexByte(s, sep[0]);
-    } else if (rl == sl) {
-        return memcmp(s.data(), sep.data(), rl) == 0 ? 0 : -1;
-    }
+// Equal reports whether a and b
+// are the same length and contain the same bytes.
+// A nil argument is equivalent to an empty slice.
+bool Equal(const slice<byte>& a, const slice<byte>& b);
 
-    const byte *a = s.data(), *b = sep.data();
-    for (int i = sl - rl; i >= 0; i--) {
-        if (memcmp(a + i, b, rl) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
+// Compare returns an integer comparing two byte slices lexicographically.
+// The result will be 0 if a == b, -1 if a < b, and +1 if a > b.
+// A nil argument is equivalent to an empty slice.
+int Compare(const slice<byte>& a, const slice<byte>& b);
 
-// Equal ...
-inline bool Equal(const slice<byte>& a, const slice<byte>& b) {
-    return (&a == &b || (a.len() == b.len() && memcmp(a.data(), b.data(), a.len()) == 0));
-}
+// Count counts the number of non-overlapping instances of sep in s.
+// If sep is an empty slice, Count returns 1 + the number of UTF-8-encoded code points in s.
+int Count(const slice<byte>& s, const slice<byte>& sep);
 
-// Compare ...
-inline int Compare(const slice<byte>& a, const slice<byte>& b) {
-    if (&a == &b) {
-        return 0;
-    }
-
-    if (a.len() == 0 && b.len() > 0) {
-        return -1;
-    } else if (a.len() > 0 && b.len() == 0) {
-        return 1;
-    }
-
-    int l = a.len() < b.len() ? a.len() : b.len();
-
-    int r = memcmp(a.data(), b.data(), l);
-    if (r != 0 || a.len() == b.len()) {
-        return r;
-    }
-
-    return l == a.len() ? -1 : 1;
-}
-
-// Count ...
-inline int Count(const slice<byte>& s, const slice<byte>& sep) {
-    int c = 0;
-    const byte *a = s.data(), *b = sep.data();
-    for (int i = 0; i < len(s); i++) {
-        for (int j = 0; j < len(sep); j++) {
-            if (a[i] == b[j]) {
-                c++;
-                break;
-            }
-        }
-    }
-    return c;
-}
-
-// Contains ...
+// Contains reports whether subslice is within b.
 inline bool Contains(const slice<byte>& s, const slice<byte>& subslice) { return Index(s, subslice) != -1; }
+
+// IndexRune interprets s as a sequence of UTF-8-encoded code points.
+// It returns the byte index of the first occurrence in s of the given rune.
+// It returns -1 if rune is not present in s.
+// If r is utf8.RuneError, it returns the first instance of any
+// invalid UTF-8 byte sequence.
+int IndexRune(const slice<byte>& s, rune r);
+
+// IndexAny interprets s as a sequence of UTF-8-encoded Unicode code points.
+// It returns the byte index of the first occurrence in s of any of the Unicode
+// code points in chars. It returns -1 if chars is empty or if there is no code
+// point in common.
+int IndexAny(const slice<byte>& s, const string& chars);
+
+// ContainsAny reports whether any of the UTF-8-encoded code points in chars are within b.
+inline bool ContainsAny(const slice<byte>& b, const string& chars) { return IndexAny(b, chars) >= 0; }
+
+// ContainsRune reports whether the rune is contained in the UTF-8-encoded byte slice b.
+inline bool ContainsRune(const slice<byte>& b, rune r) { return IndexRune(b, r) >= 0; }
 
 }  // namespace bytes
 }  // namespace gx

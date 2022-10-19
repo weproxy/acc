@@ -13,7 +13,7 @@ struct map {
     MapRef<K, V> p_;
 
     // map ...
-    map() : p_(new Map<K, V>()) {}
+    map() : p_(NewRef<Map<K, V>>()) {}
 
     // *
     Map<K, V>& operator*() { return *p_; }

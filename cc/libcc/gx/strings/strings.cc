@@ -109,11 +109,11 @@ string Replace(const string& s, const string& olds, const string& news, int n) {
 //     int fieldStart = 0;
 //     int i = 0;
 //     // Skip spaces in the front of the input.
-//     for (; i < len(s) && asciiSpace[s[i]] != 0;) {
+//     while (i < len(s) && asciiSpace[s[i]] != 0) {
 //         i++;
 //     }
 //     fieldStart = i;
-//     for (; i < len(s);) {
+//     while (i < len(s)) {
 //         if (asciiSpace[s[i]] == 0) {
 //             i++;
 //             continue;
@@ -122,7 +122,7 @@ string Replace(const string& s, const string& olds, const string& news, int n) {
 //         na++;
 //         i++;
 //         // Skip spaces in between fields.
-//         for (; i < len(s) && asciiSpace[s[i]] != 0;) {
+//         while (i < len(s) && asciiSpace[s[i]] != 0) {
 //             i++;
 //         }
 //         fieldStart = i;

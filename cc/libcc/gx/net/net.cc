@@ -11,6 +11,28 @@ namespace net {
 const error ErrClosed = errors::New("use of closed network connection");
 
 namespace xx {
+
+// ToString ...
+string ToString(Flags f) {
+    static const char* flagNames[] = {
+        "up", "broadcast", "loopback", "pointtopoint", "multicast",
+    };
+
+    string s;
+    for (int i = 0; i < sizeof(flagNames) / sizeof(flagNames[0]); i++) {
+        if ((f & (1 << i)) != 0) {
+            if (!s.empty()) {
+                s += "|";
+            }
+            s += flagNames[i];
+        }
+    }
+    if (s.empty()) {
+        s = "0";
+    }
+    return s;
+}
+
 // String ...
 string addr_t::String() const {
     if (this->IP) {

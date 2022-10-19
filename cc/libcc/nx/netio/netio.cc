@@ -106,7 +106,7 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
 //
 // Copy ...
 R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt) {
-    slice<byte> buf = make(1024 * 4);
+    slice<byte> buf = make(1024 * 8);
 
     size_t written = 0;
     error copyErr;

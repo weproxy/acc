@@ -45,7 +45,7 @@ Reader<IReader> NewReader(IReader rd, int size = defaultBufSize) {
     if (size < minReadBufferSize) {
         size = minReadBufferSize;
     }
-    Reader<IReader> r(new xx::reader_t<IReader>(rd));
+    auto r = NewRef<xx::reader_t<IReader>>(rd);
     r->reset(make(size), rd);
     return r;
 }
@@ -56,7 +56,7 @@ Writer<IWriter> NewWriter(IWriter wr, int size = defaultBufSize) {
     if (size < minReadBufferSize) {
         size = minReadBufferSize;
     }
-    Writer<IWriter> w(new xx::writer_t<IWriter>(wr));
+    auto w = NewRef<xx::writer_t<IWriter>>(wr);
     w->buf = make(size);
     return w;
 }

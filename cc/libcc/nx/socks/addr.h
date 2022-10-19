@@ -69,7 +69,7 @@ inline net::Addr ToNetAddr(Ref<Addr> addr) { return addr->ToNetAddr(); }
 
 // FromNetAddr ...
 inline Ref<Addr> FromNetAddr(net::Addr addr) {
-    Ref<Addr> r(new Addr);
+    auto r = NewRef<Addr>();
     r->FromNetAddr(addr);
     return r;
 }

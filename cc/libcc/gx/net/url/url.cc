@@ -211,7 +211,7 @@ static error parseQuery(Values m, const string& query1) {
     string query(query1);
     error err;
 
-    for (; query != "";) {
+    while (!query.empty()) {
         AUTO_R(key, _query, _, strings::Cut(query, "&"));
         query = _query;
         if (strings::Contains(key, ";")) {

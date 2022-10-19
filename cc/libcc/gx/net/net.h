@@ -257,6 +257,9 @@ enum Flags {
     FlagMulticast = 5 << 1,     // interface supports multicast access capability
 };
 
+// ToString ...
+string ToString(Flags f);
+
 // HardwareAddr ...
 struct HardwareAddr {
     uint8 B[6];

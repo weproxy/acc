@@ -99,7 +99,7 @@ struct reader_t {
         b.lastByte = -1;
         b.lastRuneSize = -1;
 
-        for (; b.w - b.r < n && b.w - b.r < len(b.buf) && b.err == nil;) {
+        while (b.w - b.r < n && b.w - b.r < len(b.buf) && b.err == nil) {
             b.fill();  // b.w-b.r < len(b.buf) => buffer is not full
         }
 
@@ -224,7 +224,7 @@ struct reader_t {
         auto& b = *this;
 
         b.lastRuneSize = -1;
-        for (; b.r == b.w;) {
+        while (b.r == b.w) {
             if (b.err != nil) {
                 return {0, b.readErr()};
             }
@@ -488,7 +488,7 @@ struct writer_t {
 
         int nn;
         error err;
-        for (; len(p) > b.Available() && b.err == nil;) {
+        while (len(p) > b.Available() && b.err == nil) {
             int n = 0;
             if (b.Buffered() == 0) {
                 // Large write, empty buffer.
@@ -535,7 +535,7 @@ struct writer_t {
     //     bool tryStringWriter = true;
 
     //     int nn == 0;
-    //     for (; len(s) > b.Available() && b.err == nil;) {
+    //     while (len(s) > b.Available() && b.err == nil) {
     //         var n int;
     //         if (b.Buffered() == 0 && sw == nil && tryStringWriter) {
     //             // Check at most once whether b.wr is a StringWriter.

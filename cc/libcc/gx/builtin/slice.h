@@ -17,7 +17,7 @@ struct slice {
     int beg_{0}, end_{0};
     VecRef<T> vec_{nullptr};
 
-    explicit slice(int len, int cap = 0) : end_(len), vec_(VecRef<T>(new Vec<T>(len))) {
+    explicit slice(int len, int cap = 0) : end_(len), vec_(NewRef<Vec<T>>(len)) {
         if (cap > len) {
             vec_->reserve(cap);
         }

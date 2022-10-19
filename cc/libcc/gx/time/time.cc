@@ -9,6 +9,24 @@
 namespace gx {
 namespace time {
 
+// // The unsigned zero year for internal calculations.
+// // Must be 1 mod 400, and times before it will not compute correctly,
+// // but otherwise can be changed at will.
+// const int64 absoluteZeroYear = -292277022399;
+
+// // The year of the zero Time.
+// // Assumed by the unixToInternal computation below.
+// const int64 internalYear = 1;
+
+// // Offsets to convert between internal and absolute or Unix times.
+// const int64 absoluteToInternal = (absoluteZeroYear - internalYear) * 365.2425 * secondsPerDay;
+// const int64 internalToAbsolute = -absoluteToInternal;
+
+// const int64 unixToInternal = (1969 * 365 + 1969 / 4 - 1969 / 100 + 1969 / 400) * secondsPerDay;
+// const int64 internalToUnix = -unixToInternal;
+
+// const int64 wallToInternal = (1884 * 365 + 1884 / 4 - 1884 / 100 + 1884 / 400) * secondsPerDay;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Before ...
 bool Time::Before(const Time& t) const { return UnixMicro() < t.UnixMicro(); }
