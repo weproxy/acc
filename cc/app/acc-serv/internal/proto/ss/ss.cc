@@ -4,8 +4,8 @@
 
 #include "ss.h"
 
-#include "../proto.h"
 #include "gx/net/net.h"
+#include "gx/time/time.h"
 #include "logx/logx.h"
 
 namespace app {
@@ -34,7 +34,7 @@ struct server_t : public proto::server_t {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
-    error Start() override {
+    virtual error Start() override {
         AUTO_R(ln, err, net::Listen(addr_));
         if (err) {
             LOGS_E(TAG << " Start(" << addr_ << "), err: " << err);

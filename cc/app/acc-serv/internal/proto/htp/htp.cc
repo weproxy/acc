@@ -4,34 +4,58 @@
 
 #include "htp.h"
 
-#include "../proto.h"
 #include "gx/net/net.h"
+#include "gx/time/time.h"
+#include "gx/io/io.h"
+#include "gx/bytes/bytes.h"
 #include "logx/logx.h"
 
 namespace app {
 namespace proto {
 namespace htp {
 
-namespace xx {
+// handleProxy handle CONNECT command
+extern error handleProxy(net::Conn c, slice<byte> hdr);
+
+// handleTunnel handle Tunneling mode
+extern error handleTunnel(net::Conn c, slice<byte> hdr);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
 static error handleConn(net::Conn c) {
     DEFER(c->Close());
 
-    return nil;
+    auto buf = make(1024 * 8);
+
+    c->SetReadDeadline(time::Now().Add(time::Second * 10));
+
+    AUTO_R(n, err, c->Read(buf));
+    if (err || n < 8) {
+        return err ? err : io::ErrShortBuffer;
+    }
+
+    auto dat = buf(0, n);
+
+    if (memcmp(dat.data(), "CONNECT ", 8) == 0) {
+        // handle CONNECT command
+        return handleProxy(c, dat);
+    }
+
+    // handle Tunneling mode
+    return handleTunnel(c, dat);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Server ...
-struct Server : public proto::server_t {
+// server_t ...
+struct server_t : public proto::server_t {
     string addr_;
     net::Listener ln_;
 
-    Server(const string& addr) : addr_(addr) {}
+    server_t(const string& addr) : addr_(addr) {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
-    error Start() override {
+    virtual error Start() override {
         AUTO_R(ln, err, net::Listen(addr_));
         if (err) {
             LOGS_E(TAG << " Listen(" << addr_ << "), err: " << err);
@@ -62,7 +86,7 @@ struct Server : public proto::server_t {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    error Close() override {
+    virtual error Close() override {
         if (ln_) {
             ln_->Close();
         }
@@ -70,7 +94,6 @@ struct Server : public proto::server_t {
         return nil;
     }
 };
-}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // New ...
@@ -82,7 +105,7 @@ R<proto::Server, error> New(const json::J& j) {
         return {nil, errors::New("invalid addr")};
     }
 
-    return {NewRef<xx::Server>(string(addr)), nil};
+    return {NewRef<server_t>(string(addr)), nil};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -26,7 +26,7 @@ int RuneLen(rune r);
 // EncodeRune writes into p (which must be large enough) the UTF-8 encoding of the rune.
 // If the rune is out of range, it writes the encoding of RuneError.
 // It returns the number of bytes written.
-int EncodeRune(slice<byte>& p, rune r);
+int EncodeRune(slice<byte> p, rune r);
 
 // AppendRune appends the UTF-8 encoding of r to the end of p and
 // returns the extended buffer. If the rune is out of range,

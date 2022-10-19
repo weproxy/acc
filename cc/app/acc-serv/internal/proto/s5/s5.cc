@@ -164,7 +164,7 @@ struct server_t : public proto::server_t {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Start ...
-    error Start() override {
+    virtual error Start() override {
         AUTO_R(ln, err, net::Listen(addr_));
         if (err) {
             LOGS_E(TAG << " Listen(" << addr_ << "), err: " << err);
@@ -195,7 +195,7 @@ struct server_t : public proto::server_t {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Close ...
-    error Close() override {
+    virtual error Close() override {
         if (ln_) {
             ln_->Close();
         }

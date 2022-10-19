@@ -100,7 +100,7 @@ int RuneLen(rune r) {
 }
 
 // EncodeRune ..
-int EncodeRune(slice<byte>& p, rune r) {
+int EncodeRune(slice<byte> p, rune r) {
     // Negative values are erroneous. Making it unsigned addresses the problem.
     uint32 i = uint32(r);
     if (i <= xx::rune1Max) {

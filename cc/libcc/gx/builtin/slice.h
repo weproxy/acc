@@ -230,6 +230,15 @@ inline int copy(slice<byte>& dst, const string& src) {
 }
 
 // copy ...
+inline int copy(slice<byte>&& dst, const string& src) {
+    int i = 0;
+    for (; i < len(dst) && i < len(src); i++) {
+        dst[i] = src[i];
+    }
+    return i;
+}
+
+// copy ...
 template <typename T = byte>
 int copy(slice<T>& dst, const slice<T>& src) {
     int i = 0;

@@ -71,26 +71,11 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         gx::go([thiz] {
             DEFER(thiz->Close());
 
-            slice<byte> buf = make(1024 * 4);
+            netio::CopyOption opt(time::Minute * 5, 0);
+            opt.CopingFn = [thiz](int size) { thiz->sta_->AddSent(size); };
 
-            for (;;) {
-                // 5 minutes timeout
-                thiz->rc_->SetReadDeadline(time::Now().Add(time::Minute * 5));
-
-                // udpConn_t::ReadFrom()
-                // readFrom target server, and pack data (to client)
-                AUTO_R(nr, _, er1, thiz->rc_->ReadFrom(buf));
-                if (er1) {
-                    break;
-                } else if (nr > 0) {
-                    AUTO_R(nw, er2, thiz->ln_->WriteTo(buf(0, nr), thiz->caddr_));
-                    if (er2) {
-                        break;
-                    } else if (nw > 0) {
-                        thiz->sta_->AddSent(nw);
-                    }
-                }
-            }
+            // copy to ln_ from rc_
+            netio::Copy(thiz->ln_, thiz->rc_, opt);
         });
     }
 

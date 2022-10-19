@@ -4,7 +4,8 @@
 
 #include "qc.h"
 
-#include "../proto.h"
+#include "gx/net/net.h"
+#include "gx/time/time.h"
 #include "logx/logx.h"
 
 namespace app {

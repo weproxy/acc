@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "gx/gx.h"
+#include "buffer.h"
 
 namespace gx {
 namespace bytes {
