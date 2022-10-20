@@ -13,7 +13,7 @@ namespace proto {
 namespace htp {
 
 // handleProxy handle reverse-proxy mode
-error handleProxy(net::Conn c, slice<> hdr) { return gx_TodoErr(); }
+error handleProxy(net::Conn c, bytez<> hdr) { return gx_TodoErr(); }
 
 }  // namespace htp
 }  // namespace proto

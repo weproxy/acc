@@ -13,7 +13,7 @@ namespace bytes {
 error ErrTooLarge = errors::New("bytes.Buffer: too large");
 
 // IndexByte returns the index of the first instance of c in b, or -1 if c is not present in b.
-int IndexByte(const slice<>& s, byte c) {
+int IndexByte(const bytez<>& s, byte c) {
     const byte* b = s.data();
     for (int i = 0; i < len(s); i++) {
         if (b[i] == c) {
@@ -24,7 +24,7 @@ int IndexByte(const slice<>& s, byte c) {
 }
 
 // Index returns the index of the first instance of sep in s, or -1 if sep is not present in s.
-int Index(const slice<>& s, const slice<>& subslice) {
+int Index(const bytez<>& s, const bytez<>& subslice) {
     int sl = len(s), rl = len(subslice);
 
     if (rl == 0) {
@@ -46,7 +46,7 @@ int Index(const slice<>& s, const slice<>& subslice) {
 }
 
 // LastIndexByte ...
-int LastIndexByte(const slice<>& s, byte c) {
+int LastIndexByte(const bytez<>& s, byte c) {
     const byte* a = s.data();
     for (int i = len(s) - 1; i >= 0; i--) {
         if (a[i] == c) {
@@ -57,7 +57,7 @@ int LastIndexByte(const slice<>& s, byte c) {
 }
 
 // LastIndex returns the index of the last instance of sep in s, or -1 if sep is not present in s.
-int LastIndex(const slice<>& s, const slice<>& sep) {
+int LastIndex(const bytez<>& s, const bytez<>& sep) {
     int sl = len(s), rl = len(sep);
 
     if (rl == 0) {
@@ -80,14 +80,14 @@ int LastIndex(const slice<>& s, const slice<>& sep) {
 // Equal reports whether a and b
 // are the same length and contain the same bytes.
 // A nil argument is equivalent to an empty slice.
-bool Equal(const slice<>& a, const slice<>& b) {
+bool Equal(const bytez<>& a, const bytez<>& b) {
     return (&a == &b || (a.len() == b.len() && memcmp(a.data(), b.data(), a.len()) == 0));
 }
 
 // Compare returns an integer comparing two byte slices lexicographically.
 // The result will be 0 if a == b, -1 if a < b, and +1 if a > b.
 // A nil argument is equivalent to an empty slice.
-int Compare(const slice<>& a, const slice<>& b) {
+int Compare(const bytez<>& a, const bytez<>& b) {
     if (&a == &b) {
         return 0;
     }
@@ -110,7 +110,7 @@ int Compare(const slice<>& a, const slice<>& b) {
 
 // Count counts the number of non-overlapping instances of sep in s.
 // If sep is an empty slice, Count returns 1 + the number of UTF-8-encoded code points in s.
-int Count(const slice<>& s, const slice<>& sep) {
+int Count(const bytez<>& s, const bytez<>& sep) {
     int c = 0;
     const byte *a = s.data(), *b = sep.data();
     for (int i = 0; i < len(s); i++) {
@@ -146,7 +146,7 @@ int IndexString(const string& chars, const string& s) { return -1; }
 // It returns -1 if rune is not present in s.
 // If r is utf8.RuneError, it returns the first instance of any
 // invalid UTF-8 byte sequence.
-int IndexRune(const slice<>& s, rune r) {
+int IndexRune(const bytez<>& s, rune r) {
     if (0 <= r && r < utf8::RuneSelf) {
         return IndexByte(s, byte(r));
     } else if (r == utf8::RuneError) {
@@ -200,7 +200,7 @@ R<asciiSet, bool> makeASCIISet(const string& chars) {
 // It returns the byte index of the first occurrence in s of any of the Unicode
 // code points in chars. It returns -1 if chars is empty or if there is no code
 // point in common.
-int IndexAny(const slice<>& s, const string& chars) {
+int IndexAny(const bytez<>& s, const string& chars) {
     if (chars == "") {
         // Avoid scanning all of s.
         return -1;

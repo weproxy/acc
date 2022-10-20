@@ -27,7 +27,7 @@ struct tcpPeer_t : public conn_t {
     }
 
     // Read ...
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         } else if (len(b) <= 0) {
@@ -45,7 +45,7 @@ struct tcpPeer_t : public conn_t {
     }
 
     // Write ...
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         } else if (len(b) <= 0) {
@@ -149,7 +149,7 @@ struct udpConn_t : public packetConn_t {
     virtual ~udpConn_t() { Close(); }
 
     // ReadFrom ...
-    virtual R<int, Addr, error> ReadFrom(slice<> b) override {
+    virtual R<int, Addr, error> ReadFrom(bytez<> b) override {
         if (len(b) <= 0) {
             return {0, nil, io::ErrShortBuffer};
         }
@@ -172,7 +172,7 @@ struct udpConn_t : public packetConn_t {
     }
 
     // WriteTo ...
-    virtual R<int, error> WriteTo(const slice<> b, Addr raddr) override {
+    virtual R<int, error> WriteTo(const bytez<> b, Addr raddr) override {
         if (len(b) <= 0) {
             return {0, io::ErrShortBuffer};
         }

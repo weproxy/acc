@@ -91,7 +91,7 @@ const string Addr::String() const {
 //	| ATYP | ADDR | PORT |
 //	+------+------+------+
 //	|  1   |  x   |  2   |
-R<Ref<Addr>, error> ParseAddr(const slice<> B) {
+R<Ref<Addr>, error> ParseAddr(const bytez<> B) {
     if (len(B) < 1 + 1 + 1 + 2) {
         return {nil, ErrInvalidAddrLen};
     }
@@ -114,7 +114,7 @@ R<Ref<Addr>, error> ParseAddr(const slice<> B) {
 }
 
 // CopyAddr ...
-R<int, error> CopyAddr(slice<> buf, Ref<Addr> addr) {
+R<int, error> CopyAddr(bytez<> buf, Ref<Addr> addr) {
     if (addr || len(buf) >= len(addr->B)) {
         memcpy(buf.data(), addr->B.data(), len(addr->B));
         return {len(addr->B), nil};
@@ -123,7 +123,7 @@ R<int, error> CopyAddr(slice<> buf, Ref<Addr> addr) {
 }
 
 // AppendAddr ...
-R<int, error> AppendAddr(slice<> buf, Ref<Addr> addr) {
+R<int, error> AppendAddr(bytez<> buf, Ref<Addr> addr) {
     if (addr) {
         for (int i = 0; i < len(addr->B); i++) {
             append(buf, addr->B[i]);

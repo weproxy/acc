@@ -54,14 +54,14 @@ void test_slice() {
     std::cout << "n3=" << n3 << std::endl;
     std::cout << "n4=" << n4 << std::endl;
 
-    slice<> s1 = make<byte>(0, 100);
-    slice<> s2 = append(s1, '$', 'b', 'c', 'x', 'y', 'z');
-    slice<> s3 = {4, 5, '6', '&', '8', '9'};
-    // slice<> s3 = {'4'};
+    bytez<> s1 = make<byte>(0, 100);
+    bytez<> s2 = append(s1, '$', 'b', 'c', 'x', 'y', 'z');
+    bytez<> s3 = {4, 5, '6', '&', '8', '9'};
+    // bytez<> s3 = {'4'};
     PRINT_SLICE(s3);
-    slice<> s4 = s3(2, 3);
-    slice<> s5 = append(s4, 'e', 'f');
-    slice<> s6 = s5;
+    bytez<> s4 = s3(2, 3);
+    bytez<> s5 = append(s4, 'e', 'f');
+    bytez<> s6 = s5;
     copy(s6, s2);
 
     PRINT_SLICE(s1);

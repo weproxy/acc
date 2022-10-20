@@ -15,10 +15,10 @@ namespace htp {
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleProxy handle CONNECT command
-extern error handleProxy(net::Conn c, slice<> hdr);
+extern error handleProxy(net::Conn c, bytez<> hdr);
 
 // handleTunnel handle Tunneling mode
-extern error handleTunnel(net::Conn c, slice<> hdr);
+extern error handleTunnel(net::Conn c, bytez<> hdr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleConn ...

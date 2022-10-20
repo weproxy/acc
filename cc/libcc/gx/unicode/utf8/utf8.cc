@@ -100,7 +100,7 @@ int RuneLen(rune r) {
 }
 
 // EncodeRune ..
-int EncodeRune(slice<> p, rune r) {
+int EncodeRune(bytez<> p, rune r) {
     // Negative values are erroneous. Making it unsigned addresses the problem.
     uint32 i = uint32(r);
     if (i <= xx::rune1Max) {
@@ -130,7 +130,7 @@ int EncodeRune(slice<> p, rune r) {
 }
 
 // appendRuneNonASCII ...
-static slice<> appendRuneNonASCII(const slice<> p, rune r) {
+static bytez<> appendRuneNonASCII(const bytez<> p, rune r) {
     // Negative values are erroneous. Making it unsigned addresses the problem.
     uint32 i = uint32(r);
     if (i <= xx::rune2Max) {
@@ -150,7 +150,7 @@ static slice<> appendRuneNonASCII(const slice<> p, rune r) {
 }
 
 // EncodeRune ..
-slice<> AppendRune(const slice<>& p, rune r) {
+bytez<> AppendRune(const bytez<>& p, rune r) {
     // This function is inlineable for fast handling of ASCII.
     if (uint32(r) <= xx::rune1Max) {
         return append(p, byte(r));
@@ -159,7 +159,7 @@ slice<> AppendRune(const slice<>& p, rune r) {
 }
 
 // RuneCount ...
-int RuneCount(const slice<>& p) {
+int RuneCount(const bytez<>& p) {
     int n = 0;
     int np = len(p);
     for (int i = 0; i < np;) {
@@ -232,11 +232,11 @@ int RuneCountInString(const string& s) {
 }
 
 // Valid ...
-bool Valid(const slice<>& p1) {
+bool Valid(const bytez<>& p1) {
     // This optimization avoids the need to recompute the capacity
     // when generating code for p[8:], bringing it to parity with
     // ValidString, which was 20% faster on long ASCII strings.
-    slice<> p = p1(0, len(p1));
+    bytez<> p = p1(0, len(p1));
 
     // Fast path. Check for and skip 8 bytes of ASCII characters per iteration.
     while (len(p) >= 8) {
@@ -341,7 +341,7 @@ bool ValidRune(rune r) {
 
 // FullRune reports whether the bytes in p begin with a full UTF-8 encoding of a rune.
 // An invalid encoding is considered a full Rune since it will convert as a width-1 error rune.
-bool FullRune(const slice<>& p) {
+bool FullRune(const bytez<>& p) {
     int n = len(p);
     if (n == 0) {
         return false;
@@ -381,7 +381,7 @@ bool FullRuneInString(const string& s) {
 }
 
 // DecodeRune ...
-R<rune, int> DecodeRune(const slice<>& p) {
+R<rune, int> DecodeRune(const bytez<>& p) {
     int n = len(p);
     if (n < 1) {
         return {RuneError, 0};
@@ -465,7 +465,7 @@ R<rune, int> DecodeRuneInString(const string& s) {
 }
 
 // DecodeLastRune ...
-R<rune, int> DecodeLastRune(const slice<>& p) {
+R<rune, int> DecodeLastRune(const bytez<>& p) {
     rune r;
     int size = 0;
 

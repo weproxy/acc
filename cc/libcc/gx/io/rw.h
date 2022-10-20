@@ -19,8 +19,8 @@ extern const error ErrNoProgress;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-using ReadFn = func<R<int, error>(slice<>)>;
-using WriteFn = func<R<int, error>(const slice<>)>;
+using ReadFn = func<R<int, error>(bytez<>)>;
+using WriteFn = func<R<int, error>(const bytez<>)>;
 using CloseFn = func<error()>;
 //
 using ReadByteFn = func<R<byte, error>()>;
@@ -36,13 +36,13 @@ namespace xx {
 // reader_t  ...
 struct reader_t {
     virtual ~reader_t() {}
-    virtual R<int, error> Read(slice<>) = 0;
+    virtual R<int, error> Read(bytez<>) = 0;
 };
 
 // writer_t  ...
 struct writer_t {
     virtual ~writer_t() {}
-    virtual R<int, error> Write(const slice<>) = 0;
+    virtual R<int, error> Write(const bytez<>) = 0;
 };
 
 // closer_t  ...
@@ -67,7 +67,7 @@ struct readWriteCloser_t : public reader_t, public writer_t, public closer_t {};
 // readerFn_t
 struct readerFn_t : public reader_t {
     readerFn_t(const ReadFn& r) : r_(r) {}
-    virtual R<int, error> Read(slice<> b) override { return r_(b); }
+    virtual R<int, error> Read(bytez<> b) override { return r_(b); }
 
    protected:
     ReadFn r_;
@@ -76,7 +76,7 @@ struct readerFn_t : public reader_t {
 // writerFn_t
 struct writerFn_t : public writer_t {
     writerFn_t(const WriteFn& w) : w_(w) {}
-    virtual R<int, error> Write(const slice<> b) override { return w_(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return w_(b); }
 
    protected:
     WriteFn w_;
@@ -94,8 +94,8 @@ struct closerFn_t : public closer_t {
 // readWriterFn_t
 struct readWriterFn_t : public readWriter_t {
     readWriterFn_t(const ReadFn& r, const WriteFn& w) : r_(r), w_(w) {}
-    virtual R<int, error> Read(slice<> b) override { return r_(b); }
-    virtual R<int, error> Write(const slice<> b) override { return w_(b); }
+    virtual R<int, error> Read(bytez<> b) override { return r_(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return w_(b); }
 
    protected:
     ReadFn r_;
@@ -105,7 +105,7 @@ struct readWriterFn_t : public readWriter_t {
 // readCloserFn_t
 struct readCloserFn_t : public readCloser_t {
     readCloserFn_t(const ReadFn& r, const CloseFn& c) : r_(r), c_(c) {}
-    virtual R<int, error> Read(slice<> b) override { return r_(b); }
+    virtual R<int, error> Read(bytez<> b) override { return r_(b); }
     virtual error Close() override { return c_(); }
 
    protected:
@@ -116,7 +116,7 @@ struct readCloserFn_t : public readCloser_t {
 // writeCloserFn_t
 struct writeCloserFn_t : public writeCloser_t {
     writeCloserFn_t(const WriteFn& w, const CloseFn& c) : w_(w), c_(c) {}
-    virtual R<int, error> Write(const slice<> b) override { return w_(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return w_(b); }
     virtual error Close() override { return c_(); }
 
    protected:
@@ -127,8 +127,8 @@ struct writeCloserFn_t : public writeCloser_t {
 // readWriteCloserFn_t
 struct readWriteCloserFn_t : public readWriteCloser_t {
     readWriteCloserFn_t(const ReadFn& r, const WriteFn& w, const CloseFn& c) : r_(r), w_(w), c_(c) {}
-    virtual R<int, error> Read(slice<> b) override { return r_(b); }
-    virtual R<int, error> Write(const slice<> b) override { return w_(b); }
+    virtual R<int, error> Read(bytez<> b) override { return r_(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return w_(b); }
     virtual error Close() override { return c_ ? c_() : nil; }
 
    protected:
@@ -231,7 +231,7 @@ struct stringWriterFn_t : public stringWriter_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
 struct readerObj_t : public reader_t {
     readerObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (t_) {
             return t_->Read(b);
         }
@@ -246,7 +246,7 @@ struct readerObj_t : public reader_t {
 template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
 struct writerObj_t : public writer_t {
     writerObj_t(T t) : t_(t) {}
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (t_) {
             return t_->Write(b);
         }
@@ -271,13 +271,13 @@ struct closerObj_t : public closer_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
 struct readWriterObj_t : public readWriter_t {
     readWriterObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (t_) {
             return t_->Read(b);
         }
         return {0, ErrEOF};
     }
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (t_) {
             return t_->Write(b);
         }
@@ -292,7 +292,7 @@ struct readWriterObj_t : public readWriter_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 struct readCloserObj_t : public readCloser_t {
     readCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (t_) {
             return t_->Read(b);
         }
@@ -308,7 +308,7 @@ struct readCloserObj_t : public readCloser_t {
 template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
 struct writeCloserObj_t : public writeCloser_t {
     writeCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (t_) {
             return t_->Write(b);
         }
@@ -325,13 +325,13 @@ template <typename T, typename std::enable_if<
                           xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 struct readWriteCloserObj_t : public readWriteCloser_t {
     readWriteCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (t_) {
             return t_->Read(b);
         }
         return {0, ErrEOF};
     }
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (t_) {
             return t_->Write(b);
         }
@@ -345,7 +345,7 @@ struct readWriteCloserObj_t : public readWriteCloser_t {
 
 // nopCloser_t ...
 struct nopCloser_t : public readCloser_t {
-    virtual R<int, error> Read(slice<> b) override { return {0, nil}; }
+    virtual R<int, error> Read(bytez<> b) override { return {0, nil}; }
     virtual error Close() override { return nil; }
 };
 
@@ -473,7 +473,7 @@ struct LimitedReader : public xx::reader_t {
     LimitedReader(Reader r, int64 n) : R(r), N(n) {}
 
     // Read ...
-    virtual gx::R<int, error> Read(slice<> p) override {
+    virtual gx::R<int, error> Read(bytez<> p) override {
         if (N <= 0) {
             return {0, ErrEOF};
         }

@@ -28,7 +28,7 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
     DEFER(c->SetDeadline(time::Time{}));
 
     socks::Command cmd = socks::Command(0);
-    slice<> buf = make(256);
+    bytez<> buf = make(256);
 
     // >>> REQ:
     //     | VER | NMETHODS | METHODS  |

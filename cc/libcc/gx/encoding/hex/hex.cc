@@ -93,11 +93,11 @@ string EncodeToString(const void* src, size_t srcLen) {
 }
 
 // DecodeString ...
-R<slice<>, error> DecodeString(const string& s) {
+R<bytez<>, error> DecodeString(const string& s) {
     const byte* src = (const byte*)s.data();
     int srcLen = s.size();
 
-    slice<> r(0, srcLen);
+    bytez<> r(0, srcLen);
     AUTO_R(dstLen, err, xx::Decode(r.data(), srcLen, src, srcLen));
     if (err) {
         return {{}, err};

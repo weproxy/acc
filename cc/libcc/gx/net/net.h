@@ -61,8 +61,8 @@ namespace xx {
 struct conn_t : public io::xx::closer_t {
     virtual ~conn_t() {}
 
-    virtual R<int, error> Read(slice<> b) = 0;
-    virtual R<int, error> Write(const slice<> b) = 0;
+    virtual R<int, error> Read(bytez<> b) = 0;
+    virtual R<int, error> Write(const bytez<> b) = 0;
 
     virtual error Close() {
         println("conn_t.Close()");
@@ -91,8 +91,8 @@ struct connWrap_t : public conn_t {
     connWrap_t() = default;
     connWrap_t(Conn c) : wrap_(c) {}
 
-    virtual R<int, error> Read(slice<> buf) override { return wrap_->Read(buf); }
-    virtual R<int, error> Write(const slice<> buf) override { return wrap_->Write(buf); }
+    virtual R<int, error> Read(bytez<> buf) override { return wrap_->Read(buf); }
+    virtual R<int, error> Write(const bytez<> buf) override { return wrap_->Write(buf); }
 
     virtual error Close() override { return wrap_->Close(); };
     virtual error CloseRead() override { return wrap_->CloseRead(); }
@@ -114,8 +114,8 @@ struct connWrap_t : public conn_t {
 struct packetConn_t : public io::xx::closer_t {
     virtual ~packetConn_t() {}
 
-    virtual R<int, Addr, error> ReadFrom(slice<> b) = 0;
-    virtual R<int, error> WriteTo(const slice<> b, Addr addr) = 0;
+    virtual R<int, Addr, error> ReadFrom(bytez<> b) = 0;
+    virtual R<int, error> WriteTo(const bytez<> b, Addr addr) = 0;
 
     virtual error Close() { return nil; };
     virtual error CloseRead() { return xx::CloseRead(Fd()); }
@@ -140,8 +140,8 @@ struct packetConnWrap_t : public packetConn_t {
     packetConnWrap_t() = default;
     packetConnWrap_t(PacketConn pc) : wrap_(pc) {}
 
-    virtual R<int, net::Addr, error> ReadFrom(slice<> buf) override { return wrap_->ReadFrom(buf); }
-    virtual R<int, error> WriteTo(const slice<> buf, Addr addr) override { return wrap_->WriteTo(buf, addr); }
+    virtual R<int, net::Addr, error> ReadFrom(bytez<> buf) override { return wrap_->ReadFrom(buf); }
+    virtual R<int, error> WriteTo(const bytez<> buf, Addr addr) override { return wrap_->WriteTo(buf, addr); }
 
     virtual error Close() override { return wrap_->Close(); };
     virtual error CloseRead() override { return wrap_->CloseRead(); }

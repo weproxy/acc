@@ -143,6 +143,10 @@ struct slice {
     }
 };
 
+// bytez ...
+template <typename T = byte>
+using bytez = slice<T>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // append ...
 namespace xx {
@@ -191,8 +195,8 @@ int cap(const slice<T>& s) {
 }
 
 // append ...
-inline slice<> append(const slice<>& dst, const string& src) {
-    slice<> s(dst);
+inline bytez<> append(const bytez<>& dst, const string& src) {
+    bytez<> s(dst);
     if (!src.empty()) {
         s._create_if_null();
         s.vec_->insert(s.vec_->begin() + s.end_, src.begin(), src.end());
@@ -225,7 +229,7 @@ slice<T> append(const slice<T>& dst, const slice<T>& src) {
 }
 
 // copy ...
-inline int copy(slice<>& dst, const string& src) {
+inline int copy(bytez<>& dst, const string& src) {
     int i = 0;
     for (; i < len(dst) && i < len(src); i++) {
         dst[i] = src[i];
@@ -234,7 +238,7 @@ inline int copy(slice<>& dst, const string& src) {
 }
 
 // copy ...
-inline int copy(slice<>&& dst, const string& src) {
+inline int copy(bytez<>&& dst, const string& src) {
     int i = 0;
     for (; i < len(dst) && i < len(src); i++) {
         dst[i] = src[i];

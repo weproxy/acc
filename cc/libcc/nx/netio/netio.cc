@@ -13,7 +13,7 @@ namespace netio {
 //
 // Copy ...
 R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
-    slice<> buf = make(1024 * 32);
+    bytez<> buf = make(1024 * 32);
 
     size_t written = 0;
     error copyErr;
@@ -106,7 +106,7 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
 //
 // Copy ...
 R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt) {
-    slice<> buf = make(1024 * 8);
+    bytez<> buf = make(1024 * 8);
 
     size_t written = 0, times = 0;
     error copyErr;

@@ -13,7 +13,7 @@ namespace proto {
 namespace ss {
 
 extern error handleTCP(net::Conn c, net::Addr raddr);
-extern error handleUDP(net::PacketConn pc, net::Addr caddr, const slice<> buf);
+extern error handleUDP(net::PacketConn pc, net::Addr caddr, const bytez<> buf);
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
@@ -67,7 +67,7 @@ struct server_t : public proto::server_t {
         });
 
         gx::go([pc] {
-            slice<> buf = make(1024 * 8);
+            bytez<> buf = make(1024 * 8);
 
             for (;;) {
                 AUTO_R(n, caddr, err, pc->ReadFrom(buf));

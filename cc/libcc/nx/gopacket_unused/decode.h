@@ -88,7 +88,7 @@ struct Decoder {
     // Decode decodes the bytes of a packet, sending decoded values and other
     // information to PacketBuilder, and returning an error if unsuccessful.  See
     // the PacketBuilder documentation for more details.
-    virtual error Decode(slice<>, PacketBuilder*) = 0;
+    virtual error Decode(bytez<>, PacketBuilder*) = 0;
 };
 
 // DecodeFunc wraps a function to make it a Decoder.

@@ -31,7 +31,7 @@ namespace xx {
 // reader_t ...
 template <typename Reader, typename std::enable_if<gx::io::xx::has_read<Reader>::value, int>::type = 0>
 struct reader_t {
-    slice<> buf;   //
+    bytez<> buf;   //
     Reader rd;        // reader provided by the client
     int r{0}, w{0};    // buf read and write positions
     error err;         //
@@ -52,7 +52,7 @@ struct reader_t {
     }
 
     // reset ...
-    void reset(slice<> buf, Reader r) {
+    void reset(bytez<> buf, Reader r) {
         auto& b = *this;
         b.buf = buf;
         b.rd = r;
@@ -101,7 +101,7 @@ struct reader_t {
     }
 
     // Peek ...
-    R<slice<>, error> Peek(int n) {
+    R<bytez<>, error> Peek(int n) {
         if (n < 0) {
             return {{}, ErrNegativeCount};
         }
@@ -173,7 +173,7 @@ struct reader_t {
     }
 
     // Read ...
-    R<int, error> Read(slice<> p) {
+    R<int, error> Read(bytez<> p) {
         auto& b = *this;
 
         int n;
@@ -275,10 +275,10 @@ struct reader_t {
     }
 
     // ReadSlice ...
-    R<slice<>, error> ReadSlice(byte delim) {
+    R<bytez<>, error> ReadSlice(byte delim) {
         auto& b = *this;
 
-        slice<> line;
+        bytez<> line;
         error err;
         int s = 0;  // search start index
         for (;;) {
@@ -323,7 +323,7 @@ struct reader_t {
     }
 
     // ReadLine ...
-    R<slice<>, bool, error> ReadLine() {
+    R<bytez<>, bool, error> ReadLine() {
         auto& b = *this;
 
         bool isPrefix = false;
@@ -363,15 +363,15 @@ struct reader_t {
     }
 
     // collectFragments ...
-    R<slice<slice<>>, slice<>, int, error> collectFragments(byte delim) {
+    R<slice<bytez<>>, bytez<>, int, error> collectFragments(byte delim) {
         auto& b = *this;
 
-        slice<slice<>> fullBuffers;
-        slice<> finalFragment;
+        slice<bytez<>> fullBuffers;
+        bytez<> finalFragment;
         int totalLen = 0;
         error err;
 
-        slice<> frag;
+        bytez<> frag;
         // Use ReadSlice to look for delim, accumulating full buffers.
         for (;;) {
             AUTO_R(_frag, e, b.ReadSlice(delim));
@@ -385,7 +385,7 @@ struct reader_t {
             }
 
             // Make a copy of the buffer.
-            slice<> buf = make(len(frag));
+            bytez<> buf = make(len(frag));
             copy(buf, frag);
             fullBuffers = append(fullBuffers, buf);
             totalLen += len(buf);
@@ -396,12 +396,12 @@ struct reader_t {
     }
 
     // ReadBytes ...
-    R<slice<>, error> ReadBytes(byte delim) {
+    R<bytez<>, error> ReadBytes(byte delim) {
         auto& b = *this;
 
         AUTO_R(full, frag, n, err, b.collectFragments(delim));
         // Allocate new buffer to hold the full pieces and the fragment.
-        slice<> buf = make(n);
+        bytez<> buf = make(n);
         n = 0;
         // Copy full pieces and fragment in.
         for (int i = 0; i < len(full); i++) {
@@ -437,7 +437,7 @@ struct reader_t {
 template <typename Writer, typename std::enable_if<gx::io::xx::has_write<Writer>::value, int>::type = 0>
 struct writer_t {
     error err;
-    slice<> buf;
+    bytez<> buf;
     int n{0};
     Writer wr;
 
@@ -489,13 +489,13 @@ struct writer_t {
     int Available() { return len(buf) - n; };
 
     // AvailableBuffer ...
-    slice<> AvailableBuffer() { return buf(n)(0, 0); }
+    bytez<> AvailableBuffer() { return buf(n)(0, 0); }
 
     // Buffered ...
     int Buffered() { return n; }
 
     // Write ...
-    R<int, error> Write(slice<> p) {
+    R<int, error> Write(bytez<> p) {
         auto& b = *this;
 
         int nn;

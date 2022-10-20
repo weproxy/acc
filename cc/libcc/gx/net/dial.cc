@@ -21,7 +21,7 @@ struct tcpConn_t : public conn_t {
     virtual ~tcpConn_t() { Close(); }
 
     // Read ...
-    virtual R<int, error> Read(slice<> b) override {
+    virtual R<int, error> Read(bytez<> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         } else if (len(b) <= 0) {
@@ -39,7 +39,7 @@ struct tcpConn_t : public conn_t {
     }
 
     // Write ...
-    virtual R<int, error> Write(const slice<> b) override {
+    virtual R<int, error> Write(const bytez<> b) override {
         if (fd_ <= 0) {
             return {0, ErrClosed};
         } else if (len(b) <= 0) {
