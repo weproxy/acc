@@ -12,7 +12,7 @@
 //
 namespace logx {
 // Level ..
-enum Level {
+enum class Level {
     NONE = 0,
     ERR,
     WRN,
@@ -26,10 +26,14 @@ namespace xx {
 // reach ...
 extern bool reach(Level lvl);
 
-// logs/logf ...
+// logs ...
 extern void logs(Level lvl, const char* file, int line, const char* msg);
+
+// logf ...
 extern void logf(Level lvl, const char* file, int line, const char* fmt, va_list args);
 extern void logf(Level lvl, const char* file, int line, const char* fmt, ...);
+
+// report ...
 extern void report(const std::string& msg);
 
 // out ...

@@ -7,28 +7,27 @@
 namespace logx {
 namespace xx {
 
-// report ...
-static struct report {
-    bool enable_;
-    std::string servUrl_;
-    int maxKB_;
-    int maxSec_;
+// report_t ...
+static struct report_t {
+    bool Enabled{false};
+    std::string ServURL;
+    int MaxKB{1024 * 10};
+    int MaxSec{60 * 5};
 
-    FILE* fp_;
-    int fsize_;
-    int findex_;
+    FILE* fp_{0};
+    int fsize_{0};
+    int findex_{0};
 
-    report() : enable_(false), maxKB_(1024 * 2), maxSec_(60 * 5), fp_(0), fsize_(0), findex_(0) {}
-
+    // checkFile ...
     void checkFile() {
         if (!fp_) {
         }
     }
 } _report;
 
-// _report ...
+// report ...
 void report(const std::string& msg) {
-    if (!_report.enable_) {
+    if (!_report.Enabled) {
         return;
     }
 }

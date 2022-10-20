@@ -10,20 +10,20 @@
 #ifdef _WIN32
 #include <windows.h>
 namespace logx {
-static struct global_init {
-    global_init() : oldMode_(0) {
+static struct globalInit_t {
+    globalInit_t() : oldMode_(0) {
         GetConsoleMode(stdout, &oldMode_);
         SetConsoleMode(stdout, oldMode_ | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     }
 
-    ~global_init() {
+    ~globalInit_t() {
         if (oldMode_) {
             SetConsoleMode(stdout, oldMode_);
         }
     }
 
-    int oldMode_;
-} _global_init;
+    int oldMode_{0};
+} _globalInit;
 }  // namespace logx
 #endif  // _WIN32
 
@@ -45,22 +45,21 @@ namespace logx {
 #endif
 
 namespace xx {
-// conf ...
-static struct conf {
-    Level stdoutLevel;
-    Level reportLevel;
-    bool showCaller;
-    bool showDatetime;
-    bool withColor;
-
-    conf() : stdoutLevel(Level::DBG), reportLevel(Level::DBG), showCaller(true), showDatetime(true), withColor(true) {}
+// conf_t ...
+static struct conf_t {
+    Level StdoutLevel{Level::DBG};
+    Level ReportLevel{Level::DBG};
+    bool ShowCaller{true};
+    bool ShowDatetime{true};
+    bool WithColor{true};
 } _conf;
 
-static const char* _tags[] = {"[P] ", "[E] ", "[W] ", "[I] ", "[D] ", "[V] "};
-static const char* _colors[] = {_TCYAN_, _TRED_, _TYELLOW_, _TGREEN_, _TWHITE_, _TMAGENTA_};
+// TAG/COLORS ...
+static const char* TAGS[] = {"[P] ", "[E] ", "[W] ", "[I] ", "[D] ", "[V] "};
+static const char* COLORS[] = {_TCYAN_, _TRED_, _TYELLOW_, _TGREEN_, _TWHITE_, _TMAGENTA_};
 
-// _reach ...
-bool reach(Level lvl) { return _conf.stdoutLevel >= lvl || _conf.reportLevel >= lvl; }
+// reach ...
+bool reach(Level lvl) { return _conf.StdoutLevel >= lvl || _conf.ReportLevel >= lvl; }
 
 // timestr ...
 static std::string timestr() {
@@ -88,31 +87,31 @@ void logs(Level lvl, const char* file, int line, const char* msg) {
 
     std::ostringstream ss;
 
-    if (_conf.withColor) {
+    if (_conf.WithColor) {
         ss << _TCLEAN_ << _TWEAK_;
     }
-    if (_conf.showDatetime) {
+    if (_conf.ShowDatetime) {
         ss << timestr();
     }
-    ss << _tags[lvl];
-    if (_conf.showCaller) {
+    ss << TAGS[int(lvl)];
+    if (_conf.ShowCaller) {
         ss << file << ":" << line << " ";
     }
-    if (_conf.withColor) {
-        ss << _TCLEAN_ << _colors[lvl];
+    if (_conf.WithColor) {
+        ss << _TCLEAN_ << COLORS[int(lvl)];
     }
     ss << msg << std::endl;
-    if (_conf.withColor) {
+    if (_conf.WithColor) {
         ss << _TCLEAN_;
     }
 
     std::string str = ss.str();
 
-    if (_conf.stdoutLevel >= lvl) {
+    if (_conf.StdoutLevel >= lvl) {
         std::cout << str;
     }
 
-    if (_conf.reportLevel >= lvl) {
+    if (_conf.ReportLevel >= lvl) {
         report(str);
     }
 }
@@ -131,12 +130,11 @@ void logf(Level lvl, const char* file, int line, const char* fmt, ...) {
 
 // logf ...
 void logf(Level lvl, const char* file, int line, const char* fmt, va_list args) {
-    // vasprintf 会自动分配，调用者负责释放
     char* ptr = 0;
-    vasprintf(&ptr, fmt, args);
+    vasprintf(&ptr, fmt, args);  // vasprintf() will alloc memory
     if (ptr) {
         logs(lvl, file, line, ptr);
-        std::free(ptr);
+        std::free(ptr);  // free the memory
     }
 }
 
