@@ -26,16 +26,16 @@ int RuneLen(rune r);
 // EncodeRune writes into p (which must be large enough) the UTF-8 encoding of the rune.
 // If the rune is out of range, it writes the encoding of RuneError.
 // It returns the number of bytes written.
-int EncodeRune(slice<byte> p, rune r);
+int EncodeRune(slice<> p, rune r);
 
 // AppendRune appends the UTF-8 encoding of r to the end of p and
 // returns the extended buffer. If the rune is out of range,
 // it appends the encoding of RuneError.
-slice<byte> AppendRune(const slice<byte>& p, rune r);
+slice<> AppendRune(const slice<>& p, rune r);
 
 // RuneCount returns the number of runes in p. Erroneous and short
 // encodings are treated as single runes of width 1 byte.
-int RuneCount(const slice<byte>& p);
+int RuneCount(const slice<>& p);
 
 // RuneCountInString is like RuneCount but its input is a string.
 int RuneCountInString(const string& s);
@@ -46,7 +46,7 @@ int RuneCountInString(const string& s);
 inline bool RuneStart(byte b) { return (b & 0xC0) != 0x80; }
 
 // Valid reports whether p consists entirely of valid UTF-8-encoded runes.
-bool Valid(const slice<byte>& p);
+bool Valid(const slice<>& p);
 
 // ValidString reports whether s consists entirely of valid UTF-8-encoded runes.
 bool ValidString(const string& s);
@@ -57,7 +57,7 @@ bool ValidRune(rune r);
 
 // FullRune reports whether the bytes in p begin with a full UTF-8 encoding of a rune.
 // An invalid encoding is considered a full Rune since it will convert as a width-1 error rune.
-bool FullRune(const slice<byte> p);
+bool FullRune(const slice<> p);
 
 // FullRuneInString is like FullRune but its input is a string.
 bool FullRuneInString(const string& s);
@@ -70,7 +70,7 @@ bool FullRuneInString(const string& s);
 // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
 // out of range, or is not the shortest possible UTF-8 encoding for the
 // value. No other validation is performed.
-R<rune, int> DecodeRune(const slice<byte>& p);
+R<rune, int> DecodeRune(const slice<>& p);
 
 // DecodeRuneInString is like DecodeRune but its input is a string. If s is
 // empty it returns (RuneError, 0). Otherwise, if the encoding is invalid, it
@@ -90,7 +90,7 @@ R<rune, int> DecodeRuneInString(const string& s);
 // An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
 // out of range, or is not the shortest possible UTF-8 encoding for the
 // value. No other validation is performed.
-R<rune, int> DecodeLastRune(const slice<byte>& p);
+R<rune, int> DecodeLastRune(const slice<>& p);
 
 // DecodeLastRuneInString is like DecodeLastRune but its input is a string. If
 // s is empty it returns (RuneError, 0). Otherwise, if the encoding is invalid,

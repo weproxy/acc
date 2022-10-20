@@ -10,7 +10,7 @@ namespace gx {
 namespace ioutil {
 
 // ReadFile ...
-R<slice<byte>, error> ReadFile(const string& filename) {
+R<slice<>, error> ReadFile(const string& filename) {
     // TOOD..
     return {{}, gx_TodoErr()};
 }

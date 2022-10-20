@@ -12,10 +12,10 @@ namespace strings {
 // Builder ...
 struct Builder {
    protected:
-    slice<byte> buf;
+    slice<> buf;
 
     void grow(int n) {
-        slice<byte> b = make(len(buf), 2 * cap(buf) + n);
+        slice<> b = make(len(buf), 2 * cap(buf) + n);
         copy(b, buf);
         buf = b;
     }
@@ -34,7 +34,7 @@ struct Builder {
         }
     }
 
-    R<int, error> Write(slice<byte> p) {
+    R<int, error> Write(slice<> p) {
         buf = append(buf, p);
         return {len(p), nil};
     }

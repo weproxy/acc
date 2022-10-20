@@ -138,7 +138,7 @@ struct BPF {
     string String() const;
 
     // Matches returns true if the given packet data matches this filter.
-    bool Matches(gopacket::CaptureInfo ci, slice<byte> data);
+    bool Matches(gopacket::CaptureInfo ci, slice<> data);
 };
 
 // Handle provides a connection to a pcap handle, allowing users to read packets
@@ -213,7 +213,7 @@ struct Handle : public io::xx::closer_t {
     // ReadPacketData returns the next packet read from the pcap handle, along with an error
     // code associated with that packet.  If the packet is read successfully, the
     // returned error is nil.
-    R<slice<byte>, gopacket::CaptureInfo, error> ReadPacketData();
+    R<slice<>, gopacket::CaptureInfo, error> ReadPacketData();
 
     // ZeroCopyReadPacketData reads the next packet off the wire, and returns its data.
     // The slice returned by ZeroCopyReadPacketData points to bytes owned by the
@@ -225,10 +225,10 @@ struct Handle : public io::xx::closer_t {
     //  data1, _, _ := handle.ZeroCopyReadPacketData()
     //  // do everything you want with data1 here, copying bytes out of it if you'd like to keep them around.
     //  data2, _, _ := handle.ZeroCopyReadPacketData()  // invalidates bytes in data1
-    R<slice<byte>, gopacket::CaptureInfo, error> ZeroCopyReadPacketData();
+    R<slice<>, gopacket::CaptureInfo, error> ZeroCopyReadPacketData();
 
     // WritePacketData calls pcap_sendpacket, injecting the given data into the pcap handle.
-    error WritePacketData(slice<byte> data);
+    error WritePacketData(slice<> data);
 
    public:
     error setNonBlocking();

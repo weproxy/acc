@@ -110,7 +110,7 @@ using CheckUserPassFn = func<error(const string& user, const string& pass)>;
 // ServerAuth ...
 template <typename ReadWriter, typename std::enable_if<io::xx::has_read_write<ReadWriter>::value, int>::type = 0>
 error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& checkUserPassFn = {}) {
-    slice<byte> buf = make(512);
+    slice<> buf = make(512);
 
     // <<< REP:
     //     | VER | METHOD |
@@ -187,7 +187,7 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
     //     +-----+-----+-------+------+----------+----------+
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
 
-    slice<byte> buf = make(boundAddr ? 3 + MaxAddrLen : 8);
+    slice<> buf = make(boundAddr ? 3 + MaxAddrLen : 8);
     int len = 3;
 
     buf[0] = Version5;

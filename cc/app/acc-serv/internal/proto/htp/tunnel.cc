@@ -25,9 +25,9 @@ using namespace nx;
     Proxy-Connection: Keep-Alive
 
 */
-static R<int /*off*/, string /*addr*/, error> parseRequest(slice<byte> hdr) {
-    static slice<byte> CRLF1("\r\n");
-    static slice<byte> CRLF2("\r\n\r\n");
+static R<int /*off*/, string /*addr*/, error> parseRequest(slice<> hdr) {
+    static slice<> CRLF1("\r\n");
+    static slice<> CRLF2("\r\n\r\n");
 
     int off = bytes::Index(hdr, CRLF2);
     if (off < 0) {
@@ -61,7 +61,7 @@ static R<int /*off*/, string /*addr*/, error> parseRequest(slice<byte> hdr) {
 }
 
 // handleTunnel handle CONNECT command
-error handleTunnel(net::Conn c, slice<byte> hdr) {
+error handleTunnel(net::Conn c, slice<> hdr) {
     // LOGS_D(TAG << " handleTunnel() req: \n" << string(hdr));
 
     AUTO_R(off, raddr, err, parseRequest(hdr));
@@ -85,14 +85,14 @@ error handleTunnel(net::Conn c, slice<byte> hdr) {
     AUTO_R(rc, er1, net::Dial(raddr));
     if (er1) {
         LOGS_E(TAG << " handleTunnel() err: " << er1);
-        static const slice<byte> FAIL("HTTP/1.1 500\r\n\r\n");
+        static const slice<> FAIL("HTTP/1.1 500\r\n\r\n");
         c->Write(FAIL);
         return er1;
     }
     DEFER(rc->Close());
 
     // reply 200 OK
-    static const slice<byte> OK("HTTP/1.1 200 Connection Established\r\n\r\n");
+    static const slice<> OK("HTTP/1.1 200 Connection Established\r\n\r\n");
     AUTO_R(n, er2, c->Write(OK));
     if (er2) {
         LOGS_E(TAG << " handleTunnel() err: " << er2);

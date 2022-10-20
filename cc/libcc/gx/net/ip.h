@@ -17,10 +17,10 @@ constexpr int IPv6len = 16;
 
 // IP ...
 struct IP final {
-    slice<byte> B;
+    slice<> B;
 
     IP() = default;
-    IP(const slice<byte> b) : B(b) {}
+    IP(const slice<> b) : B(b) {}
     IP(const IP& ip) : B(ip.B) {}
 
     uint8 len() const { return B.size(); }
@@ -76,7 +76,7 @@ struct IP final {
 
 // IPMask ...
 struct IPMask {
-    slice<byte> B;
+    slice<> B;
 
     string String();
 };

@@ -21,8 +21,8 @@ void test_io() {
         auto _6 = io::NewReadWriteCloser(rc);
     }
     {
-        auto r = [](slice<byte>) -> R<int, error> { return {0, nil}; };
-        auto w = [](const slice<byte>) -> R<int, error> { return {0, nil}; };
+        auto r = [](slice<>) -> R<int, error> { return {0, nil}; };
+        auto w = [](const slice<>) -> R<int, error> { return {0, nil}; };
         auto c = []() -> error { return nil; };
 
         auto _0 = io::NewCloserFn(c);

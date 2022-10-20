@@ -13,24 +13,24 @@ namespace io {
 namespace xx {
 
 // has_read ...
-// ----> R<int, error> Read(slice<byte>)
+// ----> R<int, error> Read(slice<>)
 template <typename T>
 struct has_read {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Read(slice<byte>{}));
+    static auto test(U) -> decltype(std::declval<U>()->Read(slice<>{}));
 
    public:
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;
 };
 
 // has_write ...
-// ----> R<int, error> Write(const slice<byte>)
+// ----> R<int, error> Write(const slice<>)
 template <typename T>
 struct has_write {
    private:
     template <typename U>
-    static auto test(U) -> decltype(std::declval<U>()->Write(slice<byte>{}));
+    static auto test(U) -> decltype(std::declval<U>()->Write(slice<>{}));
 
    public:
     static constexpr bool value = gx::xx::is_same<decltype(test<T>(std::declval<T>())), R<int, error>>::value;

@@ -47,7 +47,7 @@ struct PacketMetadata : public CaptureInfo {
 // various functions needed to access this information.
 struct packet {
     // data contains the entire packet data for a packet
-    slice<byte> data;
+    slice<> data;
     // initialLayers is space for an initial set of layers already created inside
     // the packet.
     slice<Layer> initialLayers;  // 6

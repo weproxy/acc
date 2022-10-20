@@ -81,7 +81,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    void WriteToRC(slice<byte> buf, net::Addr raddr) {
+    void WriteToRC(slice<> buf, net::Addr raddr) {
         if (!rc_) {
             return;
         }
@@ -107,7 +107,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 
     // ReadFrom ...
     // readFrom target server, and writeTo source client
-    virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override {
+    virtual R<int, net::Addr, error> ReadFrom(slice<> buf) override {
         // readFrom target server
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf));
         if (err) {
@@ -121,7 +121,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 
     // WriteTo ...
     // data from source client writeTo target server
-    virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr raddr) override {
+    virtual R<int, error> WriteTo(const slice<> buf, net::Addr raddr) override {
         // TODO ... unpack DNS query packet
 
         AUTO_R(n, err, wrap_->WriteTo(buf, raddr));
@@ -149,7 +149,7 @@ void runServLoop(net::PacketConn ln) {
 
     DEFER(ln->Close());
 
-    slice<byte> buf = make(1024 * 4);
+    slice<> buf = make(1024 * 4);
 
     for (;;) {
         // read

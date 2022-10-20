@@ -11,11 +11,11 @@ namespace hex {
 
 // EncodeToString ...
 string EncodeToString(const void* src, size_t len);
-inline string EncodeToString(const slice<byte>& s) { return EncodeToString(s.data(), s.length()); }
+inline string EncodeToString(const slice<>& s) { return EncodeToString(s.data(), s.length()); }
 inline string EncodeToString(const string& s) { return EncodeToString(s.data(), s.length()); }
 
 // DecodeString ...
-R<slice<byte>, error> DecodeString(const string& s);
+R<slice<>, error> DecodeString(const string& s);
 
 }  // namespace hex
 }  // namespace gx

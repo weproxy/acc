@@ -31,10 +31,10 @@ struct Layer {
     // LayerType is the gopacket type for this layer.
     virtual LayerType LayerType() = 0;
     // LayerContents returns the set of bytes that make up this layer.
-    virtual slice<byte> LayerContents() = 0;
+    virtual slice<> LayerContents() = 0;
     // LayerPayload returns the set of bytes contained within this layer, not
     // including the layer itself.
-    virtual slice<byte> LayerPayload() = 0;
+    virtual slice<> LayerPayload() = 0;
 };
 
 // Payload is a Layer containing the payload of a packet.  The definition of
@@ -49,13 +49,13 @@ struct Payload {
     LayerType LayerType();
 
     // LayerContents returns the bytes making up this layer.
-    slice<byte> LayerContents();
+    slice<> LayerContents();
 
     // LayerPayload returns the payload within this layer.
-    slice<byte> LayerPayload();
+    slice<> LayerPayload();
 
     // Payload returns this layer as bytes.
-    slice<byte> Payloads();
+    slice<> Payloads();
 
     // String implements fmt.Stringer.
     string String();
@@ -70,13 +70,13 @@ struct Fragment {
     LayerType LayerType();
 
     // LayerContents implements Layer.
-    slice<byte> LayerContents();
+    slice<> LayerContents();
 
     // LayerPayload implements Layer.
-    slice<byte> LayerPayload();
+    slice<> LayerPayload();
 
     // Payload returns this layer as a byte slice.
-    slice<byte> Payloads();
+    slice<> Payloads();
 
     // String implements fmt.Stringer.
     string String();
@@ -103,7 +103,7 @@ struct TransportLayer : public Layer {
 // ApplicationLayer is the packet layer corresponding to the TCP/IP layer 4 (OSI
 // layer 7), also known as the packet payload.
 struct ApplicationLayer : public Layer {
-	virtual slice<byte> Payload() = 0;
+	virtual slice<> Payload() = 0;
 };
 
 // ErrorLayer is a packet layer created when decoding of the packet has failed.

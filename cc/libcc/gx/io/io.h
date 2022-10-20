@@ -28,7 +28,7 @@ using CopingFn = func<void(int /*w*/)>;
 // buf will not be used to perform the copy.
 template <typename Writer, typename Reader,
           typename std::enable_if<xx::has_write<Writer>::value && xx::has_read<Reader>::value, int>::type = 0>
-R<int64 /*w*/, error> CopyBuffer(Writer dst, Reader src, slice<byte> buf, const CopingFn& copingFn = {}) {
+R<int64 /*w*/, error> CopyBuffer(Writer dst, Reader src, slice<> buf, const CopingFn& copingFn = {}) {
     if (!buf || buf.size() == 0) {
         buf = make(0, 32 * 1024);
     }
@@ -115,8 +115,8 @@ R<int64 /*w*/, error> CopyN(Writer dst, Reader src, int64 n, const CopingFn& cop
 // defined to read from src until EOF, it does not treat an EOF from Read
 // as an error to be reported.
 template <typename Reader, typename std::enable_if<xx::has_read<Reader>::value, int>::type = 0>
-R<slice<byte>, error> ReadAll(Reader r) {
-    slice<byte> b = make(0, 512);
+R<slice<>, error> ReadAll(Reader r) {
+    slice<> b = make(0, 512);
     for (;;) {
         if (len(b) == cap(b)) {
             // Add more capacity (let append pick how much).
@@ -143,7 +143,7 @@ R<slice<byte>, error> ReadAll(Reader r) {
 // On return, n >= min if and only if err == nil.
 // If r returns an error having read at least min bytes, the error is dropped.
 template <typename Reader, typename std::enable_if<xx::has_read<Reader>::value, int>::type = 0>
-R<int, error> ReadAtLeast(Reader r, slice<byte> buf, int min) {
+R<int, error> ReadAtLeast(Reader r, slice<> buf, int min) {
     if (len(buf) < min) {
         return {0, ErrShortBuffer};
     }
@@ -170,7 +170,7 @@ R<int, error> ReadAtLeast(Reader r, slice<byte> buf, int min) {
 // On return, n == len(buf) if and only if err == nil.
 // If r returns an error having read at least len(buf) bytes, the error is dropped.
 template <typename Reader, typename std::enable_if<xx::has_read<Reader>::value, int>::type = 0>
-R<int, error> ReadFull(Reader r, slice<byte> buf) {
+R<int, error> ReadFull(Reader r, slice<> buf) {
     return ReadAtLeast(r, buf, len(buf));
 }
 
@@ -187,7 +187,7 @@ ReadCloser NopCloser(Reader r) {
 ////////////////////////////////////////////////////////////////////////////////
 namespace xx {
 struct discard_t {
-    R<int, error> Write(const slice<byte> p) { return {len(p), nil}; }
+    R<int, error> Write(const slice<> p) { return {len(p), nil}; }
     R<int, error> WriteString(const string& s) { return {len(s), nil}; }
     R<int, error> ReadFrom(Reader r) {
         int64 n = 0;
