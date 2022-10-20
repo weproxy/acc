@@ -28,7 +28,7 @@ const int MinRead = 512;
 // A Buffer is a variable-sized buffer of bytes with Read and Write methods.
 // The zero value for Buffer is an empty buffer ready to use.
 struct Buffer {
-    slice<byte> buf;      // contents are the bytes buf[off : len(buf)]
+    slice<> buf;      // contents are the bytes buf[off : len(buf)]
     int off{0};           // read at &buf[off], write at &buf[len(buf)]
     readOp lastRead;  // last read operation, so that Unread* can work correctly.
 
@@ -42,7 +42,7 @@ struct Buffer {
     // only until the next call to a method like Read, Write, Reset, or Truncate).
     // The slice aliases the buffer content at least until the next buffer modification,
     // so immediate changes to the slice will affect the result of future reads.
-    slice<byte> Bytes() { return buf(off); }
+    slice<> Bytes() { return buf(off); }
 
     // String returns the contents of the unread portion of the buffer
     // as a string. If the Buffer is a nil pointer, it returns "<nil>".
@@ -90,7 +90,7 @@ struct Buffer {
     // Write appends the contents of p to the buffer, growing the buffer as
     // needed. The return value n is the length of p; err is always nil. If the
     // buffer becomes too large, Write will panic with ErrTooLarge.
-    R<int, error> Write(slice<byte> p);
+    R<int, error> Write(slice<> p);
 
     // WriteString appends the contents of s to the buffer, growing the buffer as
     // needed. The return value n is the length of s; err is always nil. If the
@@ -125,13 +125,13 @@ struct Buffer {
     // is drained. The return value n is the number of bytes read. If the
     // buffer has no data to return, err is io.EOF (unless len(p) is zero);
     // otherwise it is nil.
-    R<int, error> Read(slice<byte> p);
+    R<int, error> Read(slice<> p);
 
     // Next returns a slice containing the next n bytes from the buffer,
     // advancing the buffer as if the bytes had been returned by Read.
     // If there are fewer than n bytes in the buffer, Next returns the entire buffer.
     // The slice is only valid until the next call to a read or write method.
-    slice<byte> Next(int n);
+    slice<> Next(int n);
 
     // ReadByte reads and returns the next byte from the buffer.
     // If no byte is available, it returns error io.EOF.
@@ -163,11 +163,11 @@ struct Buffer {
     // it returns the data read before the error and the error itself (often io.EOF).
     // ReadBytes returns err != nil if and only if the returned data does not end in
     // delim.
-    R<slice<byte>, error> ReadBytes(byte delim);
+    R<slice<>, error> ReadBytes(byte delim);
 
    private:
     // readSlice is like ReadBytes but returns a reference to internal buffer data.
-    R<slice<byte>, error> readSlice(byte delim);
+    R<slice<>, error> readSlice(byte delim);
 
    public:
     // ReadString reads until the first occurrence of delim in the input,
@@ -188,7 +188,7 @@ struct Buffer {
 //
 // In most cases, new(Buffer) (or just declaring a Buffer variable) is
 // sufficient to initialize a Buffer.
-inline Ref<Buffer> NewBuffer(slice<byte> buf) {
+inline Ref<Buffer> NewBuffer(slice<> buf) {
     auto p = NewRef<Buffer>();
     p->buf = buf;
     return p;

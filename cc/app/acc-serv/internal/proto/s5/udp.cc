@@ -81,7 +81,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    void WriteToRC(slice<byte> buf) {
+    void WriteToRC(slice<> buf) {
         if (!rc_) {
             return;
         }
@@ -116,7 +116,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     //     | RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override {
+    virtual R<int, net::Addr, error> ReadFrom(slice<> buf) override {
         if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
             return {0, nil, socks::ErrInvalidAddrType};
         }
@@ -149,7 +149,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr) override {
+    virtual R<int, error> WriteTo(const slice<> buf, net::Addr) override {
         if (len(buf) < 10) {
             return {0, socks::ErrInvalidSocksVersion};
         }
@@ -201,7 +201,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
     DEFER(ln->Close());
 
-    slice<byte> buf = make(1024 * 8);
+    slice<> buf = make(1024 * 8);
 
     for (;;) {
         // 5 minutes timeout

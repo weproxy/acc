@@ -136,7 +136,7 @@ void Buffer::Grow(int n) {
 // Write appends the contents of p to the buffer, growing the buffer as
 // needed. The return value n is the length of p; err is always nil. If the
 // buffer becomes too large, Write will panic with ErrTooLarge.
-R<int, error> Buffer::Write(slice<byte> p) {
+R<int, error> Buffer::Write(slice<> p) {
     auto& b = *this;
     b.lastRead = readOp::opInvalid;
     AUTO_R(m, ok, b.tryGrowByReslice(len(p)));
@@ -255,7 +255,7 @@ R<int64, error> Buffer::WriteTo(io::Writer w) {
 // is drained. The return value n is the number of bytes read. If the
 // buffer has no data to return, err is io.EOF (unless len(p) is zero);
 // otherwise it is nil.
-R<int, error> Buffer::Read(slice<byte> p) {
+R<int, error> Buffer::Read(slice<> p) {
     auto& b = *this;
     b.lastRead = readOp::opInvalid;
     if (b.empty()) {
@@ -278,7 +278,7 @@ R<int, error> Buffer::Read(slice<byte> p) {
 // advancing the buffer as if the bytes had been returned by Read.
 // If there are fewer than n bytes in the buffer, Next returns the entire buffer.
 // The slice is only valid until the next call to a read or write method.
-slice<byte> Buffer::Next(int n) {
+slice<> Buffer::Next(int n) {
     auto& b = *this;
     b.lastRead = readOp::opInvalid;
     int m = b.Len();
@@ -370,9 +370,9 @@ error Buffer::UnreadByte() {
 // it returns the data read before the error and the error itself (often io.EOF).
 // ReadBytes returns err != nil if and only if the returned data does not end in
 // delim.
-R<slice<byte>, error> Buffer::ReadBytes(byte delim) {
+R<slice<>, error> Buffer::ReadBytes(byte delim) {
     auto& b = *this;
-    slice<byte> line;
+    slice<> line;
     AUTO_R(slice, err, b.readSlice(delim));
     // return a copy of slice. The buffer's backing array may
     // be overwritten by later calls.
@@ -381,9 +381,9 @@ R<slice<byte>, error> Buffer::ReadBytes(byte delim) {
 }
 
 // readSlice is like ReadBytes but returns a reference to internal buffer data.
-R<slice<byte>, error> Buffer::readSlice(byte delim) {
+R<slice<>, error> Buffer::readSlice(byte delim) {
     auto& b = *this;
-    slice<byte> line;
+    slice<> line;
     error err;
 
     int i = IndexByte(b.buf(b.off), delim);

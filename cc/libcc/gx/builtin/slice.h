@@ -4,15 +4,13 @@
 
 #pragma once
 
-#include <stdint.h>
-
-#include <sstream>
+#include "xx.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 namespace gx {
 // slice ...
-template <typename T>
+template <typename T = byte>
 struct slice {
     int beg_{0}, end_{0};
     VecRef<T> vec_{nullptr};
@@ -32,7 +30,13 @@ struct slice {
     slice(const slice& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) {}
     slice(slice&& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) { r._reset(); }
 
-    slice(const string& s) : slice(s.length(), s.length()) { memcpy(data(), s.data(), s.length()); }
+    // template <typename X, typename std::enable_if<xx::is_same<X, gx::byte>::value, int>::type = 0>
+    // slice<X>(const string& s) : slice<X>(s.length(), s.length()) {
+    //     memcpy(data(), s.data(), s.length());
+    // }
+    slice(const string& s) : slice(s.length(), s.length()) {
+        memcpy(data(), s.data(), s.length());
+    }
 
     // operator [i] ...
     T& operator[](int i) { return vec_->operator[](beg_ + i); }
@@ -187,8 +191,8 @@ int cap(const slice<T>& s) {
 }
 
 // append ...
-inline slice<byte> append(const slice<byte>& dst, const string& src) {
-    slice<byte> s(dst);
+inline slice<> append(const slice<>& dst, const string& src) {
+    slice<> s(dst);
     if (!src.empty()) {
         s._create_if_null();
         s.vec_->insert(s.vec_->begin() + s.end_, src.begin(), src.end());
@@ -221,7 +225,7 @@ slice<T> append(const slice<T>& dst, const slice<T>& src) {
 }
 
 // copy ...
-inline int copy(slice<byte>& dst, const string& src) {
+inline int copy(slice<>& dst, const string& src) {
     int i = 0;
     for (; i < len(dst) && i < len(src); i++) {
         dst[i] = src[i];
@@ -230,7 +234,7 @@ inline int copy(slice<byte>& dst, const string& src) {
 }
 
 // copy ...
-inline int copy(slice<byte>&& dst, const string& src) {
+inline int copy(slice<>&& dst, const string& src) {
     int i = 0;
     for (; i < len(dst) && i < len(src); i++) {
         dst[i] = src[i];
