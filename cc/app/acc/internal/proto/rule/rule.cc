@@ -4,7 +4,9 @@
 
 #include "rule.h"
 
-NAMESPACE_BEG_RULE
+namespace app {
+namespace proto {
+namespace rule {
 
 // _errRuleNotFound ...
 static const error _errRuleNotFound = errors::New("rule not found");
@@ -27,4 +29,6 @@ R<string, error> GetDNSRule(const string& host, net::Addr addr) {
     return {"", _errRuleNotFound};
 }
 
-NAMESPACE_END_RULE
+}  // namespace rule
+}  // namespace proto
+}  // namespace app
