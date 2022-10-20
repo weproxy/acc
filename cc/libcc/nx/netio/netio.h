@@ -28,6 +28,8 @@ struct CopyOption {
     CopingFn CopingFn;
     time::Duration ReadTimeout;
     time::Duration WriteTimeout;
+    net::Addr WriteAddr;
+    int MaxTimes{0}; // max copy times
 
     CopyOption() = default;
     CopyOption(time::Duration timeout) : ReadTimeout(timeout), WriteTimeout(timeout) {}

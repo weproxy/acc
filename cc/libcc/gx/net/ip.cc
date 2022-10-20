@@ -15,12 +15,20 @@ static const uint8 v4InV6Prefix[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
 // IPv4 ...
 IP IPv4(uint8 a, uint8 b, uint8 c, uint8 d) {
     IP p;
-    p.B = make(IPv4len);
+#if 0
+    p.B = make(IPv6len);
     copy(p.B, v4InV6Prefix, sizeof(v4InV6Prefix));
     p.B[12] = a;
     p.B[13] = b;
     p.B[14] = c;
     p.B[15] = d;
+#else
+    p.B = make(IPv4len);
+    p.B[0] = a;
+    p.B[1] = b;
+    p.B[2] = c;
+    p.B[3] = d;
+#endif
     return p;
 }
 

@@ -2,18 +2,16 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "fx/fx.h"
+#include "dns.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
 #include "nx/netio/netio.h"
-#include "nx/socks/socks.h"
 #include "nx/stats/stats.h"
-#include "s5.h"
 
 namespace app {
 namespace proto {
-namespace s5 {
+namespace dns {
 using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +71,8 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
 
             netio::CopyOption opt(time::Minute * 5, 0);
             opt.WriteAddr = thiz->caddr_;
+            opt.MaxTimes = 1; // read 1 packet then close
+            opt.ReadTimeout = time::Second * 5;
             opt.CopingFn = [thiz](int size) { thiz->sta_->AddSent(size); };
 
             // copy to ln_ from rc_
@@ -81,7 +81,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    void WriteToRC(slice<byte> buf) {
+    void WriteToRC(slice<byte> buf, net::Addr raddr) {
         if (!rc_) {
             return;
         }
@@ -89,9 +89,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         // buf is from source client
         sta_->AddRecv(len(buf));
 
-        // udpConn_t::WriteTo()
-        // unpack data (from source client), and writeTo target server
-        AUTO_R(n, err, rc_->WriteTo(buf, nil));
+        AUTO_R(n, err, rc_->WriteTo(buf, raddr));
         if (err) {
             return;
         }
@@ -105,75 +103,30 @@ using udpSessMap = Map<key_t, Ref<udpSess_t>>;
 // udpConn_t
 // to target server
 struct udpConn_t : public net::xx::packetConnWrap_t {
-    socks::AddrType typ_{socks::AddrTypeIPv4};
-
     udpConn_t(net::PacketConn pc) : net::xx::packetConnWrap_t(pc) {}
 
     // ReadFrom ...
-    // readFrom target server, and pack data (to client)
-    //
-    // <<< RSP:
-    //     | RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-    //     +-----+------+------+----------+----------+------+
-    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
+    // readFrom target server, and writeTo source client
     virtual R<int, net::Addr, error> ReadFrom(slice<byte> buf) override {
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
-            return {0, nil, socks::ErrInvalidAddrType};
-        }
-
         // readFrom target server
-        int pos = 3 + 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
-        AUTO_R(n, addr, err, wrap_->ReadFrom(buf(pos)));
+        AUTO_R(n, addr, err, wrap_->ReadFrom(buf));
         if (err) {
             return {n, addr, err};
         }
 
-        // pack data
-
-        auto raddr = socks::FromNetAddr(addr);
-        socks::CopyAddr(buf(3), raddr);
-
-        n += 3 + len(raddr->B);
-
-        buf[0] = 0;  // RSV
-        buf[1] = 0;  //
-        buf[2] = 0;  // FRAG
+        // TODO ... unpack DNS answer packet
 
         return {n, addr, nil};
     }
 
     // WriteTo ...
-    // unpack data (from source client), and writeTo target server
-    //
-    // >>> REQ:
-    //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-    //     +-----+------+------+----------+----------+------+
-    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr) override {
-        if (len(buf) < 10) {
-            return {0, socks::ErrInvalidSocksVersion};
-        }
+    // data from source client writeTo target server
+    virtual R<int, error> WriteTo(const slice<byte> buf, net::Addr raddr) override {
+        // TODO ... unpack DNS query packet
 
-        // unpack data
+        AUTO_R(n, err, wrap_->WriteTo(buf, raddr));
 
-        AUTO_R(raddr, er1, socks::ParseAddr(buf(3)));
-        if (er1) {
-            return {0, er1};
-        }
-
-        typ_ = socks::AddrType(raddr->B[0]);
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
-            return {0, socks::ErrInvalidAddrType};
-        }
-
-        // writeTo target server
-        int pos = 3 + len(raddr->B);
-        AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
-        if (er2) {
-            return {n, er2};
-        }
-
-        return {n + pos, nil};
+        return {n, err};
     }
 
     // wrap ...
@@ -184,13 +137,8 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// handleUDP ...
-//
-// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
-//   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
-//                     --> raddr=4.4.4.4:53
-//
-error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
+// runServLoop ...
+void runServLoop(net::PacketConn ln) {
     // sessMap
     auto sessMap = NewRef<udpSessMap>();
     DEFER({
@@ -201,12 +149,9 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
     DEFER(ln->Close());
 
-    slice<byte> buf = make(1024 * 8);
+    slice<byte> buf = make(1024 * 4);
 
     for (;;) {
-        // 5 minutes timeout
-        ln->SetReadDeadline(time::Now().Add(time::Minute * 5));
-
         // read
         AUTO_R(n, caddr, err, ln->ReadFrom(buf));
         if (err) {
@@ -217,6 +162,8 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         } else if (n <= 0) {
             continue;
         }
+
+        LOGS_V(TAG << " ReadFrom() " << caddr);
 
         // packet data
         auto data = buf(0, n);
@@ -254,13 +201,14 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
             sess = it->second;
         }
 
-        // writeTo target server
-        sess->WriteToRC(data);
-    }
+        // use 8.8.8.8:53
+        static net::Addr raddr = net::MakeAddr(net::IPv4(8, 8, 8, 8), 53);
 
-    return nil;
+        // writeTo target server
+        sess->WriteToRC(data, raddr);
+    }
 }
 
-}  // namespace s5
+}  // namespace dns
 }  // namespace proto
 }  // namespace app

@@ -5,7 +5,16 @@
 #pragma once
 
 const char* DEFAULT_CONF = R"({
+    "iface": {
+        "in": "",
+        "out": "jp1"
+    },
     "server": [
+        {
+            "proto": "dns",
+            "enabled": true,
+            "listen": ":15353"
+        },
         {
             "proto": "s5",
             "enabled": true,

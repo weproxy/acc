@@ -108,7 +108,7 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
 R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt) {
     slice<byte> buf = make(1024 * 8);
 
-    size_t written = 0;
+    size_t written = 0, times = 0;
     error copyErr;
 
     for (;;) {
@@ -120,7 +120,7 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
             if (opt.WriteTimeout) {
                 w->SetWriteDeadline(time::Now().Add(opt.WriteTimeout));
             }
-            AUTO_R(nw, er2, w->WriteTo(buf(0, nr), addr));
+            AUTO_R(nw, er2, w->WriteTo(buf(0, nr), opt.WriteAddr));
             if (nw > 0) {
                 written += nw;
                 if (opt.CopingFn) {
@@ -130,10 +130,17 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
             if (er2 && !err) {
                 err = er2;
             }
+
+            ++times;
         }
 
         if (err) {
             copyErr = err;
+            break;
+        }
+
+        if (opt.MaxTimes > 0 && times >= opt.MaxTimes) {
+            // read MaxTimes packets then close
             break;
         }
     }

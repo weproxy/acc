@@ -6,7 +6,7 @@
 
 #include <atomic>
 
-#include "gx/gx.h"
+#include "gx/fmt/fmt.h"
 
 namespace nx {
 
@@ -16,5 +16,8 @@ uint64 NewID() {
     id++;
     return id;
 }
+
+// BindInterface ...
+error BindInterface(int fd, int ifaceInex) { return gx_TodoErr(); }
 
 }  // namespace nx

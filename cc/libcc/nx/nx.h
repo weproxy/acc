@@ -12,4 +12,7 @@ using namespace gx;
 // NewID ...
 uint64 NewID();
 
+// BindInterface ...
+error BindInterface(int fd, int ifaceInex);
+
 }  // namespace nx
