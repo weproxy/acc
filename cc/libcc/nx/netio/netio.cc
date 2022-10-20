@@ -76,7 +76,7 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
             wg.Done();
         });
 
-        if (opt.ToB.Data) {
+        if (len(opt.ToB.Data) > 0) {
             if (opt.A2B.WriteTimeout) {
                 b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
             }
@@ -159,7 +159,7 @@ error Relay(net::PacketConn a, net::PacketConn b, RelayOption opt) {
             wg.Done();
         });
 
-        if (opt.ToB.Data && opt.ToB.Addr) {
+        if (len(opt.ToB.Data) > 0 && opt.ToB.Addr) {
             if (opt.A2B.WriteTimeout) {
                 b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
             }

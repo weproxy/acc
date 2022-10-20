@@ -25,7 +25,7 @@ int IndexByte(const slice<byte>& s, byte c) {
 
 // Index returns the index of the first instance of sep in s, or -1 if sep is not present in s.
 int Index(const slice<byte>& s, const slice<byte>& subslice) {
-    int sl = s.length(), rl = subslice.length();
+    int sl = len(s), rl = len(subslice);
 
     if (rl == 0) {
         return 0;
@@ -36,7 +36,7 @@ int Index(const slice<byte>& s, const slice<byte>& subslice) {
     }
 
     const byte *a = s.data(), *b = subslice.data();
-    for (int i = 0; i < sl - rl; i++) {
+    for (int i = 0; i <= sl - rl; i++) {
         if (memcmp(a + i, b, rl) == 0) {
             return i;
         }
@@ -58,7 +58,7 @@ int LastIndexByte(const slice<byte>& s, byte c) {
 
 // LastIndex returns the index of the last instance of sep in s, or -1 if sep is not present in s.
 int LastIndex(const slice<byte>& s, const slice<byte>& sep) {
-    int sl = s.length(), rl = sep.length();
+    int sl = len(s), rl = len(sep);
 
     if (rl == 0) {
         return 0;

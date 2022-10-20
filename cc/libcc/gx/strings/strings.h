@@ -5,346 +5,205 @@
 #pragma once
 
 #include "builder.h"
-#include "gx/unicode/utf8/utf8.h"
 
 namespace gx {
 namespace strings {
 
-// IndexByte ...
-inline int IndexByte(const string& s, byte c) {
-    for (int i = 0; i < s.length(); i++) {
-        if (s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
+// IndexByte returns the index of the first instance of c in s, or -1 if c is not present in s.
+int IndexByte(const string& s, byte c);
 
-// Index ...
-inline int Index(const string& s, const string& substr) {
-    int sl = s.length(), rl = substr.length();
+// Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
+int Index(const string& s, const string& substr);
 
-    if (rl == 0) {
-        return 0;
-    } else if (rl == 1) {
-        return IndexByte(s, substr[0]);
-    } else if (rl == sl) {
-        return s == substr ? 0 : -1;
-    }
+// LastIndexByte returns the index of the last instance of c in s, or -1 if c is not present in s.
+int LastIndexByte(const string& s, byte c);
 
-    const char *a = s.c_str(), *b = substr.c_str();
-    for (int i = 0; i < sl - rl; i++) {
-        if (memcmp(a + i, b, rl) == 0) {
-            return i;
-        }
-    }
+// LastIndex returns the index of the last instance of substr in s, or -1 if substr is not present in s.
+int LastIndex(const string& s, const string& substr);
 
-    return -1;
-}
+// Count counts the number of non-overlapping instances of substr in s.
+// If substr is an empty string, Count returns 1 + the number of Unicode code points in s.
+int Count(const string& s, const string& substr);
 
-// LastIndexByte ...
-inline int LastIndexByte(const string& s, byte c) {
-    for (int i = s.length() - 1; i >= 0; i--) {
-        if (s[i] == c) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// LastIndex ...
-inline int LastIndex(const string& s, const string& substr) {
-    int sl = s.length(), rl = substr.length();
-
-    if (rl == 0) {
-        return 0;
-    } else if (rl == 1) {
-        return LastIndexByte(s, substr[0]);
-    } else if (rl == sl) {
-        return s == substr ? 0 : -1;
-    }
-
-    const char *a = s.c_str(), *b = substr.c_str();
-    for (int i = sl - rl; i >= 0; i--) {
-        if (memcmp(a + i, b, rl) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// Count ...
-inline int Count(const string& s, const string& substr) {
-    int cnt = 0;
-    int sl = s.length(), rl = substr.length();
-    const char *a = s.c_str(), *b = substr.c_str();
-    for (int i = 0; i < sl - rl;) {
-        if (memcmp(a + i, b, rl) == 0) {
-            cnt++;
-            i += rl;
-        } else {
-            i++;
-        }
-    }
-    return cnt;
-}
-
-// Contains ...
+// Contains reports whether substr is within s.
 inline bool Contains(const string& s, const string& substr) { return Index(s, substr) >= 0; }
 
-// IndexAny ...
+// IndexAny returns the index of the first instance of any Unicode code point
+// from chars in s, or -1 if no Unicode code point from chars is present in s.
 inline int IndexAny(const string& s, const string& chars) { return Index(s, chars); }
 
 namespace xx {
+// Generic split: splits after each instance of sep,
+// including sepSave bytes of sep in the subarrays.
 Vec<string> genSplit(const string& s, const string& sep, int sepSave, int n);
 }  // namespace xx
 
-// Split ...
+// SplitN slices s into substrings separated by sep and returns a slice of
+// the substrings between those separators.
+//
+// The count determines the number of substrings to return:
+//
+//	n > 0: at most n substrings; the last substring will be the unsplit remainder.
+//	n == 0: the result is nil (zero substrings)
+//	n < 0: all substrings
+//
+// Edge cases for s and sep (for example, empty strings) are handled
+// as described in the documentation for Split.
+//
+// To split around the first instance of a separator, see Cut.
 inline Vec<string> SplitN(const string& s, const string& sep, int n) { return xx::genSplit(s, sep, 0, n); }
 
-// SplitAfter ...
-inline Vec<string> SplitAfterN(const string& s, const string& sep, int n) {
-    return xx::genSplit(s, sep, sep.length(), n);
-}
+// SplitAfterN slices s into substrings after each instance of sep and
+// returns a slice of those substrings.
+//
+// The count determines the number of substrings to return:
+//
+//	n > 0: at most n substrings; the last substring will be the unsplit remainder.
+//	n == 0: the result is nil (zero substrings)
+//	n < 0: all substrings
+//
+// Edge cases for s and sep (for example, empty strings) are handled
+// as described in the documentation for SplitAfter.
+inline Vec<string> SplitAfterN(const string& s, const string& sep, int n) { return xx::genSplit(s, sep, len(sep), n); }
 
-// Split ...
+// Split slices s into all substrings separated by sep and returns a slice of
+// the substrings between those separators.
+//
+// If s does not contain sep and sep is not empty, Split returns a
+// slice of length 1 whose only element is s.
+//
+// If sep is empty, Split splits after each UTF-8 sequence. If both s
+// and sep are empty, Split returns an empty slice.
+//
+// It is equivalent to SplitN with a count of -1.
+//
+// To split around the first instance of a separator, see Cut.
 inline Vec<string> Split(const string& s, const string& sep) { return xx::genSplit(s, sep, 0, -1); }
 
 // SplitAfter ...
-inline Vec<string> SplitAfter(const string& s, const string& sep) { return xx::genSplit(s, sep, sep.length(), -1); }
+inline Vec<string> SplitAfter(const string& s, const string& sep) { return xx::genSplit(s, sep, len(sep), -1); }
 
-// Fields ...
-slice<string> Fields(const string& s);
-
-// Join ...
-template <typename... T>
-string Join(const string& sep, T&&... s) {
-    return "";
-}
-
-// Repeat ...
-inline string Repeat(const string& s, int count) {
-    int len = s.length() * count;
-    char* buf = (char*)malloc(len);
-    for (int i = 0; i < count; i++) {
-        memcpy(buf + i, s.c_str(), s.length());
-    }
-    string t(buf, len);
-    delete[] buf;
-    return t;
-}
+// Repeat returns a new string consisting of count copies of the string s.
+//
+// It panics if count is negative or if
+// the result of (len(s) * count) overflows.
+string Repeat(const string& s, int count);
 
 namespace xx {
-inline bool cutsetMatch(const string& cutset, char v) {
-    for (char c : cutset) {
-        if (c == v) {
-            return true;
-        }
-    }
-    return false;
-}
-inline int cutsetLeftIndex(const string& s, const string& cutset) {
-    int i = 0;
-    for (; i < s.length(); i++) {
-        if (!cutsetMatch(cutset, s[i])) {
-            break;
-        }
-    }
-    return i;
-}
-inline int cutsetRightIndex(const string& s, const string& cutset) {
-    int i = s.length() - 1;
-    for (; i >= 0; i--) {
-        if (!cutsetMatch(cutset, s[i])) {
-            break;
-        }
-    }
-    return i;
-}
-
-// indexFunc ...
-inline int indexFunc(const string& s, const func<bool(rune)>& f, bool truth) {
-    for (int i = 0; i < len(s); i++) {
-        if (f(s[i]) == truth) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// lastIndexFunc ...
-inline int lastIndexFunc(const string& s, const func<bool(rune)>& f, bool truth) {
-    for (int i = len(s); i > 0;) {
-        AUTO_R(r, size, utf8::DecodeLastRuneInString(s.substr(0, i)));
-        i -= size;
-        if (f(s[i]) == truth) {
-            return i;
-        }
-    }
-    return -1;
-}
+bool cutsetMatch(const string& cutset, char v);
+int cutsetLeftIndex(const string& s, const string& cutset);
+int cutsetRightIndex(const string& s, const string& cutset);
+int indexFunc(const string& s, const func<bool(rune)>& f, bool truth);
+int lastIndexFunc(const string& s, const func<bool(rune)>& f, bool truth);
 }  // namespace xx
 
-// TrimLeftFunc ...
-inline string TrimLeftFunc(const string& s, const func<bool(rune)>& f) {
-    int i = xx::indexFunc(s, f, false);
-    if (i == -1) {
-        return "";
-    }
-    return s.substr(i);
-}
+// TrimLeftFunc returns a slice of the string s with all leading
+// Unicode code points c satisfying f(c) removed.
+string TrimLeftFunc(const string& s, const func<bool(rune)>& f);
 
-// TrimRightFunc ...
-inline string TrimRightFunc(const string& s, const func<bool(rune)>& f) {
-    int i = xx::lastIndexFunc(s, f, false);
-    if (i >= 0 && byte(s[i]) >= utf8::RuneSelf) {
-        AUTO_R(_, wid, utf8::DecodeRuneInString(s.substr(i)));
-        i += wid;
-    } else {
-        i++;
-    }
-    return s.substr(0, i);
-}
+// TrimRightFunc returns a slice of the string s with all trailing
+// Unicode code points c satisfying f(c) removed.
+string TrimRightFunc(const string& s, const func<bool(rune)>& f);
 
-// TrimFunc ...
+// TrimFunc returns a slice of the string s with all leading
+// and trailing Unicode code points c satisfying f(c) removed.
 inline string TrimFunc(const string& s, const func<bool(rune)>& f) { return TrimRightFunc(TrimLeftFunc(s, f), f); }
 
-// IndexFunc ...
+// IndexFunc returns the index into s of the first Unicode
+// code point satisfying f(c), or -1 if none do.
 inline int IndexFunc(const string& s, const func<bool(rune)>& f) { return xx::indexFunc(s, f, true); }
 
-// LastIndexFunc ...
+// LastIndexFunc returns the index into s of the last
+// Unicode code point satisfying f(c), or -1 if none do.
 inline int LastIndexFunc(const string& s, const func<bool(rune)>& f) { return xx::lastIndexFunc(s, f, true); }
 
-// TrimLeft ...
-inline string TrimLeft(const string& s, const string& cutset) {
-    if (s.empty()) {
-        return s;
-    }
-    return string(s.c_str() + xx::cutsetLeftIndex(s, cutset));
-}
+// TrimLeft returns a slice of the string s with all leading
+// Unicode code points contained in cutset removed.
+//
+// To remove a prefix, use TrimPrefix instead.
+string TrimLeft(const string& s, const string& cutset);
 
-// Trim ...
-inline string Trim(const string& s, const string& cutset) {
-    if (s.empty()) {
-        return s;
-    }
-    int i = xx::cutsetLeftIndex(s, cutset);
-    int j = xx::cutsetRightIndex(s, cutset);
-    return string(s.c_str() + i, j);
-}
+// Trim returns a slice of the string s with all leading and
+// trailing Unicode code points contained in cutset removed.
+string Trim(const string& s, const string& cutset);
 
-// TrimRight ...
-inline string TrimRight(const string& s, const string& cutset) {
-    if (s.empty()) {
-        return s;
-    }
-    int i = xx::cutsetRightIndex(s, cutset);
-    return i >= 0 ? string(s.c_str(), i + 1) : "";
-}
+// TrimRight returns a slice of the string s, with all trailing
+// Unicode code points contained in cutset removed.
+//
+// To remove a suffix, use TrimSuffix instead.
+string TrimRight(const string& s, const string& cutset);
 
-// TrimSpace ...
+// TrimSpace returns a slice of the string s, with all leading
+// and trailing white space removed, as defined by Unicode.
 inline string TrimSpace(const string& s) { return Trim(s, " \t\r\n"); }
 
-// HasPrefix ...
-inline bool HasPrefix(const string& s, const string& prefix) {
-    return s.length() >= prefix.length() && memcmp(s.c_str(), prefix.c_str(), prefix.length()) == 0;
-}
+// HasPrefix tests whether the string s begins with prefix.
+bool HasPrefix(const string& s, const string& prefix);
 
-// HasSuffix ...
-inline bool HasSuffix(const string& s, const string& suffix) {
-    return s.length() >= suffix.length() &&
-           memcmp(s.c_str() + s.length() - suffix.length(), suffix.c_str(), suffix.length()) == 0;
-}
+// HasSuffix tests whether the string s ends with suffix.
+bool HasSuffix(const string& s, const string& suffix);
 
-// TrimSuffix ...
-inline string TrimPrefix(const string& s, const string& prefix) {
-    if (HasPrefix(s, prefix)) {
-        return s.substr(prefix.length());
-    }
-    return s;
-}
+// TrimPrefix returns s without the provided leading prefix string.
+// If s doesn't start with prefix, s is returned unchanged.
+string TrimPrefix(const string& s, const string& prefix);
 
-// TrimSuffix ...
-inline string TrimSuffix(const string& s, const string& suffix) {
-    if (HasSuffix(s, suffix)) {
-        return s.substr(0, s.length() - suffix.length());
-    }
-    return s;
-}
+// TrimSuffix returns s without the provided trailing suffix string.
+// If s doesn't end with suffix, s is returned unchanged.
+string TrimSuffix(const string& s, const string& suffix);
 
-// Replace ...
+// Replace returns a copy of the string s with the first n
+// non-overlapping instances of old replaced by new.
+// If old is empty, it matches at the beginning of the string
+// and after each UTF-8 sequence, yielding up to k+1 replacements
+// for a k-rune string.
+// If n < 0, there is no limit on the number of replacements.
 string Replace(const string& s, const string& olds, const string& news, int n);
 
-// ReplaceAll ...
+// ReplaceAll returns a copy of the string s with all
+// non-overlapping instances of old replaced by new.
+// If old is empty, it matches at the beginning of the string
+// and after each UTF-8 sequence, yielding up to k+1 replacements
+// for a k-rune string.
 inline string ReplaceAll(const string& s, const string& olds, const string& news) { return Replace(s, olds, news, -1); }
 
-// EqualFold ...
-inline bool EqualFold(const string& s, const string& t) {
-    if (&s == &t) {
-        return true;
-    }
-    if (s.length() != t.length()) {
-        return false;
-    }
-    for (int i = 0; i < s.length(); i++) {
-        char c = s[i];
-        char v = t[i];
-        if (c != v) {
-            if ('a' <= c && c <= 'z') {
-                if (v != c - 'a' + 'A') {
-                    return false;
-                }
-            } else if ('A' <= c && c <= 'Z') {
-                if (v != c - 'A' + 'a') {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-    }
-    return true;
-}
+// EqualFold reports whether s and t, interpreted as UTF-8 strings,
+// are equal under simple Unicode case-folding, which is a more general
+// form of case-insensitivity.
+bool EqualFold(const string& s, const string& t);
 
-// Map ...
-inline string Map(const func<void(char&)>& mapping, const string& s) {
-    string t(s);
-    for (char& c : t) {
-        mapping(c);
-    }
-    return t;
-}
+// Map returns a copy of the string s with all its characters modified
+// according to the mapping function. If mapping returns a negative value, the character is
+// dropped from the string with no replacement.
+string Map(const func<void(char&)>& mapping, const string& s);
 
-// ToLower ..
-inline string ToLower(const string& s) {
-    string t(s);
-    for (char& c : t) {
-        if ('A' <= c && c <= 'Z') {
-            c = c - 'A' + 'a';
-        }
-    }
-    return t;
-}
+// ToLower returns s with all Unicode letters mapped to their lower case.
+string ToLower(const string& s);
 
-// ToUpper ..
-inline string ToUpper(const string& s) {
-    string t(s);
-    for (char& c : t) {
-        if ('a' <= c && c <= 'z') {
-            c = c - 'a' + 'A';
-        }
-    }
-    return t;
-}
+// ToUpper returns s with all Unicode letters mapped to their upper case.
+string ToUpper(const string& s);
 
-// Cut ...
-inline R<string /*before*/, string /*after*/, bool /*found*/> Cut(const string& s, const string& sep) {
-    int i = Index(s, sep);
-    if (i >= 0) {
-        return {s.substr(0, i), s.substr(i + sep.length()), true};
-    }
-    return {s, "", false};
-}
+// Cut slices s around the first instance of sep,
+// returning the text before and after sep.
+// The found result reports whether sep appears in s.
+// If sep does not appear in s, cut returns s, "", false.
+R<string /*before*/, string /*after*/, bool /*found*/> Cut(const string& s, const string& sep);
+
+// Fields splits the string s around each instance of one or more consecutive white space
+// characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
+// empty slice if s contains only white space.
+slice<string> Fields(const string& s);
+
+// FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
+// and returns an array of slices of s. If all code points in s satisfy f(c) or the
+// string is empty, an empty slice is returned.
+//
+// FieldsFunc makes no guarantees about the order in which it calls f(c)
+// and assumes that f always returns the same value for a given c.
+slice<string> FieldsFunc(const string& s, const func<bool(rune)>& f);
+
+// Join concatenates the elements of its first argument to create a single string. The separator
+// string sep is placed between elements in the resulting string.
+string Join(slice<string> elems, const string& sep);
 
 }  // namespace strings
 }  // namespace gx

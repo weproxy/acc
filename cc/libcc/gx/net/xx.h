@@ -15,9 +15,8 @@ int timeoutMs(const time::Time& t1, const time::Time& t2);
 
 // AddrInfo ...
 struct AddrInfo {
-    struct addrinfo* i;
+    struct addrinfo* i{0};
 
-    AddrInfo() : i(0) {}
     ~AddrInfo() {
         if (i) {
             freeaddrinfo(i);
@@ -37,7 +36,7 @@ typedef union {
 // ToAddr ...
 inline Addr ToAddr(const AddrIn& addr) {
     IP ip;
-    uint16 port;
+    uint16 port = 0;
     if (addr.v4.sin_family == AF_INET) {
         ip.B = make(IPv4len);
         copy(ip.B, &addr.v4.sin_addr.s_addr, IPv4len);

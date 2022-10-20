@@ -4,16 +4,16 @@
 
 #include "htp.h"
 
+#include "gx/io/io.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
-#include "gx/io/io.h"
-#include "gx/bytes/bytes.h"
 #include "logx/logx.h"
 
 namespace app {
 namespace proto {
 namespace htp {
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // handleProxy handle CONNECT command
 extern error handleProxy(net::Conn c, slice<byte> hdr);
 
@@ -38,11 +38,11 @@ static error handleConn(net::Conn c) {
 
     if (memcmp(dat.data(), "CONNECT ", 8) == 0) {
         // handle CONNECT command
-        return handleProxy(c, dat);
+        return handleTunnel(c, dat);
     }
 
-    // handle Tunneling mode
-    return handleTunnel(c, dat);
+    // handle reverse-proxy mode
+    return handleProxy(c, dat);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

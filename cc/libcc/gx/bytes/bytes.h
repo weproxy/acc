@@ -57,5 +57,11 @@ inline bool ContainsAny(const slice<byte>& b, const string& chars) { return Inde
 // ContainsRune reports whether the rune is contained in the UTF-8-encoded byte slice b.
 inline bool ContainsRune(const slice<byte>& b, rune r) { return IndexRune(b, r) >= 0; }
 
+// Fields interprets s as a sequence of UTF-8-encoded code points.
+// It splits the slice s around each instance of one or more consecutive white space
+// characters, as defined by unicode.IsSpace, returning a slice of subslices of s or an
+// empty slice if s contains only white space.
+slice<byte> Fields(const slice<byte>& s);
+
 }  // namespace bytes
 }  // namespace gx

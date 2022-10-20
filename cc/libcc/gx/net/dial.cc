@@ -22,11 +22,10 @@ struct tcpConn_t : public conn_t {
 
     // Read ...
     virtual R<int, error> Read(slice<byte> b) override {
-        if (len(b) <= 0) {
-            return {0, io::ErrShortBuffer};
-        }
         if (fd_ <= 0) {
             return {0, ErrClosed};
+        } else if (len(b) <= 0) {
+            return {0, nil};
         }
 
         int r = co::recv(fd_, b.data(), len(b), timeoutMs(dealine_.d, dealine_.r));
@@ -41,11 +40,10 @@ struct tcpConn_t : public conn_t {
 
     // Write ...
     virtual R<int, error> Write(const slice<byte> b) override {
-        if (len(b) <= 0) {
-            return {0, io::ErrShortBuffer};
-        }
         if (fd_ <= 0) {
             return {0, ErrClosed};
+        } else if (len(b) <= 0) {
+            return {0, nil};
         }
 
         int r = co::send(fd_, b.data(), len(b), timeoutMs(dealine_.d, dealine_.w));

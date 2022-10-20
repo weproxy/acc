@@ -32,6 +32,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         socks::WriteReply(c, socks::ReplyHostUnreachable);
         return er1;
     }
+    DEFER(rc->Close());
 
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |

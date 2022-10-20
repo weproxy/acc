@@ -32,8 +32,8 @@ int timeoutMs(const time::Time& t1, const time::Time& t2) {
 R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, const string& port) {
     auto info = NewRef<AddrInfo>();
     int r = getaddrinfo(host.empty() ? "0.0.0.0" : host.c_str(), port.c_str(), NULL, &info->i);
-    if (r < 0) {
-        return {{}, fmt::Errorf("invalid address: %s", host.c_str())};
+    if (r < 0 || !info->i) {
+        return {nil, fmt::Errorf("invalid address: %s", host.c_str())};
     }
 
     return {info, nil};
@@ -43,7 +43,7 @@ R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, const string& port) {
 R<Ref<AddrInfo>, error> GetAddrInfo(const string& addr) {
     AUTO_R(host, port, err, SplitHostPort(addr.empty() ? "0.0.0.0:0" : addr));
     if (err) {
-        return {{}, err};
+        return {nil, err};
     }
 
     return GetAddrInfo(host, (uint16)port);
