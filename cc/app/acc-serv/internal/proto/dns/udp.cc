@@ -3,6 +3,7 @@
 //
 
 #include "dns.h"
+#include "gx/encoding/binary/binary.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
@@ -20,8 +21,8 @@ typedef uint64 key_t;
 
 // makeKey ...
 static key_t makeKey(net::IP ip, uint16 port) {
-    uint64 a = (uint64)(*(uint32*)ip.B.data());  // Only IPv4
-    uint64 b = (uint64)(*(uint16*)&port);
+    uint64 a = (uint64)binary::LittleEndian.Uint32(ip.B);  // ipv4
+    uint64 b = (uint64)port;
     return a << 16 | b;
 }
 static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
@@ -71,7 +72,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
 
             netio::CopyOption opt(time::Minute * 5, 0);
             opt.WriteAddr = thiz->caddr_;
-            opt.MaxTimes = 1; // read 1 packet then close
+            opt.MaxTimes = 1;  // read 1 packet then close
             opt.ReadTimeout = time::Second * 5;
             opt.CopingFn = [thiz](int size) { thiz->sta_->AddSent(size); };
 
@@ -137,7 +138,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 
 ////////////////////////////////////////////////////////////////////////////////
 // runServLoop ...
-void runServLoop(net::PacketConn ln) {
+error runServLoop(net::PacketConn ln) {
     // sessMap
     auto sessMap = NewRef<udpSessMap>();
     DEFER({
@@ -206,9 +207,11 @@ void runServLoop(net::PacketConn ln) {
         // writeTo target server
         err = sess->WriteToRC(data, raddr);
         if (err) {
-            break;
+            return err;
         }
     }
+
+    return nil;
 }
 
 }  // namespace dns

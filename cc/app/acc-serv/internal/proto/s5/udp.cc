@@ -5,6 +5,7 @@
 #include "fx/fx.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
+#include "gx/encoding/binary/binary.h"
 #include "logx/logx.h"
 #include "nx/netio/netio.h"
 #include "nx/socks/socks.h"
@@ -22,8 +23,8 @@ typedef uint64 key_t;
 
 // makeKey ...
 static key_t makeKey(net::IP ip, uint16 port) {
-    uint64 a = (uint64)(*(uint32*)ip.B.data());  // Only IPv4
-    uint64 b = (uint64)(*(uint16*)&port);
+    uint64 a = (uint64)binary::LittleEndian.Uint32(ip.B); // ipv4
+    uint64 b = (uint64)port;
     return a << 16 | b;
 }
 static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
@@ -256,7 +257,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         // writeTo target server
         err = sess->WriteToRC(data);
         if (err) {
-            break;
+            return err;
         }
     }
 

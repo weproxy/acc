@@ -13,7 +13,7 @@ namespace proto {
 namespace dns {
 
 // runServLoop ...
-extern void runServLoop(net::PacketConn ln);
+extern error runServLoop(net::PacketConn ln);
 
 ////////////////////////////////////////////////////////////////////////////////
 // server_t ...

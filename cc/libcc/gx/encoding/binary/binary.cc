@@ -7,6 +7,9 @@
 namespace gx {
 namespace binary {
 
+// overflow ...
+error overflow = errors::New("binary: varint overflows a 64-bit integer");
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // LittleEndian is the little-endian implementation of ByteOrder and AppendByteOrder.
