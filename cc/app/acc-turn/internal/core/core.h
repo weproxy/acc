@@ -7,9 +7,10 @@
 #include "../def.h"
 
 namespace app {
-namespace conf {
+namespace core {
 
-// ...
+// Main ...
+int Main(int argc, char* argv[]);
 
-}  // namespace conf
+}  // namespace core
 }  // namespace app

@@ -8,9 +8,8 @@
 build/
 .xmake/
 
+tmp/
 logs/
 
 Cargo.lock
 **/*.rs.bk
-
-cc/include/

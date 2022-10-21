@@ -81,18 +81,17 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    void WriteToRC(const bytez<> buf, net::Addr raddr) {
+    error WriteToRC(const bytez<> buf, net::Addr raddr) {
         if (!rc_) {
-            return;
+            return net::ErrClosed;
         }
 
         // buf is from source client
         sta_->AddRecv(len(buf));
 
-        AUTO_R(n, err, rc_->WriteTo(buf, raddr));
-        if (err) {
-            return;
-        }
+        AUTO_R(_, err, rc_->WriteTo(buf, raddr));
+
+        return err;
     }
 };
 
@@ -205,7 +204,10 @@ void runServLoop(net::PacketConn ln) {
         static net::Addr raddr = net::MakeAddr(net::IPv4(8, 8, 8, 8), 53);
 
         // writeTo target server
-        sess->WriteToRC(data, raddr);
+        err = sess->WriteToRC(data, raddr);
+        if (err) {
+            break;
+        }
     }
 }
 

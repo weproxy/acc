@@ -52,14 +52,14 @@ static struct conf_t {
     bool ShowCaller{true};
     bool ShowDatetime{true};
     bool WithColor{true};
-} _conf;
+} _cfg;
+
+// reach ...
+bool reach(Level lvl) { return _cfg.StdoutLevel >= lvl || _cfg.ReportLevel >= lvl; }
 
 // TAG/COLORS ...
 static const char* TAGS[] = {"[P] ", "[E] ", "[W] ", "[I] ", "[D] ", "[V] "};
 static const char* COLORS[] = {_TCYAN_, _TRED_, _TYELLOW_, _TGREEN_, _TWHITE_, _TMAGENTA_};
-
-// reach ...
-bool reach(Level lvl) { return _conf.StdoutLevel >= lvl || _conf.ReportLevel >= lvl; }
 
 // timestr ...
 static std::string timestr() {
@@ -87,31 +87,31 @@ void logs(Level lvl, const char* file, int line, const char* msg) {
 
     std::ostringstream ss;
 
-    if (_conf.WithColor) {
+    if (_cfg.WithColor) {
         ss << _TCLEAN_ << _TWEAK_;
     }
-    if (_conf.ShowDatetime) {
+    if (_cfg.ShowDatetime) {
         ss << timestr();
     }
     ss << TAGS[int(lvl)];
-    if (_conf.ShowCaller) {
+    if (_cfg.ShowCaller) {
         ss << file << ":" << line << " ";
     }
-    if (_conf.WithColor) {
+    if (_cfg.WithColor) {
         ss << _TCLEAN_ << COLORS[int(lvl)];
     }
     ss << msg << std::endl;
-    if (_conf.WithColor) {
+    if (_cfg.WithColor) {
         ss << _TCLEAN_;
     }
 
     std::string str = ss.str();
 
-    if (_conf.StdoutLevel >= lvl) {
+    if (_cfg.StdoutLevel >= lvl) {
         std::cout << str;
     }
 
-    if (_conf.ReportLevel >= lvl) {
+    if (_cfg.ReportLevel >= lvl) {
         report(str);
     }
 }

@@ -4,7 +4,11 @@
 
 package proto
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"weproxy/acc/libgo/logx"
+)
 
 // TAG ...
 const TAG = "[proto]"
@@ -18,7 +22,7 @@ var (
 // Server ...
 type Server interface {
 	Start() error
-	Close()
+	Close() error
 }
 
 // NewServerFn ...
@@ -26,14 +30,44 @@ type NewServerFn func(j json.RawMessage) (Server, error)
 
 // Register ...
 func Register(proto string, fn NewServerFn) {
+	logx.D("%v Register(%s)", TAG, proto)
 	_protos[proto] = fn
 }
 
 // Init ..
-func Init(j json.RawMessage) error {
+func Init(servers []json.RawMessage) error {
+	logx.D("%v Init()", TAG)
+
+	for _, j := range servers {
+		var s struct {
+			Proto    string `json:"proto,omitempty"`
+			Disabled bool   `json:"disabled,omitempty"`
+		}
+
+		err := json.Unmarshal(j, &s)
+		if err != nil || len(s.Proto) == 0 || s.Disabled {
+			continue
+		}
+
+		if v, ok := _protos[s.Proto]; ok {
+			if svr, err := v(j); err != nil {
+				return err
+			} else if err = svr.Start(); err != nil {
+				return err
+			} else {
+				_servers[s.Proto] = svr
+			}
+		}
+	}
+
 	return nil
 }
 
 // Deinit ...
 func Deinit() {
+	for _, svr := range _servers {
+		svr.Close()
+	}
+	_servers = make(map[string]Server)
+	logx.D("%v Deinit()", TAG)
 }

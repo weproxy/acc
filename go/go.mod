@@ -1,3 +1,3 @@
-module webproxy/acc
+module weproxy/acc
 
-go 1.15
+go 1.19

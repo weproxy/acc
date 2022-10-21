@@ -81,9 +81,9 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    void WriteToRC(const bytez<> buf) {
+    error WriteToRC(const bytez<> buf) {
         if (!rc_) {
-            return;
+            return net::ErrClosed;
         }
 
         // buf is from source client
@@ -91,10 +91,9 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
 
         // udpConn_t::WriteTo()
         // unpack data (from source client), and writeTo target server
-        AUTO_R(n, err, rc_->WriteTo(buf, nil));
-        if (err) {
-            return;
-        }
+        AUTO_R(_, err, rc_->WriteTo(buf, nil));
+
+        return err;
     }
 };
 
@@ -255,7 +254,10 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         }
 
         // writeTo target server
-        sess->WriteToRC(data);
+        err = sess->WriteToRC(data);
+        if (err) {
+            break;
+        }
     }
 
     return nil;

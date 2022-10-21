@@ -1,10 +1,4 @@
-//
-// weproxy@foxmail.com 2022/10/03
-//
-
-#pragma once
-
-const char* DEFAULT_CONF = R"({
+{
     "iface": {
         "in": "",
         "out": "jp1"
@@ -44,4 +38,4 @@ const char* DEFAULT_CONF = R"({
             "listen": ":19784"
         }
     ]
-})";
+}

@@ -1,12 +1,11 @@
 //
-// weproxy@foxmail.com 2022/10/03
+// weproxy@foxmail.com 2022/10/21
 //
 
 #include "core.h"
 
 #include "gx/os/signal/signal.h"
-#include "internal/conf/conf.h"
-#include "internal/proto/proto.h"
+#include "gx/time/time.h"
 #include "logx/logx.h"
 
 namespace app {
@@ -14,20 +13,16 @@ namespace core {
 
 // Main ...
 int Main(int argc, char* argv[]) {
-    AUTO_R(js, err, conf::ReadConfig());
-    if (err) {
-        LOGS_E("[core] conf::ReadConfig(), err: " << err);
-        return -1;
-    }
+    LOGS_W("press Ctrl+C to quit");
 
-    // proto init
-    err = proto::Init(js["server"]);
-    // proto deinit
-    DEFER(proto::Deinit());
-    if (err) {
-        LOGS_E("[core] proto::Init(), err: " << err);
-        return -1;
-    }
+    // loop test
+    gx::go([] {
+        int64 i = 0;
+        for (;;) {
+            LOGS_D("hello " << i);
+            time::Sleep(time::Second);
+        }
+    });
 
     // Wait for Ctrl+C or kill -x
     signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,

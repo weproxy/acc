@@ -43,8 +43,8 @@ error Init(const json::J& js) {
             continue;
         }
 
-        auto enabled = j["enabled"];
-        if (enabled.is_boolean() && !enabled) {
+        auto disabled = j["disabled"];
+        if (disabled.is_boolean() && disabled) {
             continue;
         }
 

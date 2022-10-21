@@ -5,14 +5,34 @@
 package core
 
 import (
-	"webproxy/acc/app/acc-serv/internal/proto"
+	"os"
+
+	"weproxy/acc/libgo/fx/signal"
+	"weproxy/acc/libgo/logx"
+
+	"weproxy/acc/app/acc-serv/internal/conf"
+	"weproxy/acc/app/acc-serv/internal/proto"
 )
 
 // Main ...
 func Main() {
-	proto.Init(nil)
+	js, err := conf.ReadConfig()
+	if err != nil {
+		logx.E("[core] conf::ReadConfig(), err: %v", err)
+		return
+	}
 
-	// signal.Notify()
+	// proto init
+	err = proto.Init(js.Servers)
+	// proto deinit
+	defer proto.Deinit()
+	if err != nil {
+		logx.E("[core] proto::Init(), err: %v", err)
+		return
+	}
 
-	proto.Deinit()
+	// Wait for Ctrl+C or kill -x
+	signal.WaitNotify(func() {
+		logx.W("[signal] quit")
+	}, os.Interrupt, os.Kill)
 }
