@@ -48,11 +48,11 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     error Close() {
         if (rc_) {
             rc_->Close();
+            sta_->Done("closed");
+            rc_ = nil;
             if (afterClosedFn_) {
                 afterClosedFn_();
             }
-            sta_->Done("closed");
-            rc_ = nil;
         }
         return nil;
     }

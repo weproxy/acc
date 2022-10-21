@@ -2,20 +2,22 @@
 // weproxy@foxmail.com 2022/10/20
 //
 
-package s5
+package dns
 
 import (
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx"
 	"weproxy/acc/libgo/nx/netio"
-	"weproxy/acc/libgo/nx/socks"
 	"weproxy/acc/libgo/nx/stats"
+
+	"golang.org/x/net/dns/dnsmessage"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,8 +71,8 @@ func (m *udpSess_t) Close() error {
 }
 
 // Start ...
-func (m *udpSess_t) Start() {
-	tag := fmt.Sprintf("%s UDP_%v %v", TAG, nx.NewID(), m.caddr)
+func (m *udpSess_t) Start(target string) {
+	tag := fmt.Sprintf("%s DNS_%v %v->%s", TAG, nx.NewID(), m.caddr, target)
 	sta := stats.NewUDPStats(stats.TypeS5, tag)
 
 	sta.Start("started")
@@ -82,6 +84,8 @@ func (m *udpSess_t) Start() {
 
 		var opt netio.CopyOption
 		opt.WriteAddr = m.caddr
+		opt.MaxTimes = 1 // read 1 packet then close
+		opt.ReadTimeout = time.Second * 5
 		opt.CopingFn = func(n int) { m.sta.AddSent(int64(n)) }
 
 		// copy to ln from rc
@@ -90,7 +94,7 @@ func (m *udpSess_t) Start() {
 }
 
 // WriteToRC ...
-func (m *udpSess_t) WriteToRC(buf []byte) error {
+func (m *udpSess_t) WriteToRC(buf []byte, raddr net.Addr) error {
 	if m.rc == nil {
 		return net.ErrClosed
 	}
@@ -100,7 +104,7 @@ func (m *udpSess_t) WriteToRC(buf []byte) error {
 
 	// udpConn_t.WriteTo()
 	// unpack data (from source client), and writeTo target server
-	_, err := m.rc.WriteTo(buf, nil)
+	_, err := m.rc.WriteTo(buf, raddr)
 
 	return err
 }
@@ -114,91 +118,51 @@ type udpSessMap map[key_t]*udpSess_t
 // to target server
 type udpConn_t struct {
 	net.PacketConn
-	typ socks.AddrType
+	// typ socks.AddrType
 }
 
 // ReadFrom override
 // readFrom target server, and pack data (to client)
-//
-// <<< RSP:
-//
-//	| RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-//	+-----+------+------+----------+----------+------+
-//	|  2  |  1   |  1   |    ...   |    2     |  ... |
-func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
-	if socks.AddrTypeIPv4 != m.typ && socks.AddrTypeIPv6 != m.typ {
-		return 0, nil, socks.ErrInvalidAddrType
+func (m *udpConn_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
+	n, addr, err = m.PacketConn.ReadFrom(buf)
+	if err == nil {
+		return
 	}
 
-	// readFrom target server
-	pos := 3 + 1 + 2
-	if socks.AddrTypeIPv4 == m.typ {
-		pos += net.IPv4len
-	} else {
-		pos += net.IPv6len
+	// TODO ... unpack DNS answer packet
+
+	return
+}
+
+// getDomain ...
+func getDomain(msg *dnsmessage.Message) string {
+	if msg != nil && len(msg.Questions) > 0 {
+		return strings.TrimRight(msg.Questions[0].Name.String(), ".")
 	}
-	n, addr, err := m.PacketConn.ReadFrom(buf[pos:])
-	if err != nil {
-		return n, addr, err
-	}
-
-	// pack data
-
-	raddr := socks.FromNetAddr(addr)
-	copy(buf[3:], raddr.B)
-
-	n += 3 + len(raddr.B)
-
-	buf[0] = 0 // RSV
-	buf[1] = 0 //
-	buf[2] = 0 // FRAG
-
-	return n, addr, nil
+	return ""
 }
 
 // WriteTo override
 // unpack data (from source client), and writeTo target server
-//
-// >>> REQ:
-//
-//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-//	+-----+------+------+----------+----------+------+
-//	|  2  |  1   |  1   |    ...   |    2     |  ... |
-func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (int, error) {
-	if len(buf) < 10 {
-		return 0, socks.ErrInvalidSocksVersion
+func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
+	var msg dnsmessage.Message
+	if er := msg.Unpack(buf); er == nil && len(msg.Questions) > 0 {
+		if len(msg.Answers) > 0 {
+			logx.D("%s %v <- %v", TAG, getDomain(&msg), msg.Answers)
+		} else {
+			logx.D("%s %v <- [no answer]", TAG, getDomain(&msg))
+		}
 	}
 
-	// unpack data
+	n, err = m.PacketConn.WriteTo(buf, addr)
 
-	raddr, err := socks.ParseAddr(buf[3:])
-	if err != nil {
-		return 0, err
-	}
-
-	m.typ = socks.AddrType(raddr.B[0])
-	if socks.AddrTypeIPv4 != m.typ && socks.AddrTypeIPv6 != m.typ {
-		return 0, socks.ErrInvalidAddrType
-	}
-
-	// writeTo target server
-	pos := 3 + len(raddr.B)
-	n, err := m.PacketConn.WriteTo(buf[pos:], raddr.ToUDPAddr())
-	if err != nil {
-		return n, err
-	}
-
-	return n + pos, nil
+	return
 }
 
 // //////////////////////////////////////////////////////////////////////////////
-// handleUDP ...
-//
-// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
-//
-//	caddr=1.2.3.4:100 -. raddr=8.8.8.8:53
-//	                  -. raddr=4.4.4.4:53
-func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
+
+// runServLoop ...
+func runServLoop(ln net.PacketConn) error {
 	// sessMap
 	sessMap := make(udpSessMap)
 	defer func() {
@@ -212,9 +176,6 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 	buf := make([]byte, 1024*8)
 
 	for {
-		// 5 minutes timeout
-		ln.SetReadDeadline(time.Now().Add(time.Minute * 5))
-
 		// read
 		n, caddr, err := ln.ReadFrom(buf)
 		if err != nil {
@@ -245,6 +206,14 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 				continue
 			}
 
+			target := func() string {
+				var msg dnsmessage.Message
+				if err := msg.Unpack(data); err == nil && len(msg.Questions) > 0 {
+					return getDomain(&msg)
+				}
+				return ""
+			}()
+
 			// wrap as udpConn_t
 			rc := &udpConn_t{PacketConn: c}
 
@@ -260,13 +229,16 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 			sess.afterClosedFn = func() { delete(sessMap, key) }
 
 			// start recv loop...
-			sess.Start()
+			sess.Start(target)
 		} else {
 			sess = v
 		}
 
+		// DNS server
+		raddr := &net.UDPAddr{IP: net.IPv4(223, 5, 5, 5), Port: 53}
+
 		// writeTo target server
-		err = sess.WriteToRC(data)
+		err = sess.WriteToRC(data, raddr)
 		if err != nil {
 			return err
 		}

@@ -67,7 +67,7 @@ func (m *server_t) Start() error {
 		for {
 			c, err := ln.Accept()
 			if err != nil {
-				if err != net.ErrClosed {
+				if !errors.Is(err, net.ErrClosed) {
 					logx.E("%v Accept(), err: %v", TAG, err)
 				}
 				break

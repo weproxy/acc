@@ -527,7 +527,7 @@ func (m *server_t) Start() error {
         for {
             c, err := ln.Accept()
             if err != nil {
-                if err != net.ErrClosed {
+                if !errors.Is(err, net.ErrClosed) {
                     logx.E("%v Accept(), err: %v", TAG, err)
                 }
                 break
@@ -688,6 +688,7 @@ func handshake(c net.Conn) (socks.Command, *socks.Addr, error) {
 package s5
 
 import (
+    "errors"
     "fmt"
     "net"
 
@@ -723,7 +724,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
     err = socks.WriteReply(c, socks.ReplySuccess, 0, &net.TCPAddr{IP: net.IPv4zero, Port: 0})
     if err != nil {
-        if err != net.ErrClosed {
+        if !errors.Is(err, net.ErrClosed) {
             logx.E("%s err: ", TAG, err)
         }
         return err
@@ -736,7 +737,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
     // Relay c <--> rc
     err = netio.Relay(c, rc, opt)
     if err != nil {
-        if err != net.ErrClosed {
+        if !errors.Is(err, net.ErrClosed) {
             logx.E("%s relay %s, err: %v", TAG, tag, err)
         }
     }

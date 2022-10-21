@@ -5,6 +5,7 @@
 package s5
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -41,7 +42,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
 	err = socks.WriteReply(c, socks.ReplySuccess, 0, &net.TCPAddr{IP: net.IPv4zero, Port: 0})
 	if err != nil {
-		if err != net.ErrClosed {
+		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s err: ", TAG, err)
 		}
 		return err
@@ -54,7 +55,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	// Relay c <-. rc
 	err = netio.Relay(c, rc, opt)
 	if err != nil {
-		if err != net.ErrClosed {
+		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s relay %s, err: %v", TAG, tag, err)
 		}
 	}
@@ -91,7 +92,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
 	err = socks.WriteReply(c, socks.ReplySuccess, 0, ln.LocalAddr())
 	if err != nil {
-		if err != net.ErrClosed {
+		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s err: %v", TAG, err)
 		}
 		return err
@@ -99,7 +100,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 
 	_, err = io.Copy(io.Discard, c)
 	if err != nil {
-		if err != net.ErrClosed {
+		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s err: %v", TAG, err)
 		}
 		return err
