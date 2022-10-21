@@ -84,6 +84,9 @@ func (m *server_t) Start() error {
 
 // Close ...
 func (m *server_t) Close() error {
+	if m.ln != nil {
+		m.ln.Close()
+	}
 	logx.D("%v Close()", TAG)
 	return nil
 }

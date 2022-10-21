@@ -1,7 +1,7 @@
 # WeProxy
 
 ```
-<Status> developing, not works yet...
+<Status>: under development, not works yet...
 ```
 
 Cross-platform network proxy programe
@@ -12,8 +12,9 @@ A game accelerator on Linux/OSX/Windows, iOS/Android, router hardward
 
 ### /cc/
 
-* by C++，use coost, likes golang
-* only use <= C++11, compatible with some low version hardware toolchains
+* by C++，use coost
+* use <= C++11 only, to compatible with some low version hardware toolchains
+* coding c++ like golang
 * TODO...
 
 
@@ -543,6 +544,9 @@ func (m *server_t) Start() error {
 
 // Close ...
 func (m *server_t) Close() error {
+    if m.ln != nil {
+        m.ln.Close()
+    }
     logx.D("%v Close()", TAG)
     return nil
 }

@@ -12,8 +12,9 @@
 
 ### /cc/
 
-* C++ 版，使用 coost 协程库，模拟 Golang
+* C++ 版，使用 coost 协程库
 * 仅采用 C++11，尽量兼容各交叉编译 toolchain，因为它们大多仅支持到这一标准
+* 用 C++ 模拟 Golang 语法
 * TODO...
 
 
@@ -543,6 +544,9 @@ func (m *server_t) Start() error {
 
 // Close ...
 func (m *server_t) Close() error {
+    if m.ln != nil {
+        m.ln.Close()
+    }
     logx.D("%v Close()", TAG)
     return nil
 }
