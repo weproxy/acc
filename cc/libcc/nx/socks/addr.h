@@ -73,13 +73,14 @@ inline Ref<Addr> FromNetAddr(net::Addr addr) {
     r->FromNetAddr(addr);
     return r;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // ReadAddr ..
 //     | ATYP | ADDR | PORT |
 //     +------+------+------+
 //     |  1   |  x   |  2   |
 template <typename Reader, typename std::enable_if<io::xx::has_read<Reader>::value, int>::type = 0>
-R<size_t /*readlen*/, Ref<Addr>, error> ReadAddr(Reader r) {
+R<int /*readlen*/, Ref<Addr>, error> ReadAddr(Reader r) {
     bytez<> B = make(MaxAddrLen);
 
     // 2bytes = ATYP + (MAYBE)DOMAIN_LEN
@@ -111,12 +112,6 @@ R<size_t /*readlen*/, Ref<Addr>, error> ReadAddr(Reader r) {
 ////////////////////////////////////////////////////////////////////////////////
 // ParseAddr ...
 R<Ref<Addr>, error> ParseAddr(const bytez<> buf);
-
-// CopyAddr ...
-R<int, error> CopyAddr(bytez<> buf, Ref<Addr> addr);
-
-// AppendAddr ...
-R<int, error> AppendAddr(bytez<> buf, Ref<Addr> addr);
 
 }  // namespace socks
 }  // namespace nx

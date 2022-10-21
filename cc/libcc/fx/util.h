@@ -9,6 +9,6 @@
 namespace fx {
 
 // FormatBytes ...
-std::string FormatBytes(int64 bytes);
+std::string FormatBytes(int64 n);
 
 }  // namespace fx

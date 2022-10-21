@@ -88,7 +88,7 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
             return {cmd, nil, err};
         }
     } else {
-        socks::WriteReply(c, socks::AuthMethodNoAcceptableMethods);
+        socks::WriteReply(c, socks::ReplyNoAcceptableMethods);
         return {cmd, nil, socks::ErrNoSupportedAuth};
     }
 

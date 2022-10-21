@@ -113,25 +113,5 @@ R<Ref<Addr>, error> ParseAddr(const bytez<> B) {
     return {NewRef<Addr>(B(0, m)), nil};
 }
 
-// CopyAddr ...
-R<int, error> CopyAddr(bytez<> buf, Ref<Addr> addr) {
-    if (addr || len(buf) >= len(addr->B)) {
-        memcpy(buf.data(), addr->B.data(), len(addr->B));
-        return {len(addr->B), nil};
-    }
-    return {0, errors::New("socks::WriteAddr fail")};
-}
-
-// AppendAddr ...
-R<int, error> AppendAddr(bytez<> buf, Ref<Addr> addr) {
-    if (addr) {
-        for (int i = 0; i < len(addr->B); i++) {
-            append(buf, addr->B[i]);
-        }
-        return {len(addr->B), nil};
-    }
-    return {0, errors::New("socks::AppendAddr fail")};
-}
-
 }  // namespace socks
 }  // namespace nx

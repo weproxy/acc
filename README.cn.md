@@ -446,279 +446,6 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 }  // namespace app
 ```
 
-* udp.cc
-
-```c++
-//
-// weproxy@foxmail.com 2022/10/03
-//
-
-#include "fx/fx.h"
-#include "gx/net/net.h"
-#include "gx/time/time.h"
-#include "logx/logx.h"
-#include "nx/netio/netio.h"
-#include "nx/socks/socks.h"
-#include "nx/stats/stats.h"
-#include "s5.h"
-
-namespace app {
-namespace proto {
-namespace s5 {
-using namespace nx;
-
-////////////////////////////////////////////////////////////////////////////////
-// key_t ...
-typedef uint64 key_t;
-
-// makeKey ...
-static key_t makeKey(net::IP ip, uint16 port) {
-    uint64 a = (uint64)(*(uint32*)ip.B.data());  // Only IPv4
-    uint64 b = (uint64)(*(uint16*)&port);
-    return a << 16 | b;
-}
-static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
-
-////////////////////////////////////////////////////////////////////////////////
-// udpSess_t ...
-//
-// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
-//   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
-//                     --> raddr=4.4.4.4:53
-//
-struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
-    net::PacketConn ln_;  // to source client, it is net::PacketConn
-    net::PacketConn rc_;  // to target server, it is udpConn_t
-    net::Addr caddr_;     // source client addr
-    Ref<stats::Stats> sta_;
-    func<void()> afterClosedFn_;
-
-    udpSess_t(net::PacketConn ln, net::PacketConn rc, net::Addr caddr) : ln_(ln), rc_(rc), caddr_(caddr) {}
-    ~udpSess_t() { Close(); }
-
-    // Close ...
-    error Close() {
-        if (rc_) {
-            rc_->Close();
-            if (afterClosedFn_) {
-                afterClosedFn_();
-            }
-            sta_->Done("closed");
-            rc_ = nil;
-        }
-        return nil;
-    }
-
-    // Start ...
-    void Start() {
-        auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_);
-        auto sta = stats::NewUDPStats(stats::TypeS5, tag);
-
-        sta->Start("started");
-        sta_ = sta;
-
-        // loopRecvRC
-        auto thiz = shared_from_this();
-        gx::go([thiz] {
-            DEFER(thiz->Close());
-
-            netio::CopyOption opt(time::Minute * 5, 0);
-            opt.WriteAddr = thiz->caddr_;
-            opt.CopingFn = [thiz](int size) { thiz->sta_->AddSent(size); };
-
-            // copy to ln_ from rc_
-            netio::Copy(thiz->ln_, thiz->rc_, opt);
-        });
-    }
-
-    // WriteToRC ...
-    error WriteToRC(const bytez<> buf) {
-        if (!rc_) {
-            return net::ErrClosed;
-        }
-
-        // buf is from source client
-        sta_->AddRecv(len(buf));
-
-        // udpConn_t::WriteTo()
-        // unpack data (from source client), and writeTo target server
-        AUTO_R(_, err, rc_->WriteTo(buf, nil));
-
-        return err;
-    }
-};
-
-// udpSessMap ...
-using udpSessMap = Map<key_t, Ref<udpSess_t>>;
-
-////////////////////////////////////////////////////////////////////////////////
-// udpConn_t
-// to target server
-struct udpConn_t : public net::xx::packetConnWrap_t {
-    socks::AddrType typ_{socks::AddrTypeIPv4};
-
-    udpConn_t(net::PacketConn pc) : net::xx::packetConnWrap_t(pc) {}
-
-    // ReadFrom ...
-    // readFrom target server, and pack data (to client)
-    //
-    // <<< RSP:
-    //     | RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-    //     +-----+------+------+----------+----------+------+
-    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, net::Addr, error> ReadFrom(bytez<> buf) override {
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
-            return {0, nil, socks::ErrInvalidAddrType};
-        }
-
-        // readFrom target server
-        int pos = 3 + 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
-        AUTO_R(n, addr, err, wrap_->ReadFrom(buf(pos)));
-        if (err) {
-            return {n, addr, err};
-        }
-
-        // pack data
-
-        auto raddr = socks::FromNetAddr(addr);
-        socks::CopyAddr(buf(3), raddr);
-
-        n += 3 + len(raddr->B);
-
-        buf[0] = 0;  // RSV
-        buf[1] = 0;  //
-        buf[2] = 0;  // FRAG
-
-        return {n, addr, nil};
-    }
-
-    // WriteTo ...
-    // unpack data (from source client), and writeTo target server
-    //
-    // >>> REQ:
-    //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-    //     +-----+------+------+----------+----------+------+
-    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, error> WriteTo(const bytez<> buf, net::Addr) override {
-        if (len(buf) < 10) {
-            return {0, socks::ErrInvalidSocksVersion};
-        }
-
-        // unpack data
-
-        AUTO_R(raddr, er1, socks::ParseAddr(buf(3)));
-        if (er1) {
-            return {0, er1};
-        }
-
-        typ_ = socks::AddrType(raddr->B[0]);
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
-            return {0, socks::ErrInvalidAddrType};
-        }
-
-        // writeTo target server
-        int pos = 3 + len(raddr->B);
-        AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
-        if (er2) {
-            return {n, er2};
-        }
-
-        return {n + pos, nil};
-    }
-
-    // wrap ...
-    static net::PacketConn wrap(net::PacketConn pc) {
-        //
-        return NewRef<udpConn_t>(pc);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// handleUDP ...
-//
-// <NAT-Open Notice> maybe one source client send to multi-target server, likes:
-//   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
-//                     --> raddr=4.4.4.4:53
-//
-error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
-    // sessMap
-    auto sessMap = NewRef<udpSessMap>();
-    DEFER({
-        for (auto& kv : *sessMap) {
-            kv.second->Close();
-        }
-    });
-
-    DEFER(ln->Close());
-
-    bytez<> buf = make(1024 * 8);
-
-    for (;;) {
-        // 5 minutes timeout
-        ln->SetReadDeadline(time::Now().Add(time::Minute * 5));
-
-        // read
-        AUTO_R(n, caddr, err, ln->ReadFrom(buf));
-        if (err) {
-            if (err != net::ErrClosed) {
-                LOGS_E(TAG << " err: " << err);
-            }
-            break;
-        } else if (n <= 0) {
-            continue;
-        }
-
-        // packet data
-        auto data = buf(0, n);
-
-        // lookfor or create sess
-        Ref<udpSess_t> sess;
-
-        // use source client addr as key
-        // <TODO-Notice>
-        //  some user's env has multi-outbound-ip, we will get diff caddr although he use one-same-conn
-        key_t key = makeKey(caddr);
-
-        auto it = sessMap->find((key));
-        if (it == sessMap->end()) {
-            // create a new rc for every new source client
-            AUTO_R(c, err, net::ListenPacket(":0"));
-            if (err) {
-                LOGS_E(TAG << " err: " << err);
-                continue;
-            }
-
-            // wrap as udpConn_t
-            auto rc = udpConn_t::wrap(c);
-
-            // store to sessMap
-            sess = NewRef<udpSess_t>(ln, rc, caddr);
-            (*sessMap)[key] = sess;
-
-            // remove it after rc closed
-            sess->afterClosedFn_ = [sessMap, key] { sessMap->erase(key); };
-
-            // start recv loop...
-            sess->Start();
-        } else {
-            sess = it->second;
-        }
-
-        // writeTo target server
-        err = sess->WriteToRC(data);
-        if (err) {
-            break;
-        }
-    }
-
-    return nil;
-}
-
-}  // namespace s5
-}  // namespace proto
-}  // namespace app
-```
-
 
 
 ### /go/
@@ -726,11 +453,308 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 * Golang 版
 * TODO...
 
+#### A socks5 server codes example
+
+* s5.go
+```golang
+//
+// weproxy@foxmail.com 2022/10/20
+//
+
+package s5
+
+import (
+    "encoding/json"
+    "errors"
+    "fmt"
+    "io"
+    "net"
+    "time"
+
+    "weproxy/acc/libgo/logx"
+    "weproxy/acc/libgo/nx/socks"
+
+    "weproxy/acc/app/acc-serv/internal/proto"
+)
+
+// TAG ...
+const TAG = "[s5]"
+
+// init ...
+func init() {
+    proto.Register("s5", New)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// New ...
+func New(js json.RawMessage) (proto.Server, error) {
+    var j struct {
+        Listen string `json:"listen,omitempty"`
+    }
+
+    if err := json.Unmarshal(js, &j); err != nil {
+        return nil, err
+    }
+    if len(j.Listen) == 0 {
+        return nil, errors.New("invalid addr")
+    }
+
+    return &server_t{addr: j.Listen}, nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// server_t ...
+type server_t struct {
+    addr string
+    ln   net.Listener
+}
+
+// Start ...
+func (m *server_t) Start() error {
+    ln, err := net.Listen("tcp", m.addr)
+    if err != nil {
+        logx.E("%v Listen(%v), err: %v", TAG, m.addr, err)
+        return err
+    }
+
+    logx.D("%v Start(%s)", TAG, m.addr)
+
+    m.ln = ln
+    go func() {
+        for {
+            c, err := ln.Accept()
+            if err != nil {
+                if err != net.ErrClosed {
+                    logx.E("%v Accept(), err: %v", TAG, err)
+                }
+                break
+            }
+
+            logx.V("%v Accept() %v", TAG, c.RemoteAddr())
+
+            go handleConn(c)
+        }
+    }()
+
+    return nil
+}
+
+// Close ...
+func (m *server_t) Close() error {
+    logx.D("%v Close()", TAG)
+    return nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// handleConn ...
+func handleConn(c net.Conn) error {
+    defer c.Close()
+
+    cmd, raddr, err := handshake(c)
+    if err != nil || raddr == nil {
+        logx.E("%v handshake(), err: %v", TAG, err)
+        return err
+    }
+
+    switch cmd {
+    case socks.CmdConnect:
+        return handleTCP(c, raddr.ToTCPAddr())
+    case socks.CmdAssociate:
+        return handleAssoc(c, raddr.ToUDPAddr())
+    case socks.CmdBind:
+        return errors.New("not support socks command: bind")
+    default:
+        return fmt.Errorf("unknow socks command: %d", cmd)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// checkUserPass ...
+func checkUserPass(user, pass string) error {
+    return nil
+}
+
+// handshake ...
+func handshake(c net.Conn) (socks.Command, *socks.Addr, error) {
+    c.SetDeadline(time.Now().Add(time.Second * 5))
+    defer c.SetDeadline(time.Time{})
+
+    cmd := socks.Command(0)
+    buf := make([]byte, 256)
+
+    // >>> REQ:
+    //     | VER | NMETHODS | METHODS  |
+    //     +-----+----------+----------+
+    //     |  1  |    1     | 1 to 255 |
+
+    _, err := io.ReadFull(c, buf[0:2])
+    if err != nil {
+        socks.WriteReply(c, socks.ReplyAuthFailure, 0, nil)
+        return cmd, nil, err
+    }
+
+    methodCnt := buf[1]
+
+    if buf[0] != socks.Version5 || methodCnt == 0 || methodCnt > 16 {
+        socks.WriteReply(c, socks.ReplyAuthFailure, 0, nil)
+        return cmd, nil, socks.ErrInvalidSocksVersion
+    }
+
+    n, err := io.ReadFull(c, buf[0:methodCnt])
+    if err != nil {
+        socks.WriteReply(c, socks.ReplyAuthFailure, 0, nil)
+        return cmd, nil, err
+    }
+
+    var methodNotRequired, methodUserPass bool
+    for i := 0; i < n; i++ {
+        switch socks.Method(buf[i]) {
+        case socks.AuthMethodNotRequired:
+            methodNotRequired = true
+        case socks.AuthMethodUserPass:
+            methodUserPass = true
+        }
+    }
+
+    if methodNotRequired || methodUserPass {
+        // <<< REP:
+        //     | VER | METHOD |
+        //     +-----+--------+
+        //     |  1  |   1    |
+
+        // >>> REQ:
+        //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+        //     +-----+------+----------+------+----------+
+        //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+
+        // <<< REP:
+        //     | VER | STATUS |
+        //     +-----+--------+
+        //     |  1  |   1    |
+        err := socks.ServerAuth(c, methodUserPass, checkUserPass)
+        if err != nil {
+            return cmd, nil, err
+        }
+    } else {
+        socks.WriteReply(c, socks.ReplyNoAcceptableMethods, 0, nil)
+        return cmd, nil, socks.ErrNoSupportedAuth
+    }
+
+    // >>> REQ:
+    //     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+
+    _, err = io.ReadFull(c, buf[0:3])
+    if err != nil {
+        socks.WriteReply(c, socks.ReplyAddressNotSupported, 0, nil)
+        return cmd, nil, err
+    }
+
+    // ver := buf[0]
+    cmd = socks.Command(buf[1])
+    // rsv := buf[2]
+
+    if socks.CmdConnect != cmd && socks.CmdAssociate != cmd {
+        socks.WriteReply(c, socks.ReplyCommandNotSupported, 0, nil)
+        return cmd, nil, socks.ToError(socks.ReplyCommandNotSupported)
+    }
+
+    _, raddr, err := socks.ReadAddr(c)
+    if err != nil {
+        socks.WriteReply(c, socks.ReplyAddressNotSupported, 0, nil)
+        return cmd, nil, err
+    }
+
+    return cmd, raddr, nil
+}
+```
+
+* tcp.go
+
+```golang
+//
+// weproxy@foxmail.com 2022/10/20
+//
+
+package s5
+
+import (
+    "fmt"
+    "net"
+
+    "weproxy/acc/libgo/logx"
+    "weproxy/acc/libgo/nx"
+    "weproxy/acc/libgo/nx/netio"
+    "weproxy/acc/libgo/nx/socks"
+    "weproxy/acc/libgo/nx/stats"
+)
+
+////////////////////////////////////////////////////////////////////////////////
+
+// handleTCP ...
+func handleTCP(c net.Conn, raddr net.Addr) error {
+    tag := fmt.Sprintf("%s TCP_%v %v->%v", TAG, nx.NewID(), c.RemoteAddr(), raddr)
+    sta := stats.NewTCPStats(stats.TypeS5, tag)
+
+    sta.Start("connected")
+    defer sta.Done("closed")
+
+    // dial target server
+    rc, err := net.Dial("tcp", raddr.String())
+    if err != nil {
+        logx.E("%s dial, err: %v", TAG, err)
+        socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
+        return err
+    }
+    defer rc.Close()
+
+    // <<< REP:
+    //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    //     +-----+-----+-------+------+----------+----------+
+    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+    err = socks.WriteReply(c, socks.ReplySuccess, 0, &net.TCPAddr{IP: net.IPv4zero, Port: 0})
+    if err != nil {
+        if err != net.ErrClosed {
+            logx.E("%s err: ", TAG, err)
+        }
+        return err
+    }
+
+    opt := netio.RelayOption{}
+    opt.A2B.CopingFn = func(n int) { sta.AddRecv(int64(n)) }
+    opt.B2A.CopingFn = func(n int) { sta.AddSent(int64(n)) }
+
+    // Relay c <--> rc
+    err = netio.Relay(c, rc, opt)
+    if err != nil {
+        if err != net.ErrClosed {
+            logx.E("%s relay %s, err: %v", TAG, tag, err)
+        }
+    }
+
+    return err
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// handleAssoc ...
+func handleAssoc(c net.Conn, raddr net.Addr) error {
+    // TODO ...
+    return nil
+}
+```
+
 
 
 ### /rs/
 
-* Rust 版
+Rust 版
+
 * TODO...
 
 

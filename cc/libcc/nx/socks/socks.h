@@ -45,8 +45,6 @@ inline const char* ToString(Command cmd) {
 enum Method {
     AuthMethodNotRequired = 0x00,          // no authentication required
     AuthMethodUserPass = 0x02,             // use username/password
-    AuthMethodNoAcceptableMethods = 0xff,  // no acceptable authentication methods
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +62,8 @@ enum Reply {
     ReplyTTLExpired = 6,
     ReplyCommandNotSupported = 7,
     ReplyAddressNotSupported = 8,
+
+    ReplyNoAcceptableMethods = 0xff,  // no acceptable authentication methods
 };
 
 // ToString ...

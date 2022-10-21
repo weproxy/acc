@@ -130,7 +130,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         // pack data
 
         auto raddr = socks::FromNetAddr(addr);
-        socks::CopyAddr(buf(3), raddr);
+        copy(buf(3), raddr->B);
 
         n += 3 + len(raddr->B);
 

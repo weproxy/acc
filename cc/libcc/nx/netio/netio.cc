@@ -115,7 +115,7 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         if (opt.ReadTimeout) {
             r->SetReadDeadline(time::Now().Add(opt.ReadTimeout));
         }
-        AUTO_R(nr, addr, err, r->ReadFrom(buf));
+        AUTO_R(nr, _, err, r->ReadFrom(buf));
         if (nr > 0) {
             if (opt.WriteTimeout) {
                 w->SetWriteDeadline(time::Now().Add(opt.WriteTimeout));

@@ -49,8 +49,8 @@ func Init(servers []json.RawMessage) error {
 			continue
 		}
 
-		if v, ok := _protos[s.Proto]; ok {
-			if svr, err := v(j); err != nil {
+		if newFn, ok := _protos[s.Proto]; ok && newFn != nil {
+			if svr, err := newFn(j); err != nil {
 				return err
 			} else if err = svr.Start(); err != nil {
 				return err
@@ -68,6 +68,6 @@ func Deinit() {
 	for _, svr := range _servers {
 		svr.Close()
 	}
-	_servers = make(map[string]Server)
+	_servers = nil
 	logx.D("%v Deinit()", TAG)
 }
