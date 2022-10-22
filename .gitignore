@@ -13,3 +13,4 @@ logs/
 
 Cargo.lock
 **/*.rs.bk
+/rs/**/target
