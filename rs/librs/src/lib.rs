@@ -3,8 +3,12 @@
 //
 
 pub mod fx;
+pub mod gx;
 pub mod logx;
 pub mod nx;
+
+pub type Runner = futures::future::BoxFuture<'static, ()>;
+pub type RuntimeID = u16;
 
 #[cfg(test)]
 mod tests {

@@ -231,12 +231,7 @@ struct stringWriterFn_t : public stringWriter_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value, int>::type = 0>
 struct readerObj_t : public reader_t {
     readerObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(bytez<> b) override {
-        if (t_) {
-            return t_->Read(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(bytez<> b) override { return t_->Read(b); }
 
    protected:
     T t_;
@@ -246,12 +241,7 @@ struct readerObj_t : public reader_t {
 template <typename T, typename std::enable_if<xx::has_write<T>::value, int>::type = 0>
 struct writerObj_t : public writer_t {
     writerObj_t(T t) : t_(t) {}
-    virtual R<int, error> Write(const bytez<> b) override {
-        if (t_) {
-            return t_->Write(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Write(const bytez<> b) override { return t_->Write(b); }
 
    protected:
     T t_;
@@ -271,18 +261,8 @@ struct closerObj_t : public closer_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_write<T>::value, int>::type = 0>
 struct readWriterObj_t : public readWriter_t {
     readWriterObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(bytez<> b) override {
-        if (t_) {
-            return t_->Read(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual R<int, error> Write(const bytez<> b) override {
-        if (t_) {
-            return t_->Write(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(bytez<> b) override { return t_->Read(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return t_->Write(b); }
 
    protected:
     T t_;
@@ -292,12 +272,7 @@ struct readWriterObj_t : public readWriter_t {
 template <typename T, typename std::enable_if<xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 struct readCloserObj_t : public readCloser_t {
     readCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(bytez<> b) override {
-        if (t_) {
-            return t_->Read(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(bytez<> b) override { return t_->Read(b); }
     virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
@@ -308,12 +283,7 @@ struct readCloserObj_t : public readCloser_t {
 template <typename T, typename std::enable_if<xx::has_write<T>::value && xx::has_read<T>::value, int>::type = 0>
 struct writeCloserObj_t : public writeCloser_t {
     writeCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Write(const bytez<> b) override {
-        if (t_) {
-            return t_->Write(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Write(const bytez<> b) override { return t_->Write(b); }
     virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
@@ -325,18 +295,8 @@ template <typename T, typename std::enable_if<
                           xx::has_write<T>::value && xx::has_read<T>::value && xx::has_close<T>::value, int>::type = 0>
 struct readWriteCloserObj_t : public readWriteCloser_t {
     readWriteCloserObj_t(T t) : t_(t) {}
-    virtual R<int, error> Read(bytez<> b) override {
-        if (t_) {
-            return t_->Read(b);
-        }
-        return {0, ErrEOF};
-    }
-    virtual R<int, error> Write(const bytez<> b) override {
-        if (t_) {
-            return t_->Write(b);
-        }
-        return {0, ErrEOF};
-    }
+    virtual R<int, error> Read(bytez<> b) override { return t_->Read(b); }
+    virtual R<int, error> Write(const bytez<> b) override { return t_->Write(b); }
     virtual error Close() override { return t_ ? t_->Close() : nil; }
 
    protected:
