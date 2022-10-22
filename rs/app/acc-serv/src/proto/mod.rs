@@ -9,4 +9,3 @@ mod qc;
 mod kc;
 mod s5;
 mod ss;
-mod rule;
