@@ -5,6 +5,11 @@
 #pragma once
 
 #include "gx/errors/errors.h"
+
+// switch off exceptions
+#define JSON_TRY_USER if (true)
+#define JSON_CATCH_USER(exception) if (false)
+#define JSON_THROW_USER(exception) std::abort()
 #include "nlohmann/json.hpp"
 
 namespace gx {
@@ -57,6 +62,14 @@ error Unmarshal(const string& s, T* v) {
     } catch (...) {
         return errors::New("parse fail");
     }
+}
+
+// Get safe get
+inline J Get(const J& j, const string& k) {
+    if (j.find(k) != j.end()) {
+        return j[k];
+    }
+    return J();
 }
 
 }  // namespace json

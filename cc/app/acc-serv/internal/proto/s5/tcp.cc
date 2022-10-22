@@ -77,8 +77,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 
     AUTO_R(ln, er1, net::ListenPacket(":0"));
     if (er1) {
-        // LOGS_E(TAG << " dial, err: " << er1);
-        logs_E(TAG << " dial, err: " << er1);
+        LOGS_E(TAG << " dial, err: " << er1);
         socks::WriteReply(c, socks::ReplyHostUnreachable);
         return er1;
     }

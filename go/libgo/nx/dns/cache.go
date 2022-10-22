@@ -45,7 +45,7 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 		return
 	}
 
-	logx.I("[dns] cache.Query %v", msg.Questions[0].Name)
+	logx.I("[dns] cache.Query %v%v", msg.Questions[0].Name, msg.Questions[0].Type)
 
 	key := makeCacheKey(&msg.Questions[0])
 
@@ -87,7 +87,7 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 		Data: data,
 	}
 
-	logx.W("[dns] cache.Answer %v", msg.Questions[0].Name)
+	logx.W("[dns] cache.Answer %v%v <- %v", msg.Questions[0].Name, msg.Questions[0].Type, toAnswerString(answer.Msg.Answers))
 
 	return
 }
@@ -105,7 +105,7 @@ func (m *cacheMap) store(msg *dnsmessage.Message) (err error) {
 	m.mem[key] = &cacheEntry{msg: msg, exp: exp}
 	m.mu.Unlock()
 
-	logx.W("[dns] cache.Store %v", msg.Questions[0].Name)
+	logx.W("[dns] cache.Store %v%v <- %v", msg.Questions[0].Name, msg.Questions[0].Type, toAnswerString(msg.Answers))
 
 	return
 }

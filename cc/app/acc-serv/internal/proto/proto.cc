@@ -38,14 +38,20 @@ error Init(const json::J& js) {
     }
 
     for (auto& j : js) {
+        if (!j.is_object() || j.find("proto") == j.end()) {
+            continue;
+        }
+
         auto proto = j["proto"];
         if (!proto.is_string() || proto.empty()) {
             continue;
         }
 
-        auto disabled = j["disabled"];
-        if (disabled.is_boolean() && disabled) {
-            continue;
+        if (j.find("disabled") != j.end()) {
+            auto disabled = j["disabled"];
+            if (disabled.is_boolean() && disabled) {
+                continue;
+            }
         }
 
         auto it = _protos->find(proto);
