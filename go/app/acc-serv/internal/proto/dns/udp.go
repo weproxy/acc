@@ -14,10 +14,9 @@ import (
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx"
+	"weproxy/acc/libgo/nx/dns"
 	"weproxy/acc/libgo/nx/netio"
 	"weproxy/acc/libgo/nx/stats"
-
-	"golang.org/x/net/dns/dnsmessage"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,35 +124,19 @@ type udpConn_t struct {
 // readFrom target server, and pack data (to client)
 func (m *udpConn_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 	n, addr, err = m.PacketConn.ReadFrom(buf)
-	if err == nil {
+	if err != nil {
 		return
 	}
 
-	// TODO ... unpack DNS answer packet
+	// cache store
+	dns.Cache.OnResponse(buf[:n])
 
 	return
-}
-
-// getDomain ...
-func getDomain(msg *dnsmessage.Message) string {
-	if msg != nil && len(msg.Questions) > 0 {
-		return strings.TrimRight(msg.Questions[0].Name.String(), ".")
-	}
-	return ""
 }
 
 // WriteTo override
 // unpack data (from source client), and writeTo target server
 func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
-	var msg dnsmessage.Message
-	if er := msg.Unpack(buf); er == nil && len(msg.Questions) > 0 {
-		if len(msg.Answers) > 0 {
-			logx.D("%s %v <- %v", TAG, getDomain(&msg), msg.Answers)
-		} else {
-			logx.D("%s %v <- [no answer]", TAG, getDomain(&msg))
-		}
-	}
-
 	n, err = m.PacketConn.WriteTo(buf, addr)
 
 	return
@@ -190,6 +173,14 @@ func runServLoop(ln net.PacketConn) error {
 		// packet data
 		data := buf[:n]
 
+		// cache query
+		msg, ans, err := dns.Cache.OnRequest(data)
+		if err == nil && ans != nil && len(ans.Data) > 0 {
+			// cache answer
+			ln.WriteTo(ans.Data, caddr)
+			continue
+		}
+
 		// lookfor or create sess
 		var sess *udpSess_t
 
@@ -207,9 +198,8 @@ func runServLoop(ln net.PacketConn) error {
 			}
 
 			target := func() string {
-				var msg dnsmessage.Message
-				if err := msg.Unpack(data); err == nil && len(msg.Questions) > 0 {
-					return getDomain(&msg)
+				if msg != nil && len(msg.Questions) > 0 {
+					return strings.TrimSuffix(msg.Questions[0].Name.String(), ".")
 				}
 				return ""
 			}()

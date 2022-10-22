@@ -1,0 +1,186 @@
+//
+// weproxy@foxmail.com 2022/10/20
+//
+
+package sni
+
+import (
+	"bufio"
+	"bytes"
+	"io"
+	"net/textproto"
+	"net/url"
+	"strconv"
+	"strings"
+)
+
+////////////////////////////////////////////////////////////////////////////////
+
+// getHTTP_v2
+func getHTTP_v2(b []byte) (serverName string, err error) {
+	br := bufio.NewReader(bytes.NewReader(b))
+	tr := textproto.NewReader(br)
+
+	line, err := tr.ReadLine()
+	if err != nil {
+		return
+	}
+	reqMethod, reqURI, reqProto, ok := parseRequestLine(line)
+	if !ok {
+		return "", ErrNotHTTP
+	}
+
+	switch strings.ToUpper(reqMethod) {
+	case "GET", "PUT", "POST", "HEAD", "DELETE", "TRACE", "OPTIONS", "CONNECT":
+	default:
+		err = ErrNotHTTP
+		return
+	}
+
+	if _, _, ok = parseHTTPVersion(reqProto); !ok {
+		err = ErrNotHTTP
+		return
+	}
+
+	// Subsequent lines: Key: value.
+	mimeHeader, err := tr.ReadMIMEHeader()
+	if err != nil {
+		return
+	}
+
+	serverName = mimeHeader.Get("Host")
+	if len(serverName) == 0 {
+		u, err := url.ParseRequestURI(reqURI)
+		if err != nil {
+			return "", err
+		}
+		serverName = u.Host
+	}
+
+	return
+}
+
+// parseRequestLine ...
+func parseRequestLine(line string) (method, requestURI, proto string, ok bool) {
+	s1 := strings.Index(line, " ")
+	s2 := strings.Index(line[s1+1:], " ")
+	if s1 < 0 || s2 < 0 {
+		return
+	}
+	s2 += s1 + 1
+	return line[:s1], line[s1+1 : s2], line[s2+1:], true
+}
+
+// parseHTTPVersion parses an HTTP version string.
+// "HTTP/1.0" returns (1, 0, true).
+func parseHTTPVersion(vers string) (major, minor int, ok bool) {
+	const Big = 1000000 // arbitrary upper bound
+	switch vers {
+	case "HTTP/1.1":
+		return 1, 1, true
+	case "HTTP/1.0":
+		return 1, 0, true
+	}
+	if !strings.HasPrefix(vers, "HTTP/") {
+		return 0, 0, false
+	}
+	dot := strings.Index(vers, ".")
+	if dot < 0 {
+		return 0, 0, false
+	}
+	major, err := strconv.Atoi(vers[5:dot])
+	if err != nil || major < 0 || major > Big {
+		return 0, 0, false
+	}
+	minor, err = strconv.Atoi(vers[dot+1:])
+	if err != nil || minor < 0 || minor > Big {
+		return 0, 0, false
+	}
+	return major, minor, true
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// getHTTPs_v2 ...
+func getHTTPs_v2(b []byte) (serverName string, err error) {
+	if len(b) < 5 {
+		return "", io.ErrShortBuffer
+	}
+
+	restLengthBytes := b[3:]
+	restLength := (int(restLengthBytes[0]) << 8) + int(restLengthBytes[1])
+	if len(b) < 5+restLength {
+		return "", io.ErrShortBuffer
+	}
+
+	if len(b) < 5 {
+		return "", io.ErrShortBuffer
+	}
+
+	rest := b[5:]
+	if rest[0] != 0x1 {
+		return "", ErrNotTLS
+	}
+	restLen, pos := len(rest), 1
+
+	// Skip over another length
+	pos += 3
+	// Skip over protocolversion
+	pos += 2
+	// Skip over random number
+	pos += 4 + 28
+	// Skip over session ID
+	if pos >= restLen {
+		return "", io.ErrShortBuffer
+	}
+	sessionIDLength := int(rest[pos])
+	pos += 1 + sessionIDLength
+
+	if (pos + 1) >= restLen {
+		return "", io.ErrShortBuffer
+	}
+	cipherSuiteLength := (int(rest[pos]) << 8) + int(rest[pos+1])
+	pos += 2 + cipherSuiteLength
+
+	if pos >= restLen {
+		return "", io.ErrShortBuffer
+	}
+	compressionMethodLength := int(rest[pos])
+	pos += 1 + compressionMethodLength
+
+	if pos > restLen {
+		return "", ErrNoExtensions
+	}
+
+	pos += 2
+
+	for pos < len(rest) && serverName == "" {
+		extensionType := (int(rest[pos]) << 8) + int(rest[pos+1])
+		pos += 2
+
+		extensionDataLength := (int(rest[pos]) << 8) + int(rest[pos+1])
+		pos += 2
+
+		if extensionType == 0 {
+			// Skip over number of names as we're assuming there's just one
+			pos += 2
+
+			nameType := rest[pos]
+			pos++
+			if nameType != 0 {
+				return "", ErrNoServerName
+			}
+			nameLen := (int(rest[pos]) << 8) + int(rest[pos+1])
+			pos += 2
+			serverName = string(rest[pos : pos+nameLen])
+		}
+
+		pos += extensionDataLength
+	}
+
+	if len(serverName) == 0 {
+		return "", ErrNoServerName
+	}
+
+	return serverName, nil
+}
