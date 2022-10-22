@@ -11,6 +11,8 @@ build/
 tmp/
 logs/
 
+/cc/include/
+
 Cargo.lock
 **/*.rs.bk
 /rs/**/target
