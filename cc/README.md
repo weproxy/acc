@@ -6,7 +6,7 @@
 
 ### libcc/gx
 
-* C++ library like Golang 
+* C++ library like Golang
 
 | Golang                                                       | C++                                                          | 说明                             |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------- |
@@ -43,29 +43,29 @@
 type CallbackFn func(n int) ([]byte, error)
 
 func foo(fn CallbackFn) (int, string, error) {
-  	b, err := fn(100)
+    b, err := fn(100)
     if err != nil {
         return 0, "a", err
     }
-  
-	  c := append(b[:2], 'c')
-  	println("c =", c)
-  
-  	var wg sync.WaitGroup
-	  wg.Add(1)
-  
+
+    c := append(b[:2], 'c')
+    println("c =", c)
+
+    var wg sync.WaitGroup
+    wg.Add(1)
+
     go func() {
-	      defer wg.Done()
-      	for {
-	          println("hello", 100)
-	          time.Sleep(time.Second * 5)
-          	break
-	      }
+        defer wg.Done()
+        for {
+            println("hello", 100)
+            time.Sleep(time.Second * 5)
+            break
+        }
     }()
-  
-	  wg.Wait()
-  
-  	return 1, "b", errors.New("err")
+
+    wg.Wait()
+
+    return 1, "b", errors.New("err")
 }
 ```
 
@@ -74,33 +74,33 @@ func foo(fn CallbackFn) (int, string, error) {
 ```c++
 // C++
 
-using CallbackFn = func<R<bytez<>, error>(int)>
+using CallbackFn = func<R<bytez<>, error>(int)>;
 
 R<int, string, error> foo(const CallbackFn& fn)  {
-  	// auto [b, err] = fn(100); // >= C++17
-  	AUTO_R(b, err, fn(100));    // C++11/14
+    // auto [b, err] = fn(100); // >= C++17
+    AUTO_R(b, err, fn(100));    // C++11/14
     if (err != nil) {
         return {0, "a", err};
     }
 
-		auto c = append(b(0, 2), 'c');
-  	println("c =", c);
-  
-  	sync::WaitGroup wg;
-  	wg.Add(1);
-  
+    auto c = append(b(0, 2), 'c');
+    println("c =", c);
+
+    sync::WaitGroup wg;
+    wg.Add(1);
+
     gx::go([&] {
-      	DEFER(wg.Done());
-      	for (;;) {
-	          println("hello", 100);
-	          time::Sleep(time::Second * 5);
-          	break;
-	      }
+        DEFER(wg.Done());
+        for (;;) {
+            println("hello", 100);
+            time::Sleep(time::Second * 5);
+            break;
+        }
     });
-  
-  	wg.Wait();
-  
-  	return {1, "b", errors::New("err")};
+
+    wg.Wait();
+
+    return {1, "b", errors::New("err")};
 }
 ```
 
