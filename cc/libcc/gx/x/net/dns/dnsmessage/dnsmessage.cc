@@ -373,7 +373,7 @@ xx::packResult Name::pack(bytez<> msg, map<string, int> compression, int compres
 
             // Miss. Add the suffix to the compression table if the
             // offset can be stored in the available 14 bytes.
-            if (len(msg) <= int(~uint16(0) >> 2)) {
+            if (len(msg) <= int(uint16(0xffff) >> 2)) {
                 auto b = n.Data(i);
                 auto s = string((char*)b.data(), len(b));
                 compression[s] = len(msg) - compressionOff;
@@ -520,7 +520,7 @@ R<int, error> ResourceHeader::unpack(bytez<> msg, int off) {
 error ResourceHeader::fixLen(bytez<> msg, int lenOff, int preLen) {
     auto& h = *this;
     int conLen = len(msg) - preLen;
-    if (conLen > int(~uint16(0))) {
+    if (conLen > 65535) {
         return errResTooLong;
     }
 
@@ -1553,16 +1553,16 @@ R<bytez<>, error> Message::AppendPack(bytez<> b) {
     // Validate the lengths. It is very unlikely that anyone will try to
     // pack more than 65535 of any particular type, but it is possible and
     // we should fail gracefully.
-    if (len(m.Questions) > int(~uint16(0))) {
+    if (len(m.Questions) > 65535) {
         return {{}, errTooManyQuestions};
     }
-    if (len(m.Answers) > int(~uint16(0))) {
+    if (len(m.Answers) > 65535) {
         return {{}, errTooManyAnswers};
     }
-    if (len(m.Authorities) > int(~uint16(0))) {
+    if (len(m.Authorities) > 65535) {
         return {{}, errTooManyAuthorities};
     }
-    if (len(m.Additionals) > int(~uint16(0))) {
+    if (len(m.Additionals) > 65535) {
         return {{}, errTooManyAdditionals};
     }
 

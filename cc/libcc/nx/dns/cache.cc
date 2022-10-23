@@ -12,7 +12,7 @@ namespace nx {
 namespace dns {
 
 // makeCacheKey ...
-string makeCacheKey(const Question& q) { return string(q.Name.String() + dnsmessage::TypeString(q.Type)); }
+string makeCacheKey(const Question& q) { return q.Name.String() + dnsmessage::TypeString(q.Type); }
 
 // cacheEntry ...
 struct cacheEntry {
@@ -26,7 +26,7 @@ struct cacheEntry {
 // cacheMap ...
 struct cacheMap {
     sync::Mutex mu;
-    map<string, Ref<cacheEntry>> mem;
+    map<string, Ref<cacheEntry>> mem{makemap<string, Ref<cacheEntry>>()};
 
     // load
     R<Ref<Answer>, error> load(Ref<Message> msg);
@@ -64,18 +64,13 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
 
     LOGS_I("[dns] cache.Query " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type));
 
-    if (true) {
-        // LOGS_W("[dns] cache.Answer " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type));
-        return {nil, nil};
-    }
-
     auto key = makeCacheKey(msg->Questions[0]);
 
     m.mu.Lock();
     DEFER(m.mu.Unlock());
 
     AUTO_R(entry, ok, m.mem(key));
-    if (!ok) {
+    if (!ok || !entry || !entry->msg) {
         return {nil, nil};
     }
     if (time::Now().After(entry->exp)) {
@@ -84,21 +79,13 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
     }
 
     auto amsg = NewRef<Message>();
-    amsg->Answers = entry->msg->Answers;
-    amsg->Additionals = entry->msg->Additionals;
-    amsg->Authorities = entry->msg->Authorities;
-
+    *amsg = *entry->msg;
     amsg->Header.ID = msg->Header.ID;
     amsg->Header.Response = true;
-    amsg->Header.RCode = entry->msg->Header.RCode;
-    amsg->Header.OpCode = entry->msg->Header.OpCode;
-    amsg->Header.Authoritative = entry->msg->Header.Authoritative;
-    amsg->Header.Truncated = entry->msg->Header.Truncated;
-    amsg->Header.RecursionDesired = entry->msg->Header.RecursionDesired;
-    amsg->Header.RecursionAvailable = entry->msg->Header.RecursionAvailable;
 
     AUTO_R(data, err, amsg->Pack());
     if (err != nil) {
+        LOGS_E("[dns] Pack err: " << err);
         return {nil, err};
     }
 
@@ -119,7 +106,6 @@ error cacheMap::store(Ref<Message> msg) {
         return nil;
     }
 
-#if 0
     auto key = makeCacheKey(msg->Questions[0]);
     auto exp = time::Now().Add(time::Second * 300);
 
@@ -128,10 +114,9 @@ error cacheMap::store(Ref<Message> msg) {
     m.mu.Lock();
     m.mem[key] = NewRef<cacheEntry>(msg, exp);
     m.mu.Unlock();
-#endif
 
     LOGS_W("[dns] cache.Store " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type) << " <- "
-                                 << toAnswerString(msg->Answers));
+                                << toAnswerString(msg->Answers));
 
     return nil;
 }
@@ -172,7 +157,7 @@ void cacheMap::cleanUp() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Ref<cacheMap> _cache;
+static Ref<cacheMap> _cache(NewRef<cacheMap>());
 
 // OnRequest ...
 R<Ref<Message>, Ref<Answer>, error> OnRequest(bytez<> b) {

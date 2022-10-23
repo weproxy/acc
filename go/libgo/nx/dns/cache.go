@@ -53,7 +53,7 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 	defer m.mu.Unlock()
 
 	entry, ok := m.mem[key]
-	if !ok {
+	if !ok || entry == nil || entry.msg == nil {
 		return
 	}
 	if time.Now().After(entry.exp) {
@@ -62,18 +62,9 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 	}
 
 	amsg := &dnsmessage.Message{}
-	amsg.Answers = entry.msg.Answers
-	amsg.Additionals = entry.msg.Additionals
-	amsg.Authorities = entry.msg.Authorities
-
+	*amsg = *entry.msg
 	amsg.Header.ID = msg.Header.ID
 	amsg.Header.Response = true
-	amsg.Header.RCode = entry.msg.Header.RCode
-	amsg.Header.OpCode = entry.msg.Header.OpCode
-	amsg.Header.Authoritative = entry.msg.Header.Authoritative
-	amsg.Header.Truncated = entry.msg.Header.Truncated
-	amsg.Header.RecursionDesired = entry.msg.Header.RecursionDesired
-	amsg.Header.RecursionAvailable = entry.msg.Header.RecursionAvailable
 
 	data, err := amsg.Pack()
 	if err != nil {

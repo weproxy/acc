@@ -13,7 +13,9 @@ struct map {
     MapRef<K, V> p_;
 
     // map ...
-    map() : p_(NewRef<Map<K, V>>()) {}
+    // map() : p_(NewRef<Map<K, V>>()) {}
+    map() = default;
+    map(MapRef<K, V> p) : p_(p) {}
 
     // *
     Map<K, V>& operator*() { return *p_; }
@@ -57,7 +59,7 @@ struct map {
 // makemap ...
 template <typename K, typename V>
 map<K, V> makemap() {
-    return map<K, V>();
+    return map<K, V>(NewRef<Map<K, V>>());
 }
 
 template <typename K, typename V>
