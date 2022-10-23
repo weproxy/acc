@@ -238,6 +238,8 @@ R<uint16, uint16> Header::pack() {
     return {id, bits};
 }
 
+namespace xx {
+
 // pack appends the wire format of the header to msg.
 bytez<> header::pack(bytez<> msg) {
     auto& h = *this;
@@ -255,40 +257,35 @@ R<int, error> header::unpack(bytez<> msg, int off) {
 
     AUTO_R(id, newOff1, err1, unpackUint16(msg, newOff));
     h.id = id;
-    newOff = newOff1;
     if (err1 != nil) {
         return {off, nestedError("id", err1)};
     }
 
-    AUTO_R(bits, newOff2, err2, unpackUint16(msg, newOff));
+    AUTO_R(bits, newOff2, err2, unpackUint16(msg, newOff1));
     h.bits = bits;
-    newOff = newOff2;
     if (err2 != nil) {
         return {off, nestedError("bits", err2)};
     }
 
-    AUTO_R(questions, newOff3, err3, unpackUint16(msg, newOff));
+    AUTO_R(questions, newOff3, err3, unpackUint16(msg, newOff2));
     h.questions = questions;
-    newOff = newOff3;
     if (err3 != nil) {
         return {off, nestedError("questions", err3)};
     }
 
-    AUTO_R(answers, newOff4, err4, unpackUint16(msg, newOff));
+    AUTO_R(answers, newOff4, err4, unpackUint16(msg, newOff3));
     h.answers = answers;
-    newOff = newOff4;
     if (err4 != nil) {
         return {off, nestedError("answers", err4)};
     }
 
-    AUTO_R(authorities, newOff5, err5, unpackUint16(msg, newOff));
+    AUTO_R(authorities, newOff5, err5, unpackUint16(msg, newOff4));
     h.authorities = authorities;
-    newOff = newOff5;
     if (err5 != nil) {
         return {off, nestedError("authorities", err5)};
     }
 
-    AUTO_R(additionals, newOff6, err6, unpackUint16(msg, newOff));
+    AUTO_R(additionals, newOff6, err6, unpackUint16(msg, newOff5));
     h.additionals = additionals;
     newOff = newOff6;
     if (err6 != nil) {
@@ -298,10 +295,10 @@ R<int, error> header::unpack(bytez<> msg, int off) {
     return {newOff, nil};
 }
 
-// toHeader ...
-Header header::toHeader() {
+// Header ...
+dnsmessage::Header header::Header() {
     auto& h = *this;
-    Header r;
+    dnsmessage::Header r;
     r.ID = h.id;
     r.Response = (h.bits & headerBitQR) != 0;
     r.OpCode = OpCode(h.bits >> 11) & 0xF;
@@ -314,6 +311,7 @@ Header header::toHeader() {
     r.RCode = RCode(h.bits & 0xF);
     return r;
 }
+}  // namespace xx
 
 // pack appends the wire format of the Name to msg.
 //
@@ -322,7 +320,7 @@ Header header::toHeader() {
 //
 // The compression map will be updated with new domain suffixes. If compression
 // is nil, compression will not be used.
-packResult Name::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+xx::packResult Name::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
     auto& n = *this;
     auto oldMsg = msg;
 
@@ -420,9 +418,15 @@ __Loop:
                 if (endOff > len(msg)) {
                     return {off, errCalcLen};
                 }
+                // auto tmp = msg(currOff, endOff);
+                // name = append(name, tmp);
+                // for (int i = currOff; i < endOff; i++) {
+                //     name = append(name, msg[i]);
+                // }
                 name = append(name, msg(currOff, endOff));
                 name = append(name, '.');
                 currOff = endOff;
+                // println("tmp =", string(tmp), " name =", string(name));
             } break;
             case 0xC0: {  // Pointer
                 if (!allowCompression) {
@@ -527,6 +531,271 @@ error ResourceHeader::fixLen(bytez<> msg, int lenOff, int preLen) {
     return nil;
 }
 
+R<Ref<CNAMEResource>, error> unpackCNAMEResource(bytez<> msg, int off) {
+    auto ret = NewRef<CNAMEResource>();
+    AUTO_R(_, err, ret->CNAME.unpack(msg, off));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+xx::packResult MXResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    auto oldMsg = msg;
+    msg = packUint16(msg, r.Pref);
+    AUTO_R(_msg, err, r.MX.pack(msg, compression, compressionOff));
+    if (err != nil) {
+        return {oldMsg, nestedError("MXResource.MX", err)};
+    }
+    return {_msg, nil};
+}
+
+R<Ref<MXResource>, error> unpackMXResource(bytez<> msg, int off) {
+    auto ret = NewRef<MXResource>();
+    AUTO_R(_, err, ret->MX.unpack(msg, off));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+R<Ref<NSResource>, error> unpackNSResource(bytez<> msg, int off) {
+    auto ret = NewRef<NSResource>();
+    AUTO_R(_, err, ret->NS.unpack(msg, off));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+R<Ref<PTRResource>, error> unpackPTRResource(bytez<> msg, int off) {
+    auto ret = NewRef<PTRResource>();
+    AUTO_R(_, err, ret->PTR.unpack(msg, off));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+xx::packResult SOAResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    auto oldMsg = msg;
+    AUTO_R(_msg1, _err1, r.NS.pack(msg, compression, compressionOff));
+    if (_err1 != nil) {
+        return {oldMsg, nestedError("SOAResource.NS", _err1)};
+    }
+    AUTO_R(_msg2, _err2, r.MBox.pack(_msg1, compression, compressionOff));
+    if (_err2 != nil) {
+        return {oldMsg, nestedError("SOAResource.MBox", _err2)};
+    }
+    msg = packUint32(_msg2, r.Serial);
+    msg = packUint32(msg, r.Refresh);
+    msg = packUint32(msg, r.Retry);
+    msg = packUint32(msg, r.Expire);
+    return {packUint32(msg, r.MinTTL), nil};
+}
+
+R<Ref<SOAResource>, error> unpackSOAResource(bytez<> msg, int off) {
+    auto ret = NewRef<SOAResource>();
+
+    AUTO_R(off1, err1, ret->NS.unpack(msg, off));
+    if (err1 != nil) {
+        return {nil, nestedError("NS", err1)};
+    }
+
+    AUTO_R(off2, err2, ret->MBox.unpack(msg, off1));
+    if (err2 != nil) {
+        return {nil, nestedError("MBox", err2)};
+    }
+
+    AUTO_R(serial, off3, err3, unpackUint32(msg, off2));
+    if (err3 != nil) {
+        return {nil, nestedError("Serial", err3)};
+    }
+
+    AUTO_R(refresh, off4, err4, unpackUint32(msg, off3));
+    if (err4 != nil) {
+        return {nil, nestedError("Refresh", err4)};
+    }
+
+    AUTO_R(retry, off5, err5, unpackUint32(msg, off4));
+    if (err5 != nil) {
+        return {nil, nestedError("Retry", err5)};
+    }
+
+    AUTO_R(expire, off6, err6, unpackUint32(msg, off5));
+    if (err6 != nil) {
+        return {nil, nestedError("Expire", err6)};
+    }
+
+    AUTO_R(minTTL, _, err7, unpackUint32(msg, off6));
+    if (err7 != nil) {
+        return {nil, nestedError("MinTTL", err7)};
+    }
+
+    ret->Serial = serial;
+    ret->Refresh = refresh;
+    ret->Expire = expire;
+    ret->MinTTL = minTTL;
+    return {ret, nil};
+}
+
+xx::packResult TXTResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    auto oldMsg = msg;
+    for (int i = 0; i < len(r.TXT); i++) {
+        AUTO_R(_msg, err, packText(msg, r.TXT[i]));
+        if (err != nil) {
+            return {oldMsg, err};
+        }
+        msg = _msg;
+    }
+    return {msg, nil};
+}
+
+R<Ref<TXTResource>, error> unpackTXTResource(bytez<> msg, int off, uint16 length) {
+    auto ret = NewRef<TXTResource>();
+    ret->TXT = make<string>(0, 1);
+    for (uint16 n = uint16(0); n < length;) {
+        AUTO_R(t, _off, err, unpackText(msg, off));
+        off = _off;
+        if (err != nil) {
+            return {nil, nestedError("text", err)};
+        }
+        // Check if we got too many bytes.
+        if (length - n < uint16(len(t)) + 1) {
+            return {nil, errCalcLen};
+        }
+        n += uint16(len(t)) + 1;
+        ret->TXT = append(ret->TXT, t);
+    }
+
+    return {ret, nil};
+}
+
+xx::packResult SRVResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    auto oldMsg = msg;
+    msg = packUint16(msg, r.Priority);
+    msg = packUint16(msg, r.Weight);
+    msg = packUint16(msg, r.Port);
+    AUTO_R(_msg, err, r.Target.pack(msg, {}, compressionOff));
+    if (err != nil) {
+        return {oldMsg, nestedError("SRVResource.Target", err)};
+    }
+    return {_msg, nil};
+}
+
+R<Ref<SRVResource>, error> unpackSRVResource(bytez<> msg, int off) {
+    AUTO_R(priority, _off1, err1, unpackUint16(msg, off));
+    if (err1 != nil) {
+        return {nil, nestedError("Priority", err1)};
+    }
+
+    AUTO_R(weight, _off2, err2, unpackUint16(msg, _off1));
+    if (err2 != nil) {
+        return {nil, nestedError("Weight", err2)};
+    }
+
+    AUTO_R(port, _off3, err3, unpackUint16(msg, _off2));
+    if (err3 != nil) {
+        return {nil, nestedError("Port", err3)};
+    }
+
+    auto ret = NewRef<SRVResource>();
+    AUTO_R(_, err, ret->Target.unpackCompressed(msg, _off3, false /* allowCompression */));
+    if (err != nil) {
+        return {nil, nestedError("Target", err)};
+    }
+
+    ret->Priority = priority;
+    ret->Weight = weight;
+    ret->Port = port;
+    return {ret, nil};
+}
+
+xx::packResult AResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    return {packBytes(msg, r.A(0, -1)), nil};
+}
+
+R<Ref<AResource>, error> unpackAResource(bytez<> msg, int off) {
+    auto ret = NewRef<AResource>();
+    AUTO_R(_, err, unpackBytes(msg, off, ret->A(0, -1)));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+xx::packResult AAAAResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    return {packBytes(msg, r.AAAA(0, -1)), nil};
+}
+
+R<Ref<AAAAResource>, error> unpackAAAAResource(bytez<> msg, int off) {
+    auto ret = NewRef<AAAAResource>();
+    AUTO_R(_, err, unpackBytes(msg, off, ret->AAAA(0, -1)));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
+xx::packResult OPTResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    for (int i = 0; i < len(r.Options); ++i) {
+        auto& opt = r.Options[i];
+        msg = packUint16(msg, opt.Code);
+        uint16 l = uint16(len(opt.Data));
+        msg = packUint16(msg, l);
+        msg = packBytes(msg, opt.Data);
+    }
+    return {msg, nil};
+}
+
+R<Ref<OPTResource>, error> unpackOPTResource(bytez<> msg, int off, uint16 length) {
+    auto ret = NewRef<OPTResource>();
+    for (int oldOff = off; off < oldOff + int(length);) {
+        Option o;
+        AUTO_R(_Code, _off1, er1, unpackUint16(msg, off));
+        o.Code = _Code;
+        off = _off1;
+        if (er1 != nil) {
+            return {nil, nestedError("Code", er1)};
+        }
+        AUTO_R(l, _off2, er2, unpackUint16(msg, off));
+        off = _off2;
+        if (er2 != nil) {
+            return {nil, nestedError("Data", er2)};
+        }
+        o.Data = make(l);
+        if (copy(o.Data, msg(off)) != int(l)) {
+            return {nil, nestedError("Data", errCalcLen)};
+        }
+        off += int(l);
+        ret->Options = append(ret->Options, o);
+    }
+    return {ret, nil};
+}
+
+xx::packResult UnknownResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    auto& r = *this;
+    return {packBytes(msg, r.Data(0, -1)), nil};
+}
+
+R<Ref<UnknownResource>, error> unpackUnknownResource(Type recordType, bytez<> msg, int off, uint16 length) {
+    auto parsed = NewRef<UnknownResource>();
+    parsed->Type = recordType;
+    parsed->Data = make(length);
+    AUTO_R(_, err, unpackBytes(msg, off, parsed->Data));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {parsed, nil};
+}
+
 R<string, Ref<ResourceBody>, error> _unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr) {
     switch (hdr.Type) {
         case TypeA: {
@@ -584,271 +853,6 @@ R<Ref<ResourceBody>, int, error> unpackResourceBody(bytez<> msg, int off, Resour
     return {r, off + int(hdr.Length), nil};
 }
 
-R<Ref<CNAMEResource>, error> unpackCNAMEResource(bytez<> msg, int off) {
-    auto ret = NewRef<CNAMEResource>();
-    AUTO_R(_, err, ret->CNAME.unpack(msg, off));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-packResult MXResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    auto oldMsg = msg;
-    msg = packUint16(msg, r.Pref);
-    AUTO_R(_msg, err, r.MX.pack(msg, compression, compressionOff));
-    if (err != nil) {
-        return {oldMsg, nestedError("MXResource.MX", err)};
-    }
-    return {_msg, nil};
-}
-
-R<Ref<MXResource>, error> unpackMXResource(bytez<> msg, int off) {
-    auto ret = NewRef<MXResource>();
-    AUTO_R(_, err, ret->MX.unpack(msg, off));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-R<Ref<NSResource>, error> unpackNSResource(bytez<> msg, int off) {
-    auto ret = NewRef<NSResource>();
-    AUTO_R(_, err, ret->NS.unpack(msg, off));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-R<Ref<PTRResource>, error> unpackPTRResource(bytez<> msg, int off) {
-    auto ret = NewRef<PTRResource>();
-    AUTO_R(_, err, ret->PTR.unpack(msg, off));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-packResult SOAResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    auto oldMsg = msg;
-    AUTO_R(_msg1, _err1, r.NS.pack(msg, compression, compressionOff));
-    if (_err1 != nil) {
-        return {oldMsg, nestedError("SOAResource.NS", _err1)};
-    }
-    AUTO_R(_msg2, _err2, r.MBox.pack(_msg1, compression, compressionOff));
-    if (_err2 != nil) {
-        return {oldMsg, nestedError("SOAResource.MBox", _err2)};
-    }
-    msg = packUint32(_msg2, r.Serial);
-    msg = packUint32(msg, r.Refresh);
-    msg = packUint32(msg, r.Retry);
-    msg = packUint32(msg, r.Expire);
-    return {packUint32(msg, r.MinTTL), nil};
-}
-
-R<Ref<SOAResource>, error> unpackSOAResource(bytez<> msg, int off) {
-    auto ret = NewRef<SOAResource>();
-    AUTO_R(off1, err1, ret->NS.unpack(msg, off));
-    off = off1;
-    if (err1 != nil) {
-        return {nil, nestedError("NS", err1)};
-    }
-    AUTO_R(off2, err2, ret->MBox.unpack(msg, off));
-    off = off2;
-    if (err2 != nil) {
-        return {nil, nestedError("MBox", err2)};
-    }
-    AUTO_R(serial, off3, err3, unpackUint32(msg, off));
-    off = off3;
-    if (err3 != nil) {
-        return {nil, nestedError("Serial", err3)};
-    }
-    AUTO_R(refresh, off4, err4, unpackUint32(msg, off));
-    off = off4;
-    if (err4 != nil) {
-        return {nil, nestedError("Refresh", err4)};
-    }
-    AUTO_R(retry, off5, err5, unpackUint32(msg, off));
-    off = off5;
-    if (err5 != nil) {
-        return {nil, nestedError("Retry", err5)};
-    }
-    AUTO_R(expire, off6, err6, unpackUint32(msg, off));
-    off = off6;
-    if (err6 != nil) {
-        return {nil, nestedError("Expire", err6)};
-    }
-    AUTO_R(minTTL, _, err7, unpackUint32(msg, off));
-    if (err7 != nil) {
-        return {nil, nestedError("MinTTL", err7)};
-    }
-    ret->Serial = serial;
-    ret->Refresh = refresh;
-    ret->Expire = expire;
-    ret->MinTTL = minTTL;
-    return {ret, nil};
-}
-
-packResult TXTResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    auto oldMsg = msg;
-    for (int i = 0; i < len(r.TXT); i++) {
-        AUTO_R(_msg, err, packText(msg, r.TXT[i]));
-        if (err != nil) {
-            return {oldMsg, err};
-        }
-        msg = _msg;
-    }
-    return {msg, nil};
-}
-
-R<Ref<TXTResource>, error> unpackTXTResource(bytez<> msg, int off, uint16 length) {
-    auto ret = NewRef<TXTResource>();
-    ret->TXT = make<string>(0, 1);
-    for (uint16 n = uint16(0); n < length;) {
-        AUTO_R(t, _off, err, unpackText(msg, off));
-        off = _off;
-        if (err != nil) {
-            return {nil, nestedError("text", err)};
-        }
-        // Check if we got too many bytes.
-        if (length - n < uint16(len(t)) + 1) {
-            return {nil, errCalcLen};
-        }
-        n += uint16(len(t)) + 1;
-        ret->TXT = append(ret->TXT, t);
-    }
-
-    return {ret, nil};
-}
-
-packResult SRVResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    auto oldMsg = msg;
-    msg = packUint16(msg, r.Priority);
-    msg = packUint16(msg, r.Weight);
-    msg = packUint16(msg, r.Port);
-    AUTO_R(_msg, err, r.Target.pack(msg, {}, compressionOff));
-    if (err != nil) {
-        return {oldMsg, nestedError("SRVResource.Target", err)};
-    }
-    return {_msg, nil};
-}
-
-R<Ref<SRVResource>, error> unpackSRVResource(bytez<> msg, int off) {
-    AUTO_R(priority, _off1, err1, unpackUint16(msg, off));
-    off = _off1;
-    if (err1 != nil) {
-        return {nil, nestedError("Priority", err1)};
-    }
-    AUTO_R(weight, _off2, err2, unpackUint16(msg, off));
-    off = _off2;
-    if (err2 != nil) {
-        return {nil, nestedError("Weight", err2)};
-    }
-    AUTO_R(port, _off3, err3, unpackUint16(msg, off));
-    off = _off3;
-    if (err3 != nil) {
-        return {nil, nestedError("Port", err3)};
-    }
-    Name target;
-    AUTO_R(_, err, target.unpackCompressed(msg, off, false /* allowCompression */));
-    if (err != nil) {
-        return {nil, nestedError("Target", err)};
-    }
-    auto ret = NewRef<SRVResource>();
-    ret->Priority = priority;
-    ret->Weight = weight;
-    ret->Port = port;
-    ret->Target = target;
-    return {ret, nil};
-}
-
-packResult AResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    return {packBytes(msg, r.A(0, -1)), nil};
-}
-
-R<Ref<AResource>, error> unpackAResource(bytez<> msg, int off) {
-    auto ret = NewRef<AResource>();
-    AUTO_R(_, err, unpackBytes(msg, off, ret->A(0, -1)));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-packResult AAAAResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    return {packBytes(msg, r.AAAA(0, -1)), nil};
-}
-
-R<Ref<AAAAResource>, error> unpackAAAAResource(bytez<> msg, int off) {
-    auto ret = NewRef<AAAAResource>();
-    AUTO_R(_, err, unpackBytes(msg, off, ret->AAAA(0, -1)));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {ret, nil};
-}
-
-packResult OPTResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    for (int i = 0; i < len(r.Options); ++i) {
-        auto& opt = r.Options[i];
-        msg = packUint16(msg, opt.Code);
-        uint16 l = uint16(len(opt.Data));
-        msg = packUint16(msg, l);
-        msg = packBytes(msg, opt.Data);
-    }
-    return {msg, nil};
-}
-
-R<Ref<OPTResource>, error> unpackOPTResource(bytez<> msg, int off, uint16 length) {
-    auto ret = NewRef<OPTResource>();
-    for (int oldOff = off; off < oldOff + int(length);) {
-        error err;
-        Option o;
-        AUTO_R(_Code, _off, er1, unpackUint16(msg, off));
-        o.Code = _Code;
-        off = _off;
-        if (er1 != nil) {
-            return {nil, nestedError("Code", er1)};
-        }
-        AUTO_R(l, off, er2, unpackUint16(msg, off));
-        off = _off;
-        if (er2 != nil) {
-            return {nil, nestedError("Data", er2)};
-        }
-        o.Data = make(l);
-        if (copy(o.Data, msg(off)) != int(l)) {
-            return {nil, nestedError("Data", errCalcLen)};
-        }
-        off += int(l);
-        ret->Options = append(ret->Options, o);
-    }
-    return {ret, nil};
-}
-
-packResult UnknownResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
-    auto& r = *this;
-    return {packBytes(msg, r.Data(0, -1)), nil};
-}
-
-R<Ref<UnknownResource>, error> unpackUnknownResource(Type recordType, bytez<> msg, int off, uint16 length) {
-    auto parsed = NewRef<UnknownResource>();
-    parsed->Type_ = recordType;
-    parsed->Data = make(length);
-    AUTO_R(_, err, unpackBytes(msg, off, parsed->Data));
-    if (err != nil) {
-        return {nil, err};
-    }
-    return {parsed, nil};
-}
-
 // Start parses the header and enables the parsing of Questions.
 R<Header, error> Parser::Start(bytez<> msg) {
     auto& p = *this;
@@ -858,27 +862,28 @@ R<Header, error> Parser::Start(bytez<> msg) {
     if (err != nil) {
         return {Header{}, nestedError("unpacking header", err)};
     }
-    p.section_ = sectionQuestions;
-    return {p.header.toHeader(), nil};
+    p.section = xx::sectionQuestions;
+    return {p.header.Header(), nil};
 }
 
-error Parser::checkAdvance(section sec) {
+error Parser::checkAdvance(xx::section sec) {
     auto& p = *this;
-    if (p.section_ < sec) {
+    if (p.section < sec) {
         return ErrNotStarted;
     }
-    if (p.section_ > sec) {
+    if (p.section > sec) {
         return ErrSectionDone;
     }
     p.resHeaderValid = false;
     if (p.index == int(p.header.count(sec))) {
         p.index = 0;
-        p.section_++;
+        p.section++;
         return ErrSectionDone;
     }
     return nil;
 }
 
+namespace xx {
 const char* sectionNames(section sec) {
     switch (sec) {
         case sectionHeader:
@@ -894,8 +899,9 @@ const char* sectionNames(section sec) {
     }
     return "";
 }
+}  // namespace xx
 
-R<Resource, error> Parser::resource(section sec) {
+R<Resource, error> Parser::resource(xx::section sec) {
     auto& p = *this;
     Resource r;
     AUTO_R(_hdr, err, p.resourceHeader(sec));
@@ -908,13 +914,13 @@ R<Resource, error> Parser::resource(section sec) {
     r.Body = _body;
     p.off = _off;
     if (er2 != nil) {
-        return {Resource{}, nestedError(string("unpacking ") + sectionNames(sec), er2)};
+        return {Resource{}, nestedError(string("unpacking ") + xx::sectionNames(sec), er2)};
     }
     p.index++;
     return {r, nil};
 }
 
-R<ResourceHeader, error> Parser::resourceHeader(section sec) {
+R<ResourceHeader, error> Parser::resourceHeader(xx::section sec) {
     auto& p = *this;
     if (p.resHeaderValid) {
         return {p.resHeader, nil};
@@ -980,34 +986,35 @@ R<int, error> skipResource(bytez<> msg, int off) {
     if (err != nil) {
         return {off, nestedError("Name", err)};
     }
+
     AUTO_R(_newOff1, err1, skipType(msg, newOff));
-    newOff = _newOff1;
     if (err1 != nil) {
         return {off, nestedError("Type", err1)};
     }
-    AUTO_R(_newOff2, err2, skipClass(msg, newOff));
-    newOff = _newOff2;
+
+    AUTO_R(_newOff2, err2, skipClass(msg, _newOff1));
     if (err2 != nil) {
         return {off, nestedError("Class", err2)};
     }
-    AUTO_R(_newOff3, err3, skipUint32(msg, newOff));
-    newOff = _newOff3;
+
+    AUTO_R(_newOff3, err3, skipUint32(msg, _newOff2));
     if (err3 != nil) {
         return {off, nestedError("TTL", err3)};
     }
-    AUTO_R(length, _newOff4, err4, unpackUint16(msg, newOff));
-    newOff = _newOff4;
+
+    AUTO_R(length, _newOff4, err4, unpackUint16(msg, _newOff3));
     if (err4 != nil) {
         return {off, nestedError("Length", err4)};
     }
-    newOff += int(length);
-    if (newOff > len(msg)) {
+    _newOff4 += int(length);
+    if (_newOff4 > len(msg)) {
         return {off, errResourceLen};
     }
-    return {newOff, nil};
+
+    return {_newOff4, nil};
 }
 
-error Parser::skipResource(section sec) {
+error Parser::skipResource(xx::section sec) {
     auto& p = *this;
     if (p.resHeaderValid) {
         int newOff = p.off + int(p.resHeader.Length);
@@ -1026,7 +1033,7 @@ error Parser::skipResource(section sec) {
     AUTO_R(_off, err2, dnsmessage::skipResource(p.msg, p.off));
     p.off = _off;
     if (err2 != nil) {
-        return nestedError(string("skipping: ") + sectionNames(sec), err2);
+        return nestedError(string("skipping: ") + xx::sectionNames(sec), err2);
     }
     p.index++;
     return nil;
@@ -1058,7 +1065,7 @@ R<slice<Question>, error> Parser::AllQuestions() {
 R<Question, error> Parser::Question() {
     auto& p = *this;
 
-    auto err = p.checkAdvance(sectionQuestions);
+    auto err = p.checkAdvance(xx::sectionQuestions);
     if (err != nil) {
         return {{}, err};
     }
@@ -1093,7 +1100,7 @@ R<Question, error> Parser::Question() {
 error Parser::SkipQuestion() {
     auto& p = *this;
 
-    auto err = p.checkAdvance(sectionQuestions);
+    auto err = p.checkAdvance(xx::sectionQuestions);
     if (err != nil) {
         return err;
     }
@@ -1494,7 +1501,7 @@ error Message::Unpack(bytez<> msg) {
 }
 
 // pack appends the wire format of the Question to msg.
-packResult Question::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+xx::packResult Question::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
     auto& q = *this;
     AUTO_R(_msg, err, q.Name.pack(msg, compression, compressionOff));
     msg = _msg;
@@ -1506,7 +1513,7 @@ packResult Question::pack(bytez<> msg, map<string, int> compression, int compres
 }
 
 // pack appends the wire format of the Question to msg.
-packResult Resource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+xx::packResult Resource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
     auto& r = *this;
     if (r.Body == nil) {
         return {msg, errNilResouceBody};
@@ -1559,7 +1566,7 @@ R<bytez<>, error> Message::AppendPack(bytez<> b) {
         return {{}, errTooManyAdditionals};
     }
 
-    header h;
+    xx::header h;
     AUTO_R(id, bits, m.Header.pack());
     h.id = id;
     h.bits = bits;

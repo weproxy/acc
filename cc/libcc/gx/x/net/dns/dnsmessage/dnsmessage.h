@@ -81,14 +81,15 @@ struct Header {
     R<uint16 /*id*/, uint16 /*bits*/> pack();
 };
 
+namespace xx {
 const int nameLen = 255;
-
 using packResult = R<bytez<> /*msg*/, error /*err*/>;
+}  // namespace xx
 
 // A Name is a non-encoded domain name. It is used instead of strings to avoid
 // allocations.
 struct Name {
-    bytez<> Data{make(nameLen)};  // 255 bytes
+    bytez<> Data{make(xx::nameLen)};  // 255 bytes
     uint8 Length{0};
 
     // pack appends the wire format of the Name to msg.
@@ -98,13 +99,16 @@ struct Name {
     //
     // The compression map will be updated with new domain suffixes. If compression
     // is nil, compression will not be used.
-    packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
+    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 
     // unpack unpacks a domain name.
     R<int, error> unpack(bytez<> msg, int off) { return unpackCompressed(msg, off, true /* allowCompression */); }
 
     // unpack unpacks a domain name.
     R<int, error> unpackCompressed(bytez<> msg, int off, bool allowCompression);
+
+    // String ...
+    string String() const { return string(Data(0, Length)); }
 };
 
 // A Question is a DNS query.
@@ -114,9 +118,10 @@ struct Question {
     Class Class;
 
     // pack appends the wire format of the Question to msg.
-    packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
+    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 };
 
+namespace xx {
 using section = uint8;
 const section sectionNotStarted = 0;
 const section sectionHeader = 1;
@@ -155,13 +160,14 @@ struct header {
 
     R<int, error> unpack(bytez<> msg, int off);
 
-    Header toHeader();
+    dnsmessage::Header Header();
 };
+}  // namespace xx
 
 // A ResourceBody is a DNS resource record minus the header.
 struct ResourceBody {
     // pack packs a Resource except for its header.
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) = 0;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) = 0;
 
     // realType returns the actual type of the Resource. This is used to
     // fill in the header Type field.
@@ -210,22 +216,18 @@ struct Resource {
     Ref<ResourceBody> Body;
 
     // pack appends the wire format of the Resource to msg.
-    packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
+    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 };
-
-R<Ref<ResourceBody>, int, error> unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr);
 
 // A CNAMEResource is a CNAME Resource record.
 struct CNAMEResource : public ResourceBody {
     Name CNAME;
 
     virtual Type realType() override { return TypeCNAME; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return CNAME.pack(msg, compression, compressionOff);
     }
 };
-
-R<Ref<CNAMEResource>, error> unpackCNAMEResource(bytez<> msg, int off);
 
 // An MXResource is an MX Resource record.
 struct MXResource : public ResourceBody {
@@ -233,34 +235,28 @@ struct MXResource : public ResourceBody {
     Name MX;
 
     virtual Type realType() override { return TypeMX; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<MXResource>, error> unpackMXResource(bytez<> msg, int off);
 
 // An NSResource is an NS Resource record.
 struct NSResource : public ResourceBody {
     Name NS;
 
     virtual Type realType() override { return TypeNS; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return NS.pack(msg, compression, compressionOff);
     }
 };
-
-R<Ref<NSResource>, error> unpackNSResource(bytez<> msg, int off);
 
 // A PTRResource is a PTR Resource record.
 struct PTRResource : public ResourceBody {
     Name PTR;
 
     virtual Type realType() override { return TypePTR; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return PTR.pack(msg, compression, compressionOff);
     }
 };
-
-R<Ref<PTRResource>, error> unpackPTRResource(bytez<> msg, int off);
 
 // An SOAResource is an SOA Resource record.
 struct SOAResource : public ResourceBody {
@@ -277,20 +273,16 @@ struct SOAResource : public ResourceBody {
     uint32 MinTTL{0};
 
     virtual Type realType() override { return TypeSOA; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<SOAResource>, error> unpackSOAResource(bytez<> msg, int off);
 
 // A TXTResource is a TXT Resource record.
 struct TXTResource : public ResourceBody {
     slice<string> TXT;
 
     virtual Type realType() override { return TypeTXT; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<TXTResource>, error> unpackTXTResource(bytez<> msg, int off, uint16 length);
 
 // An SRVResource is an SRV Resource record.
 struct SRVResource : public ResourceBody {
@@ -300,30 +292,24 @@ struct SRVResource : public ResourceBody {
     Name Target;  // Not compressed as per RFC 2782.
 
     virtual Type realType() override { return TypeSRV; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<SRVResource>, error> unpackSRVResource(bytez<> msg, int off);
 
 // An AResource is an A Resource record.
 struct AResource : public ResourceBody {
     bytez<> A{make(4)};
 
     virtual Type realType() override { return TypeA; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<AResource>, error> unpackAResource(bytez<> msg, int off);
 
 // An AAAAResource is an AAAA Resource record.
 struct AAAAResource : public ResourceBody {
     bytez<> AAAA{make(16)};
 
     virtual Type realType() override { return TypeAAAA; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<AAAAResource>, error> unpackAAAAResource(bytez<> msg, int off);
 
 // An Option represents a DNS message option within OPTResource.
 //
@@ -342,21 +328,17 @@ struct OPTResource : public ResourceBody {
     slice<Option> Options;
 
     virtual Type realType() override { return TypeOPT; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<OPTResource>, error> unpackOPTResource(bytez<> msg, int off, uint16 length);
 
 // An UnknownResource is a catch-all container for unknown record types.
 struct UnknownResource : public ResourceBody {
-    Type Type_;
+    dnsmessage::Type Type;
     bytez<> Data;
 
-    virtual Type realType() override { return Type_; }
-    virtual packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
+    virtual dnsmessage::Type realType() override { return Type; }
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
-
-R<Ref<UnknownResource>, error> unpackUnknownResource(Type recordType, bytez<> msg, int off, uint16 length);
 
 // Message is a representation of a DNS message.
 struct Message {
@@ -391,9 +373,9 @@ struct Message {
 // Note that there is no requirement to fully skip or parse the message.
 struct Parser {
     bytez<> msg;
-    header header;
+    xx::header header;
 
-    section section_;
+    xx::section section;
     int off{0};
     int index{0};
     bool resHeaderValid{false};
@@ -402,13 +384,13 @@ struct Parser {
     // Start parses the header and enables the parsing of Questions.
     R<Header, error> Start(bytez<> msg);
 
-    error checkAdvance(section sec);
+    error checkAdvance(xx::section sec);
 
-    R<Resource, error> resource(section sec);
+    R<Resource, error> resource(xx::section sec);
 
-    R<ResourceHeader, error> resourceHeader(section sec);
+    R<ResourceHeader, error> resourceHeader(xx::section sec);
 
-    error skipResource(section sec);
+    error skipResource(xx::section sec);
 
     // AllQuestions parses all Questions.
     R<slice<Question>, error> AllQuestions();
@@ -423,64 +405,46 @@ struct Parser {
     error SkipAllQuestions();
 
     // AnswerHeader parses a single Answer ResourceHeader.
-    R<ResourceHeader, error> AnswerHeader() {
-        return this->resourceHeader(sectionAnswers);
-    }
+    R<ResourceHeader, error> AnswerHeader() { return this->resourceHeader(xx::sectionAnswers); }
 
     // Answer parses a single Answer Resource.
-    R<Resource, error> Answer() {
-        return this->resource(sectionAnswers);
-    }
+    R<Resource, error> Answer() { return this->resource(xx::sectionAnswers); }
 
     // AllAnswers parses all Answer Resources.
     R<slice<Resource>, error> AllAnswers();
 
     // SkipAnswer skips a single Answer Resource.
-    error SkipAnswer() {
-        return this->skipResource(sectionAnswers);
-    }
+    error SkipAnswer() { return this->skipResource(xx::sectionAnswers); }
 
     // SkipAllAnswers skips all Answer Resources.
     error SkipAllAnswers();
 
     // AuthorityHeader parses a single Authority ResourceHeader.
-    R<ResourceHeader, error> AuthorityHeader() {
-        return this->resourceHeader(sectionAuthorities);
-    }
+    R<ResourceHeader, error> AuthorityHeader() { return this->resourceHeader(xx::sectionAuthorities); }
 
     // Authority parses a single Authority Resource.
-    R<Resource, error> Authority() {
-        return this->resource(sectionAuthorities);
-    }
+    R<Resource, error> Authority() { return this->resource(xx::sectionAuthorities); }
 
     // AllAuthorities parses all Authority Resources.
     R<slice<Resource>, error> AllAuthorities();
 
     // SkipAuthority skips a single Authority Resource.
-    error SkipAuthority() {
-        return this->skipResource(sectionAuthorities);
-    }
+    error SkipAuthority() { return this->skipResource(xx::sectionAuthorities); }
 
     // SkipAllAuthorities skips all Authority Resources.
     error SkipAllAuthorities();
 
     // AdditionalHeader parses a single Additional ResourceHeader.
-    R<ResourceHeader, error> AdditionalHeader() {
-        return this->resourceHeader(sectionAdditionals);
-    }
+    R<ResourceHeader, error> AdditionalHeader() { return this->resourceHeader(xx::sectionAdditionals); }
 
     // Additional parses a single Additional Resource.
-    R<Resource, error> Additional() {
-        return this->resource(sectionAdditionals);
-    }
+    R<Resource, error> Additional() { return this->resource(xx::sectionAdditionals); }
 
     // AllAdditionals parses all Additional Resources.
     R<slice<Resource>, error> AllAdditionals();
 
     // SkipAdditional skips a single Additional Resource.
-    error SkipAdditional() {
-        return this->skipResource(sectionAdditionals);
-    }
+    error SkipAdditional() { return this->skipResource(xx::sectionAdditionals); }
 
     // SkipAllAdditionals skips all Additional Resources.
     error SkipAllAdditionals();

@@ -92,8 +92,11 @@ struct Time {
     // IsZero ...
     bool IsZero() const { return t_.tv_sec <= 0 && t_.tv_nsec <= 0; }
 
-    // Before ...
-    bool Before(const Time& t) const;
+    // After reports whether the time instant t is after u.
+    bool After(const Time& u) const;
+
+    // Before reports whether the time instant t is before u.
+    bool Before(const Time& u) const;
 
     // Equal ...
     bool Equal(const Time& t) const;
@@ -147,7 +150,7 @@ struct Time {
     // location associated with t.
     int64 UnixNano() const { return t_.tv_sec * 1e9 + t_.tv_nsec; }
 
-public:
+   public:
     // operator bool() ...
     operator bool() const { return !IsZero(); }
 

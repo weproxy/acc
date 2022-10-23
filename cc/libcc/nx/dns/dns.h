@@ -10,8 +10,16 @@ namespace nx {
 namespace dns {
 using namespace gx;
 
+extern const error ErrQueryNotFound;
+extern const error ErrQueryDropped;
+extern const error ErrQueryFaked;
+extern const error ErrQueryHited;
+
 // Message ...
 using Message = dnsmessage::Message;
+
+// Question ...
+using Question = dnsmessage::Question;
 
 // Answer ...
 struct Answer {
@@ -20,11 +28,11 @@ struct Answer {
     Ref<Message> Msg;
 };
 
-// CacheOnRequest ...
-R<Ref<Message>, Ref<Answer>, error> CacheOnRequest(bytez<> b);
+// OnRequest ...
+R<Ref<Message>, Ref<Answer>, error> OnRequest(bytez<> b);
 
-// CacheOnResponse ...
-R<Ref<Message>, error> CacheOnResponse(bytez<> b);
+// OnResponse ...
+R<Ref<Message>, error> OnResponse(bytez<> b);
 
 }  // namespace dns
 }  // namespace nx

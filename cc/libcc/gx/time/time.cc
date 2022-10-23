@@ -28,8 +28,6 @@ namespace time {
 // const int64 wallToInternal = (1884 * 365 + 1884 / 4 - 1884 / 100 + 1884 / 400) * secondsPerDay;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Before ...
-bool Time::Before(const Time& t) const { return UnixMicro() < t.UnixMicro(); }
 
 // Equal ...
 bool Time::Equal(const Time& t) const { return t_.tv_sec == t.t_.tv_sec && t_.tv_nsec == t.t_.tv_nsec; }
@@ -46,6 +44,16 @@ Duration Time::Sub(const Time& t) const { return Duration(this->UnixNano() - t.U
 
 // String ...
 string Time::String() const { return ""; }
+
+// After reports whether the time instant t is after u.
+bool Time::After(const Time& u) const {
+    return t_.tv_sec > u.t_.tv_sec || (t_.tv_sec == u.t_.tv_sec && t_.tv_nsec > u.t_.tv_nsec);
+}
+
+// Before reports whether the time instant t is before u.
+bool Time::Before(const Time& u) const {
+    return t_.tv_sec < u.t_.tv_sec || (t_.tv_sec == u.t_.tv_sec && t_.tv_nsec < u.t_.tv_nsec);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Now ...

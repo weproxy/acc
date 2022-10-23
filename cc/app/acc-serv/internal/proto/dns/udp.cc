@@ -116,7 +116,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         }
 
         // cache store
-        nx::dns::CacheOnResponse(buf(0, n));
+        nx::dns::OnResponse(buf(0, n));
 
         return {n, addr, nil};
     }
@@ -172,7 +172,7 @@ error runServLoop(net::PacketConn ln) {
 
 
 		// cache query
-		AUTO_R(msg, ans, erx, nx::dns::CacheOnRequest(data));
+		AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
 		if (!erx && ans  && len(ans->Data) > 0) {
 			// cache answer
 			ln->WriteTo(ans->Data, caddr);

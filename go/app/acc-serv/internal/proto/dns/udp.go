@@ -129,7 +129,7 @@ func (m *udpConn_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 	}
 
 	// cache store
-	dns.Cache.OnResponse(buf[:n])
+	dns.OnResponse(buf[:n])
 
 	return
 }
@@ -174,7 +174,7 @@ func runServLoop(ln net.PacketConn) error {
 		data := buf[:n]
 
 		// cache query
-		msg, ans, err := dns.Cache.OnRequest(data)
+		msg, ans, err := dns.OnRequest(data)
 		if err == nil && ans != nil && len(ans.Data) > 0 {
 			// cache answer
 			ln.WriteTo(ans.Data, caddr)

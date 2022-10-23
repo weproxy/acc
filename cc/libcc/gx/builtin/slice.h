@@ -34,9 +34,7 @@ struct slice {
     // slice<X>(const string& s) : slice<X>(s.length(), s.length()) {
     //     memcpy(data(), s.data(), s.length());
     // }
-    slice(const string& s) : slice(s.length(), s.length()) {
-        memcpy(data(), s.data(), s.length());
-    }
+    slice(const string& s) : slice(s.length(), s.length()) { memcpy(data(), s.data(), s.length()); }
 
     // operator [i] ...
     T& operator[](int i) { return vec_->operator[](beg_ + i); }
@@ -153,6 +151,26 @@ namespace xx {
 template <typename T>
 inline void append(slice<T>&) {}
 
+// append ...
+template <typename T = byte, typename... X>
+void append(slice<T>& dst, const slice<T>& src, X&&... x) {
+    if (len(src) > 0) {
+        dst.vec_->insert(dst.vec_->begin() + dst.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
+        dst.end_ += len(src);
+    }
+    append(dst, std::forward<X>(x)...);
+}
+
+// append ...
+template <typename T = byte, typename... X>
+void append(slice<T>& dst, slice<T>&& src, X&&... x) {
+    if (len(src) > 0) {
+        dst.vec_->insert(dst.vec_->begin() + dst.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
+        dst.end_ += len(src);
+    }
+    append(dst, std::forward<X>(x)...);
+}
+
 template <typename T = byte, typename V = byte, typename... X>
 void append(slice<T>& dst, V&& v, X&&... x) {
     auto it = dst.vec_->begin() + dst.end_;
@@ -212,18 +230,6 @@ slice<T> append(const slice<T>& dst, X&&... x) {
     if (sizeof...(x) > 0) {
         s._create_if_null();
         xx::append<T>(s, std::forward<X>(x)...);
-    }
-    return s;
-}
-
-// append ...
-template <typename T = byte>
-slice<T> append(const slice<T>& dst, const slice<T>& src) {
-    slice<T> s(dst);
-    if (len(src) > 0) {
-        s._create_if_null();
-        s.vec_->insert(s.vec_->begin() + s.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
-        s.end_ += len(src);
     }
     return s;
 }

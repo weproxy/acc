@@ -65,7 +65,6 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 	amsg.Answers = entry.msg.Answers
 	amsg.Additionals = entry.msg.Additionals
 	amsg.Authorities = entry.msg.Authorities
-	amsg.Authoritative = entry.msg.Authoritative
 
 	amsg.Header.ID = msg.Header.ID
 	amsg.Header.Response = true
