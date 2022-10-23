@@ -7,6 +7,7 @@
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
+#include "nx/dns/dns.h"
 #include "nx/netio/netio.h"
 #include "nx/stats/stats.h"
 
@@ -114,7 +115,8 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
             return {n, addr, err};
         }
 
-        // TODO ... unpack DNS answer packet
+        // cache store
+        nx::dns::CacheOnResponse(buf(0, n));
 
         return {n, addr, nil};
     }
@@ -167,6 +169,16 @@ error runServLoop(net::PacketConn ln) {
 
         // packet data
         auto data = buf(0, n);
+
+
+		// cache query
+		AUTO_R(msg, ans, erx, nx::dns::CacheOnRequest(data));
+		if (!erx && ans  && len(ans->Data) > 0) {
+			// cache answer
+			ln->WriteTo(ans->Data, caddr);
+			continue;
+		}
+
 
         // lookfor or create sess
         Ref<udpSess_t> sess;

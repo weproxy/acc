@@ -113,7 +113,8 @@ struct Question {
     Type Type;
     Class Class;
 
-    R<uint16 /*id*/, uint16 /*bits*/> pack();
+    // pack appends the wire format of the Question to msg.
+    packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 };
 
 using section = uint8;
@@ -148,6 +149,9 @@ struct header {
         }
         return 0;
     }
+
+    // pack appends the wire format of the header to msg.
+    bytez<> pack(bytez<> msg);
 
     R<int, error> unpack(bytez<> msg, int off);
 
@@ -204,6 +208,9 @@ struct ResourceHeader {
 struct Resource {
     ResourceHeader Header;
     Ref<ResourceBody> Body;
+
+    // pack appends the wire format of the Resource to msg.
+    packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 };
 
 R<Ref<ResourceBody>, int, error> unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr);
@@ -395,13 +402,154 @@ struct Parser {
     // Start parses the header and enables the parsing of Questions.
     R<Header, error> Start(bytez<> msg);
 
-    error checkAdvance(section sec );
+    error checkAdvance(section sec);
 
-    R<Resource, error> resource(section sec ) ;
+    R<Resource, error> resource(section sec);
 
-    R<ResourceHeader, error> resourceHeader(section sec ) ;
+    R<ResourceHeader, error> resourceHeader(section sec);
 
-    error skipResource(section sec ) ;
+    error skipResource(section sec);
+
+    // AllQuestions parses all Questions.
+    R<slice<Question>, error> AllQuestions();
+
+    // Question parses a single Question.
+    R<Question, error> Question();
+
+    // SkipQuestion skips a single Question.
+    error SkipQuestion();
+
+    // SkipAllQuestions skips all Questions.
+    error SkipAllQuestions();
+
+    // AnswerHeader parses a single Answer ResourceHeader.
+    R<ResourceHeader, error> AnswerHeader() {
+        return this->resourceHeader(sectionAnswers);
+    }
+
+    // Answer parses a single Answer Resource.
+    R<Resource, error> Answer() {
+        return this->resource(sectionAnswers);
+    }
+
+    // AllAnswers parses all Answer Resources.
+    R<slice<Resource>, error> AllAnswers();
+
+    // SkipAnswer skips a single Answer Resource.
+    error SkipAnswer() {
+        return this->skipResource(sectionAnswers);
+    }
+
+    // SkipAllAnswers skips all Answer Resources.
+    error SkipAllAnswers();
+
+    // AuthorityHeader parses a single Authority ResourceHeader.
+    R<ResourceHeader, error> AuthorityHeader() {
+        return this->resourceHeader(sectionAuthorities);
+    }
+
+    // Authority parses a single Authority Resource.
+    R<Resource, error> Authority() {
+        return this->resource(sectionAuthorities);
+    }
+
+    // AllAuthorities parses all Authority Resources.
+    R<slice<Resource>, error> AllAuthorities();
+
+    // SkipAuthority skips a single Authority Resource.
+    error SkipAuthority() {
+        return this->skipResource(sectionAuthorities);
+    }
+
+    // SkipAllAuthorities skips all Authority Resources.
+    error SkipAllAuthorities();
+
+    // AdditionalHeader parses a single Additional ResourceHeader.
+    R<ResourceHeader, error> AdditionalHeader() {
+        return this->resourceHeader(sectionAdditionals);
+    }
+
+    // Additional parses a single Additional Resource.
+    R<Resource, error> Additional() {
+        return this->resource(sectionAdditionals);
+    }
+
+    // AllAdditionals parses all Additional Resources.
+    R<slice<Resource>, error> AllAdditionals();
+
+    // SkipAdditional skips a single Additional Resource.
+    error SkipAdditional() {
+        return this->skipResource(sectionAdditionals);
+    }
+
+    // SkipAllAdditionals skips all Additional Resources.
+    error SkipAllAdditionals();
+
+    // CNAMEResource parses a single CNAMEResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<CNAMEResource>, error> CNAMEResource();
+
+    // MXResource parses a single MXResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<MXResource>, error> MXResource();
+
+    // NSResource parses a single NSResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<NSResource>, error> NSResource();
+
+    // PTRResource parses a single PTRResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<PTRResource>, error> PTRResource();
+
+    // SOAResource parses a single SOAResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<SOAResource>, error> SOAResource();
+
+    // TXTResource parses a single TXTResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<TXTResource>, error> TXTResource();
+
+    // SRVResource parses a single SRVResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<SRVResource>, error> SRVResource();
+
+    // AResource parses a single AResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<AResource>, error> AResource();
+
+    // AAAAResource parses a single AAAAResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<AAAAResource>, error> AAAAResource();
+
+    // OPTResource parses a single OPTResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<OPTResource>, error> OPTResource();
+
+    // UnknownResource parses a single UnknownResource.
+    //
+    // One of the XXXHeader methods must have been called before calling this
+    // method.
+    R<Ref<UnknownResource>, error> UnknownResource();
 };
 
 }  // namespace dnsmessage
