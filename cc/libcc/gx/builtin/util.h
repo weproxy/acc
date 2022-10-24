@@ -33,15 +33,11 @@ inline std::ostream& operator<<(std::ostream& s, unsigned char c) {
     } else {
         ::sprintf(b, "%d", c);
     }
-    s << b;
-    return s;
+    return s << b;
 };
 
 // << char
-inline std::ostream& operator<<(std::ostream& s, char c) {
-    // ...
-    return operator<<(s, (unsigned char)c);
-};
+inline std::ostream& operator<<(std::ostream& s, char c) { return operator<<(s, (unsigned char)c); };
 
 // if has .String()
 // if has .operator string()
@@ -49,25 +45,18 @@ inline std::ostream& operator<<(std::ostream& s, char c) {
 // if has ->operator string()
 template <typename T, typename std::enable_if<gx::xx::has_string<T>::value, int>::type = 0>
 std::ostream& operator<<(std::ostream& s, T t) {
-    s << gx::xx::to_string(t);
-    return s;
+    return s << gx::xx::to_string(t);
 };
 
 }  // namespace std
 
 // override std::ostream <<
-#define GX_DEC_OSTREAM_REF(Obj)                                         \
-    inline std::ostream& operator<<(std::ostream& out, const Obj obj) { \
-        out << obj.String();                                            \
-        return out;                                                     \
-    }
+#define GX_DEC_OSTREAM_REF(Obj) \
+    inline std::ostream& operator<<(std::ostream& out, const Obj obj) { return out << obj.String(); }
 
 // override std::ostream <<
-#define GX_DEC_OSTREAM_PTR(Obj)                                         \
-    inline std::ostream& operator<<(std::ostream& out, const Obj obj) { \
-        out << (obj ? obj->String() : "<nil>");                         \
-        return out;                                                     \
-    }
+#define GX_DEC_OSTREAM_PTR(Obj) \
+    inline std::ostream& operator<<(std::ostream& out, const Obj obj) { return out << (obj ? obj->String() : "<nil>"); }
 
 #define GX_SS(...)                \
     [&] {                         \
@@ -128,14 +117,12 @@ std::ostream& operator<<(std::ostream& s, const gx::Vec<T>& t) {
         }
         s << c;
     }
-    s << "]";
-    return s;
+    return s << "]";
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& s, const gx::VecRef<T>& t) {
-    s << *t;
-    return s;
+    return s << *t;
 }
 
 template <typename T>
@@ -148,14 +135,12 @@ std::ostream& operator<<(std::ostream& s, const gx::Set<T>& t) {
         }
         s << c;
     }
-    s << "}";
-    return s;
+    return s << "}";
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& s, const gx::SetRef<T>& t) {
-    s << *t;
-    return s;
+    return s << *t;
 }
 
 template <typename T>
@@ -168,14 +153,12 @@ std::ostream& operator<<(std::ostream& s, const gx::List<T>& t) {
         }
         s << c;
     }
-    s << "}";
-    return s;
+    return s << "}";
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& s, const gx::ListRef<T>& t) {
-    s << *t;
-    return s;
+    return s << *t;
 }
 
 template <typename K, typename V>
@@ -188,14 +171,12 @@ std::ostream& operator<<(std::ostream& s, const gx::Map<K, V>& t) {
         }
         s << c.first << "=" << c.second;
     }
-    s << "}";
-    return s;
+    return s << "}";
 }
 
 template <typename K, typename V>
 std::ostream& operator<<(std::ostream& s, const gx::MapRef<K, V>& t) {
-    s << *t;
-    return s;
+    return s << *t;
 }
 }  // namespace std
 

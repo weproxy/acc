@@ -19,13 +19,20 @@ constexpr int IPv6len = 16;
 struct IP final {
     bytez<> B;
 
-    IP() = default;
+    IP(const void* p = nil){};
     IP(const bytez<> b) : B(b) {}
     IP(const IP& ip) : B(ip.B) {}
 
     uint8 len() const { return B.size(); }
 
     operator bool() const { return bool(B); }
+
+    byte& operator[](int i) { return B[i]; }
+    byte operator[](int i) const { return B[i]; }
+
+    // x == nil or x != nil
+    bool operator==(const void* p) const { return p == nil && !bool(B); }
+    bool operator!=(const void* p) const { return p == nil && bool(B); }
 
     string String() const;
 

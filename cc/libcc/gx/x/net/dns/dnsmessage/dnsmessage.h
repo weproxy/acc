@@ -9,61 +9,95 @@
 namespace gx {
 namespace dnsmessage {
 
+// ErrNotStarted indicates that the prerequisite information isn't
+// available yet because the previous records haven't been appropriately
+// parsed, skipped or finished.
+extern const error ErrNotStarted;
+
+// ErrSectionDone indicated that all records in the section have been
+// parsed or finished.
+extern const error ErrSectionDone;
+
+namespace xx {
+extern const error errBaseLen;
+extern const error errCalcLen;
+extern const error errReserved;
+extern const error errTooManyPtr;
+extern const error errInvalidPtr;
+extern const error errNilResouceBody;
+extern const error errResourceLen;
+extern const error errSegTooLong;
+extern const error errZeroSegLen;
+extern const error errResTooLong;
+extern const error errTooManyQuestions;
+extern const error errTooManyAnswers;
+extern const error errTooManyAuthorities;
+extern const error errTooManyAdditionals;
+extern const error errNonCanonicalName;
+extern const error errStringTooLong;
+extern const error errCompressedSRV;
+}  // namespace xx
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Message formats
 
 // A Type is a type of DNS request and response.
-using Type = uint16;
+enum class Type : uint16 {
+    // ResourceHeader.Type and Question.Type
+    A = 1,
+    NS = 2,
+    CNAME = 5,
+    SOA = 6,
+    PTR = 12,
+    MX = 15,
+    TXT = 16,
+    AAAA = 28,
+    SRV = 33,
+    OPT = 41,
 
-// ResourceHeader.Type and Question.Type
-const Type TypeA = 1;
-const Type TypeNS = 2;
-const Type TypeCNAME = 5;
-const Type TypeSOA = 6;
-const Type TypePTR = 12;
-const Type TypeMX = 15;
-const Type TypeTXT = 16;
-const Type TypeAAAA = 28;
-const Type TypeSRV = 33;
-const Type TypeOPT = 41;
+    // Question.Type
+    WKS = 11,
+    HINFO = 13,
+    MINFO = 14,
+    AXFR = 252,
+    ALL = 255,
+};
 
-// Question.Type
-const Type TypeWKS = 11;
-const Type TypeHINFO = 13;
-const Type TypeMINFO = 14;
-const Type TypeAXFR = 252;
-const Type TypeALL = 255;
-
-// TypeString ...
-const char* TypeString(Type typ);
+// ToString ...
+const char* ToString(const Type e);
 
 // A Class is a type of network.
-using Class = uint16;
+enum class Class : uint16 {
+    // ResourceHeader.Class and Question.Class
+    INET = 1,
+    CSNET = 2,
+    CHAOS = 3,
+    HESIOD = 4,
 
-// ResourceHeader.Class and Question.Class
-const Class ClassINET = 1;
-const Class ClassCSNET = 2;
-const Class ClassCHAOS = 3;
-const Class ClassHESIOD = 4;
+    // Question.Class
+    ANY = 255,
+};
 
-// Question.Class
-const Class ClassANY = 255;
+// ToString ...
+const char* ToString(const Class e);
 
 // An OpCode is a DNS operation code.
 using OpCode = uint16;
 
 // An RCode is a DNS response status code.
-using RCode = uint16;
+enum class RCode : uint16 {
+    // Header.RCode values.
+    Success = 0,         // NoError
+    FormatError = 1,     // FormErr
+    ServerFailure = 2,   // ServFail
+    NameError = 3,       // NXDomain
+    NotImplemented = 4,  // NotImp
+    Refused = 5,         // Refused
+};
 
-// Header.RCode values.
-const RCode RCodeSuccess = 0;         // NoError
-const RCode RCodeFormatError = 1;     // FormErr
-const RCode RCodeServerFailure = 2;   // ServFail
-const RCode RCodeNameError = 3;       // NXDomain
-const RCode RCodeNotImplemented = 4;  // NotImp
-const RCode RCodeRefused = 5;         // Refused
-
-// RCodeString ...
-const char* RCodeString(RCode typ);
+// ToString ...
+const char* ToString(const RCode e);
 
 // Header is a representation of a DNS message header.
 struct Header {
@@ -76,7 +110,7 @@ struct Header {
     bool RecursionAvailable{false};
     bool AuthenticData{false};
     bool CheckingDisabled{false};
-    RCode RCode{0};
+    RCode RCode{RCode::Success};
 
     R<uint16 /*id*/, uint16 /*bits*/> pack();
 };
@@ -84,7 +118,10 @@ struct Header {
 namespace xx {
 const int nameLen = 255;
 using packResult = R<bytez<> /*msg*/, error /*err*/>;
+error nestedError(const string& s, const error err);
 }  // namespace xx
+
+////////////////////////////////////////////////////////////////////////////////
 
 // A Name is a non-encoded domain name. It is used instead of strings to avoid
 // allocations.
@@ -130,6 +167,8 @@ const section sectionAnswers = 3;
 const section sectionAuthorities = 4;
 const section sectionAdditionals = 5;
 const section sectionDone = 6;
+
+const char* sectionNames(section sec);
 
 // header is the wire format for a DNS message header.
 struct header {
@@ -177,6 +216,15 @@ struct ResourceBody {
     // virtual string GoString() = 0;
 };
 
+namespace xx {
+// EDNS(0) wire constants.
+const int edns0Version = 0;
+
+const int edns0DNSSECOK = 0x00008000;
+const int ednsVersionMask = 0x00ff0000;
+const int edns0DNSSECOKMask = 0x00ff8000;
+}  // namespace xx
+
 // A ResourceHeader is the header of a DNS resource record. There are
 // many types of DNS resource records, but they all share the same header.
 struct ResourceHeader {
@@ -208,6 +256,41 @@ struct ResourceHeader {
     R<int, error> unpack(bytez<> msg, int off);
 
     error fixLen(bytez<> msg, int lenOff, int preLen);
+
+    // SetEDNS0 configures h for EDNS(0).
+    //
+    // The provided extRCode must be an extended RCode.
+    error SetEDNS0(int udpPayloadLen, RCode extRCode, bool dnssecOK) {
+        auto& h = *this;
+        // RFC 6891 section 6.1.2
+        h.Name.Data = make(xx::nameLen);
+        h.Name.Data[0] = '.';
+        h.Name.Length = 1;
+        h.Type = Type::OPT;
+        h.Class = dnsmessage::Class(udpPayloadLen);
+        h.TTL = uint32(extRCode) >> 4 << 24;
+        if (dnssecOK) {
+            h.TTL |= xx::edns0DNSSECOK;
+        }
+        return nil;
+    }
+
+    // DNSSECAllowed reports whether the DNSSEC OK bit is set.
+    bool DNSSECAllowed() {
+        // RFC 6891 section 6.1.3
+        return (TTL & xx::edns0DNSSECOKMask) == xx::edns0DNSSECOK;
+    }
+
+    // ExtendedRCode returns an extended RCode.
+    //
+    // The provided rcode must be the RCode in DNS message header.
+    RCode ExtendedRCode(RCode rcode) {
+        // RFC 6891 section 6.1.3
+        if ((TTL & xx::ednsVersionMask) == xx::edns0Version) {
+            return RCode(((TTL >> 24) << 4) | uint32(rcode));
+        }
+        return rcode;
+    }
 };
 
 // A Resource is a DNS resource record.
@@ -223,7 +306,7 @@ struct Resource {
 struct CNAMEResource : public ResourceBody {
     Name CNAME;
 
-    virtual Type realType() override { return TypeCNAME; }
+    virtual Type realType() override { return Type::CNAME; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return CNAME.pack(msg, compression, compressionOff);
     }
@@ -234,7 +317,7 @@ struct MXResource : public ResourceBody {
     uint16 Pref{0};
     Name MX;
 
-    virtual Type realType() override { return TypeMX; }
+    virtual Type realType() override { return Type::MX; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -242,7 +325,7 @@ struct MXResource : public ResourceBody {
 struct NSResource : public ResourceBody {
     Name NS;
 
-    virtual Type realType() override { return TypeNS; }
+    virtual Type realType() override { return Type::NS; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return NS.pack(msg, compression, compressionOff);
     }
@@ -252,7 +335,7 @@ struct NSResource : public ResourceBody {
 struct PTRResource : public ResourceBody {
     Name PTR;
 
-    virtual Type realType() override { return TypePTR; }
+    virtual Type realType() override { return Type::PTR; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
         return PTR.pack(msg, compression, compressionOff);
     }
@@ -272,7 +355,7 @@ struct SOAResource : public ResourceBody {
     // Section 4)
     uint32 MinTTL{0};
 
-    virtual Type realType() override { return TypeSOA; }
+    virtual Type realType() override { return Type::SOA; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -280,7 +363,7 @@ struct SOAResource : public ResourceBody {
 struct TXTResource : public ResourceBody {
     slice<string> TXT;
 
-    virtual Type realType() override { return TypeTXT; }
+    virtual Type realType() override { return Type::TXT; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -291,7 +374,7 @@ struct SRVResource : public ResourceBody {
     uint16 Port{0};
     Name Target;  // Not compressed as per RFC 2782.
 
-    virtual Type realType() override { return TypeSRV; }
+    virtual Type realType() override { return Type::SRV; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -299,7 +382,7 @@ struct SRVResource : public ResourceBody {
 struct AResource : public ResourceBody {
     bytez<> A{make(4)};
 
-    virtual Type realType() override { return TypeA; }
+    virtual Type realType() override { return Type::A; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -307,7 +390,7 @@ struct AResource : public ResourceBody {
 struct AAAAResource : public ResourceBody {
     bytez<> AAAA{make(16)};
 
-    virtual Type realType() override { return TypeAAAA; }
+    virtual Type realType() override { return Type::AAAA; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -327,7 +410,7 @@ struct Option {
 struct OPTResource : public ResourceBody {
     slice<Option> Options;
 
-    virtual Type realType() override { return TypeOPT; }
+    virtual Type realType() override { return Type::OPT; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
@@ -339,6 +422,8 @@ struct UnknownResource : public ResourceBody {
     virtual dnsmessage::Type realType() override { return Type; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Message is a representation of a DNS message.
 struct Message {
@@ -358,6 +443,8 @@ struct Message {
     // extended buffer.
     R<bytez<>, error> AppendPack(bytez<> b);
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 // A Parser allows incrementally parsing a DNS message.
 //
@@ -516,5 +603,183 @@ struct Parser {
     R<Ref<UnknownResource>, error> UnknownResource();
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+// A Builder allows incrementally packing a DNS message.
+//
+// Example usage:
+//
+//	buf := make([]byte, 2, 514)
+//	b := NewBuilder(buf, Header{...})
+//	b.EnableCompression()
+//	// Optionally start a section and add things to that section.
+//	// Repeat adding sections as necessary.
+//	buf, err := b.Finish()
+//	// If err is nil, buf[2:] will contain the built bytes.
+struct Builder {
+    // msg is the storage for the message being built.
+    bytez<> msg;
+
+    // section keeps track of the current section being built.
+    xx::section section;
+
+    // header keeps track of what should go in the header when Finish is
+    // called.
+    xx::header header;
+
+    // start is the starting index of the bytes allocated in msg for header.
+    int start{0};
+
+    // compression is a mapping from name suffixes to their starting index
+    // in msg.
+    map<string, int> compression;
+
+    // EnableCompression enables compression in the Builder.
+    //
+    // Leaving compression disabled avoids compression related allocations, but can
+    // result in larger message sizes. Be careful with this mode as it can cause
+    // messages to exceed the UDP size limit.
+    //
+    // According to RFC 1035, section 4.1.4, the use of compression is optional, but
+    // all implementations must accept both compressed and uncompressed DNS
+    // messages.
+    //
+    // Compression should be enabled before any sections are added for best results.
+    void EnableCompression() { this->compression = makemap<string, int>(); }
+
+    error startCheck(xx::section s) {
+        if (this->section <= xx::sectionNotStarted) {
+            return ErrNotStarted;
+        }
+        if (this->section > s) {
+            return ErrSectionDone;
+        }
+        return nil;
+    }
+
+    // StartQuestions prepares the builder for packing Questions.
+    error StartQuestions() {
+        auto err = this->startCheck(xx::sectionQuestions);
+        if (err == nil) {
+            this->section = xx::sectionQuestions;
+        }
+        return err;
+    }
+
+    // StartAnswers prepares the builder for packing Answers.
+    error StartAnswers() {
+        auto err = this->startCheck(xx::sectionAnswers);
+        if (err == nil) {
+            this->section = xx::sectionAnswers;
+        }
+        return err;
+    }
+
+    // StartAuthorities prepares the builder for packing Authorities.
+    error StartAuthorities() {
+        auto err = this->startCheck(xx::sectionAuthorities);
+        if (err == nil) {
+            this->section = xx::sectionAuthorities;
+        }
+        return err;
+    }
+
+    // StartAdditionals prepares the builder for packing Additionals.
+    error StartAdditionals() {
+        auto err = this->startCheck(xx::sectionAdditionals);
+        if (err == nil) {
+            this->section = xx::sectionAdditionals;
+        }
+        return err;
+    }
+
+    error incrementSectionCount();
+
+    error checkResourceSection() {
+        if (this->section <= xx::sectionAnswers) {
+            return ErrNotStarted;
+        }
+        if (this->section > xx::sectionAdditionals) {
+            return ErrSectionDone;
+        }
+        return nil;
+    }
+
+    // addResourceBody adds a single ResourceBody.
+    error addResourceBody(ResourceHeader& h, dnsmessage::ResourceBody* r, const char* name);
+
+    // Question adds a single Question.
+    error Question(dnsmessage::Question q);
+
+    // CNAMEResource adds a single CNAMEResource.
+    error CNAMEResource(ResourceHeader h, dnsmessage::CNAMEResource r) {
+        return addResourceBody(h, &r, "CNAMEResource");
+    }
+
+    // MXResource adds a single MXResource.
+    error MXResource(ResourceHeader h, dnsmessage::MXResource r) { return addResourceBody(h, &r, "MXResource"); }
+
+    // NSResource adds a single NSResource.
+    error NSResource(ResourceHeader h, dnsmessage::NSResource r) { return addResourceBody(h, &r, "NSResource"); }
+
+    // PTRResource adds a single PTRResource.
+    error PTRResource(ResourceHeader h, dnsmessage::PTRResource r) { return addResourceBody(h, &r, "PTRResource"); }
+
+    // SOAResource adds a single SOAResource.
+    error SOAResource(ResourceHeader h, dnsmessage::SOAResource r) { return addResourceBody(h, &r, "SOAResource"); }
+
+    // TXTResource adds a single TXTResource.
+    error TXTResource(ResourceHeader h, dnsmessage::TXTResource r) { return addResourceBody(h, &r, "TXTResource"); }
+
+    // SRVResource adds a single SRVResource.
+    error SRVResource(ResourceHeader h, dnsmessage::SRVResource r) { return addResourceBody(h, &r, "SRVResource"); }
+
+    // AResource adds a single AResource.
+    error AResource(ResourceHeader h, dnsmessage::AResource r) { return addResourceBody(h, &r, "AResource"); }
+
+    // AAAAResource adds a single AAAAResource.
+    error AAAAResource(ResourceHeader h, dnsmessage::AAAAResource r) { return addResourceBody(h, &r, "AAAAResource"); }
+
+    // UnknownResource adds a single UnknownResource.
+    error UnknownResource(ResourceHeader h, dnsmessage::UnknownResource r) {
+        return addResourceBody(h, &r, "UnknownResource");
+    }
+
+    // Finish ends message building and generates a binary message.
+    R<bytez<>, error> Finish() {
+        auto& b = *this;
+        if (b.section < xx::sectionHeader) {
+            return {nil, ErrNotStarted};
+        }
+        b.section = xx::sectionDone;
+        // Space for the header was allocated in NewBuilder.
+        b.header.pack(b.msg(b.start, b.start));
+        return {b.msg, nil};
+    }
+};
+
+// NewBuilder creates a new builder with compression disabled.
+//
+// Note: Most users will want to immediately enable compression with the
+// EnableCompression method. See that method's comment for why you may or may
+// not want to enable compression.
+//
+// The DNS message is appended to the provided initial buffer buf (which may be
+// nil) as it is built. The final message is returned by the (*Builder).Finish
+// method, which includes buf[:len(buf)] and may return the same underlying
+// array if there was sufficient capacity in the slice.
+Builder NewBuilder(bytez<> buf, Header h);
+
 }  // namespace dnsmessage
 }  // namespace gx
+
+////////////////////////////////////////////////////////////////////////////////
+namespace std {
+// to_string for ostream << Type
+// inline std::string to_string(const gx::dnsmessage::Type v) { return gx::dnsmessage::ToString(v); }
+
+// override ostream <<
+inline ostream& operator<<(ostream& o, const gx::dnsmessage::Type v) { return o << gx::dnsmessage::ToString(v); }
+inline ostream& operator<<(ostream& o, const gx::dnsmessage::Class v) { return o << gx::dnsmessage::ToString(v); }
+inline ostream& operator<<(ostream& o, const gx::dnsmessage::RCode v) { return o << gx::dnsmessage::ToString(v); }
+}  // namespace std

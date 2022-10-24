@@ -14,7 +14,7 @@ struct map {
 
     // map ...
     // map() : p_(NewRef<Map<K, V>>()) {}
-    map() = default;
+    map(const void* p = nil){};
     map(MapRef<K, V> p) : p_(p) {}
 
     // *
@@ -54,6 +54,10 @@ struct map {
 
     // bool() ...
     operator bool() const { return !!p_; }
+
+    // x == nil or x != nil
+    bool operator==(const void* p) const { return p == nil && !!p_; }
+    bool operator!=(const void* p) const { return p == nil && p_; }
 };
 
 // makemap ...

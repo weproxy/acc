@@ -13,7 +13,7 @@ namespace bytes {
 static error errNegativeRead = errors::New("bytes.Buffer: reader returned negative count from Read");
 static error errUnreadByte = errors::New("bytes.Buffer: UnreadByte: previous operation was not a successful read");
 
-static const int maxInt = int(~uint(0) >> 1);
+static const int maxInt = int(uint(~uint(0)) >> 1);
 
 // smallBufferSize is an initial allocation minimal capacity.
 static const int smallBufferSize = 64;

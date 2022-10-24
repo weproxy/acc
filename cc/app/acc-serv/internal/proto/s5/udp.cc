@@ -62,7 +62,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     // Start ...
     void Start() {
         auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_);
-        auto sta = stats::NewUDPStats(stats::TypeS5, tag);
+        auto sta = stats::NewUDPStats(stats::Type::S5, tag);
 
         sta->Start("started");
         sta_ = sta;
@@ -105,7 +105,7 @@ using udpSessMap = Map<key_t, Ref<udpSess_t>>;
 // udpConn_t
 // to target server
 struct udpConn_t : public net::xx::packetConnWrap_t {
-    socks::AddrType typ_{socks::AddrTypeIPv4};
+    socks::AddrType typ_{socks::AddrType::IPv4};
 
     udpConn_t(net::PacketConn pc) : net::xx::packetConnWrap_t(pc) {}
 
@@ -117,12 +117,12 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     //     +-----+------+------+----------+----------+------+
     //     |  2  |  1   |  1   |    ...   |    2     |  ... |
     virtual R<int, net::Addr, error> ReadFrom(bytez<> buf) override {
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
+        if (socks::AddrType::IPv4 != typ_ && socks::AddrType::IPv6 != typ_) {
             return {0, nil, socks::ErrInvalidAddrType};
         }
 
         // readFrom target server
-        int pos = 3 + 1 + (socks::AddrTypeIPv4 == typ_ ? 4 : 16) + 2;
+        int pos = 3 + 1 + (socks::AddrType::IPv4 == typ_ ? 4 : 16) + 2;
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf(pos)));
         if (err) {
             return {n, addr, err};
@@ -162,7 +162,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         }
 
         typ_ = socks::AddrType(raddr->B[0]);
-        if (socks::AddrTypeIPv4 != typ_ && socks::AddrTypeIPv6 != typ_) {
+        if (socks::AddrType::IPv4 != typ_ && socks::AddrType::IPv6 != typ_) {
             return {0, socks::ErrInvalidAddrType};
         }
 

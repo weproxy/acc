@@ -20,7 +20,7 @@ using namespace nx;
 // handleTCP ...
 error handleTCP(net::Conn c, net::Addr raddr) {
     auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
-    auto sta = stats::NewTCPStats(stats::TypeS5, tag);
+    auto sta = stats::NewTCPStats(stats::Type::S5, tag);
 
     sta->Start("connected");
     DEFER(sta->Done("closed"));
@@ -29,7 +29,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     AUTO_R(rc, er1, net::Dial(raddr));
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
-        socks::WriteReply(c, socks::ReplyHostUnreachable);
+        socks::WriteReply(c, socks::Reply::HostUnreachable);
         return er1;
     }
     DEFER(rc->Close());
@@ -38,7 +38,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
     //     +-----+-----+-------+------+----------+----------+
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-    auto err = socks::WriteReply(c, socks::ReplySuccess, 0, net::MakeAddr(net::IPv4zero, 0));
+    auto err = socks::WriteReply(c, socks::Reply::Success, 0, net::MakeAddr(net::IPv4zero, 0));
     if (err) {
         if (err != net::ErrClosed) {
             LOGS_E(TAG << " err: " << err);
@@ -70,7 +70,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     auto caddr = c->RemoteAddr();
 
     auto tag = GX_SS(TAG << " Assoc_" << nx::NewID() << " " << caddr << "->" << raddr);
-    auto sta = stats::NewTCPStats(stats::TypeS5, tag);
+    auto sta = stats::NewTCPStats(stats::Type::S5, tag);
 
     sta->Start("connected");
     DEFER(sta->Done("closed"));
@@ -78,7 +78,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     AUTO_R(ln, er1, net::ListenPacket(":0"));
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
-        socks::WriteReply(c, socks::ReplyHostUnreachable);
+        socks::WriteReply(c, socks::Reply::HostUnreachable);
         return er1;
     }
 
@@ -92,7 +92,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
     //     +-----+-----+-------+------+----------+----------+
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-    auto err = socks::WriteReply(c, socks::ReplySuccess, 0, ln->LocalAddr());
+    auto err = socks::WriteReply(c, socks::Reply::Success, 0, ln->LocalAddr());
     if (err) {
         if (err != net::ErrClosed) {
             LOGS_E(TAG << " err: " << err);

@@ -15,6 +15,9 @@ struct slice {
     int beg_{0}, end_{0};
     VecRef<T> vec_{nullptr};
 
+    slice(const void* p = nil){};
+    slice(const slice& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) {}
+    slice(slice&& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) { r._reset(); }
     explicit slice(int len, int cap = 0) : end_(len), vec_(NewRef<Vec<T>>(len)) {
         if (cap > len) {
             vec_->reserve(cap);
@@ -26,9 +29,6 @@ struct slice {
         }
         end_ += x.size();
     }
-    slice() = default;
-    slice(const slice& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) {}
-    slice(slice&& r) : beg_(r.beg_), end_(r.end_), vec_(r.vec_) { r._reset(); }
 
     // template <typename X, typename std::enable_if<xx::is_same<X, gx::byte>::value, int>::type = 0>
     // slice<X>(const string& s) : slice<X>(s.length(), s.length()) {
@@ -71,6 +71,10 @@ struct slice {
 
     // bool() ...
     operator bool() const { return !!vec_; }
+
+    // x == nil or x != nil
+    bool operator==(const void* p) const { return p == nil && !!vec_; }
+    bool operator!=(const void* p) const { return p == nil && vec_; }
 
     // size/length ...
     int size() const { return vec_ ? end_ - beg_ : 0; }

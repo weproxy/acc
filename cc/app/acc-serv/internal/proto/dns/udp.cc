@@ -59,9 +59,9 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // Start ...
-    void Start() {
-        auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_);
-        auto sta = stats::NewUDPStats(stats::TypeS5, tag);
+    void Start(const string& target) {
+        auto tag = GX_SS(TAG << " UDP_" << nx::NewID() << " " << caddr_ << "->" << target);
+        auto sta = stats::NewUDPStats(stats::Type::DNS, tag);
 
         sta->Start("started");
         sta_ = sta;
@@ -170,15 +170,13 @@ error runServLoop(net::PacketConn ln) {
         // packet data
         auto data = buf(0, n);
 
-
-		// cache query
-		AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
-		if (!erx && ans  && len(ans->Data) > 0) {
-			// cache answer
-			ln->WriteTo(ans->Data, caddr);
-			continue;
-		}
-
+        // cache query
+        AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
+        if (!erx && ans && len(ans->Data) > 0) {
+            // cache answer
+            ln->WriteTo(ans->Data, caddr);
+            continue;
+        }
 
         // lookfor or create sess
         Ref<udpSess_t> sess;
@@ -207,14 +205,21 @@ error runServLoop(net::PacketConn ln) {
             // remove it after rc closed
             sess->afterClosedFn_ = [sessMap, key] { sessMap->erase(key); };
 
+            auto target = [msg]() -> string {
+                if (msg != nil && len(msg->Questions) > 0) {
+                    return GX_SS(msg->Questions[0].Name << msg->Questions[0].Type);
+                }
+                return "";
+            }();
+
             // start recv loop...
-            sess->Start();
+            sess->Start(target);
         } else {
             sess = it->second;
         }
 
         // use 8.8.8.8:53
-        static net::Addr raddr = net::MakeAddr(net::IPv4(8, 8, 8, 8), 53);
+        static net::Addr raddr = net::MakeAddr(net::IPv4(223, 5, 5, 5), 53);
 
         // writeTo target server
         err = sess->WriteToRC(data, raddr);

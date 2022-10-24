@@ -60,8 +60,8 @@ void connT::calc() {
     oss << TAG << " Conn{cur/his}: ";
 
     for (int i = 0; i < xx::typeCount; i++) {
-        Type typ = (Type)(TypeDirect + i);
-        if (typ == typeMax || (arr[i].tcpTotal == 0 || arr[i].tcpTotal == 0)) {
+        Type typ = (Type)(int(Type::Direct) + i);
+        if (typ == Type::MAX || (arr[i].tcpTotal == 0 || arr[i].tcpTotal == 0)) {
             continue;
         }
 

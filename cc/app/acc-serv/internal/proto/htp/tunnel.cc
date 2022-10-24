@@ -76,7 +76,7 @@ error handleTunnel(net::Conn c, bytez<> hdr) {
     // }
 
     auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
-    auto sta = stats::NewTCPStats(stats::TypeHTP, tag);
+    auto sta = stats::NewTCPStats(stats::Type::HTP, tag);
 
     sta->Start("connected");
     DEFER(sta->Done("closed"));

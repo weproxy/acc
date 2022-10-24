@@ -16,28 +16,28 @@ using namespace gx;
 
 constexpr const char* TAG = "[stats]";
 
-enum Type {
-    TypeDirect = 0,
-    TypeS5,
-    TypeSS,
-    TypeGAAP,
-    TypeHTP,
-    TypeDNS,
-    TypeKCP,
-    TypeQUIC,
-    TypeOTHER,
-    typeMax,
+enum class Type : int {
+    Direct = 0,
+    S5,
+    SS,
+    GAAP,
+    HTP,
+    DNS,
+    KCP,
+    QUIC,
+    OTHER,
+    MAX,
 };
 
 // ToString ...
-inline const char* ToString(Type typ) {
+inline const char* ToString(const Type typ) {
     static const char* S[] = {"Direct", "S5", "SS", "GAAP", "HTP", "DNS", "KCP", "QUIC", "OTH", ""};
-    return S[typ - TypeDirect];
+    return S[int(typ) - int(Type::Direct)];
 }
 
 namespace xx {
 
-constexpr int typeCount = typeMax - TypeDirect;
+constexpr int typeCount = int(Type::MAX) - int(Type::Direct);
 
 typedef std::atomic_bool abool;
 typedef std::atomic<int32> aint32;
@@ -58,25 +58,25 @@ struct connT {
 
     connT& AddTCP(Type typ, int delta = 1) {
         dirty = true;
-        arr[typ].tcp += delta;
+        arr[int(typ)].tcp += delta;
         if (delta > 0) {
-            arr[typ].tcpTotal += delta;
+            arr[int(typ)].tcpTotal += delta;
         }
         return *this;
     }
     connT& AddUDP(Type typ, int delta = 1) {
         dirty = true;
-        arr[typ].udp += delta;
+        arr[int(typ)].udp += delta;
         if (delta > 0) {
-            arr[typ].udpTotal += delta;
+            arr[int(typ)].udpTotal += delta;
         }
         return *this;
     }
 
-    int64 GetTCP(Type typ) { return arr[typ].tcp; }
-    int64 GetUDP(Type typ) { return arr[typ].udp; }
-    int64 GetTCPTotal(Type typ) { return arr[typ].tcpTotal; }
-    int64 GetUDPTotal(Type typ) { return arr[typ].udpTotal; }
+    int64 GetTCP(Type typ) { return arr[int(typ)].tcp; }
+    int64 GetUDP(Type typ) { return arr[int(typ)].udp; }
+    int64 GetTCPTotal(Type typ) { return arr[int(typ)].tcpTotal; }
+    int64 GetUDPTotal(Type typ) { return arr[int(typ)].udpTotal; }
 
     void calc();
 };
@@ -95,25 +95,25 @@ struct rateT {
     rateE udp[typeCount];
 
     rateT& AddTCPSent(Type typ, int delta) {
-        auto& p = tcp[typ];
+        auto& p = tcp[int(typ)];
         p.sent += delta;
         p.sentTotal += delta;
         return *this;
     }
     rateT& AddTCPRecv(Type typ, int delta) {
-        auto& p = tcp[typ];
+        auto& p = tcp[int(typ)];
         p.recv += delta;
         p.recvTotal += delta;
         return *this;
     }
     rateT& AddUDPSent(Type typ, int delta) {
-        auto& p = udp[typ];
+        auto& p = udp[int(typ)];
         p.sent += delta;
         p.sentTotal += delta;
         return *this;
     }
     rateT& AddUDPRecv(Type typ, int delta) {
-        auto& p = udp[typ];
+        auto& p = udp[int(typ)];
         p.recv += delta;
         p.recvTotal += delta;
         return *this;
@@ -121,7 +121,7 @@ struct rateT {
 
     void calc() {
         for (int i = 0; i < typeCount; i++) {
-            Type typ = (Type)(i + TypeDirect);
+            Type typ = (Type)(i + int(Type::Direct));
             tcp[i].calc(typ, true);
             udp[i].calc(typ, false);
         }
@@ -214,7 +214,8 @@ struct Stats {
     string target;
     string server;
 
-    Stats(Type typ_, const string& tag_, bool tcp_) : tcp(tcp_), typ(typ_), tag(tag_), conn(xx::_Conn), rate(xx::_Rate) {}
+    Stats(Type typ_, const string& tag_, bool tcp_)
+        : tcp(tcp_), typ(typ_), tag(tag_), conn(xx::_Conn), rate(xx::_Rate) {}
 
     const string& Tag() const { return tag; }
     Stats& SetTag(const string& s) {

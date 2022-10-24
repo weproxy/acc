@@ -37,20 +37,20 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
 
     AUTO_R(_1, er1, io::ReadFull(c, buf(0, 2)));
     if (er1) {
-        socks::WriteReply(c, socks::ReplyAuthFailure);
+        socks::WriteReply(c, socks::Reply::AuthFailure);
         return {cmd, nil, er1};
     }
 
     auto methodCnt = buf[1];
 
     if (buf[0] != socks::Version5 || methodCnt == 0 || methodCnt > 16) {
-        socks::WriteReply(c, socks::ReplyAuthFailure);
+        socks::WriteReply(c, socks::Reply::AuthFailure);
         return {cmd, nil, socks::ErrInvalidSocksVersion};
     }
 
     AUTO_R(n, er2, io::ReadFull(c, buf(0, methodCnt)));
     if (er2) {
-        socks::WriteReply(c, socks::ReplyAuthFailure);
+        socks::WriteReply(c, socks::Reply::AuthFailure);
         return {cmd, nil, er2};
     }
 
@@ -88,7 +88,7 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
             return {cmd, nil, err};
         }
     } else {
-        socks::WriteReply(c, socks::ReplyNoAcceptableMethods);
+        socks::WriteReply(c, socks::Reply::NoAcceptableMethods);
         return {cmd, nil, socks::ErrNoSupportedAuth};
     }
 
@@ -99,7 +99,7 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
 
     AUTO_R(_3, er3, io::ReadFull(c, buf(0, 3)));
     if (er3) {
-        socks::WriteReply(c, socks::ReplyAddressNotSupported);
+        socks::WriteReply(c, socks::Reply::AddressNotSupported);
         return {cmd, nil, er3};
     }
 
@@ -107,14 +107,14 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
     cmd = socks::Command(buf[1]);
     auto rsv = buf[2];
 
-    if (socks::CmdConnect != cmd && socks::CmdAssociate != cmd) {
-        socks::WriteReply(c, socks::ReplyCommandNotSupported);
-        return {cmd, nil, socks::ToError(socks::ReplyCommandNotSupported)};
+    if (socks::Command::Connect != cmd && socks::Command::Associate != cmd) {
+        socks::WriteReply(c, socks::Reply::CommandNotSupported);
+        return {cmd, nil, socks::ToError(socks::Reply::CommandNotSupported)};
     }
 
     AUTO_R(_4, raddr, er4, socks::ReadAddr(c));
     if (er4) {
-        socks::WriteReply(c, socks::ReplyAddressNotSupported);
+        socks::WriteReply(c, socks::Reply::AddressNotSupported);
         return {cmd, nil, er4};
     }
 
@@ -143,11 +143,11 @@ static error handleConn(net::Conn c) {
     // LOGS_D(TAG << " handshake(), cmd=" << socks::ToString(cmd) << ", raddr=" << raddr);
 
     switch (cmd) {
-        case socks::CmdConnect:
+        case socks::Command::Connect:
             return handleTCP(c, raddr->ToNetAddr());
-        case socks::CmdAssociate:
+        case socks::Command::Associate:
             return handleAssoc(c, raddr->ToNetAddr());
-        case socks::CmdBind:
+        case socks::Command::Bind:
             return errors::New("not support socks command: bind");
         default:
             return fmt::Errorf("unknow socks command: %d", cmd);

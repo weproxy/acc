@@ -45,9 +45,11 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 		return
 	}
 
-	logx.I("[dns] cache.Query %v%v", msg.Questions[0].Name, msg.Questions[0].Type)
+	q := &msg.Questions[0]
 
-	key := makeCacheKey(&msg.Questions[0])
+	logx.I("[dns] cache.Query %v%v", q.Name, q.Type)
+
+	key := makeCacheKey(q)
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -73,11 +75,11 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 
 	answer = &Answer{
 		Msg:  amsg,
-		Name: strings.TrimSuffix(msg.Questions[0].Name.String(), "."),
+		Name: strings.TrimSuffix(q.Name.String(), "."),
 		Data: data,
 	}
 
-	logx.W("[dns] cache.Answer %v%v <- %v", msg.Questions[0].Name, msg.Questions[0].Type, toAnswerString(answer.Msg.Answers))
+	logx.W("[dns] cache.Answer %v%v <- %v", q.Name, q.Type, toAnswerString(answer.Msg.Answers))
 
 	return
 }
@@ -88,14 +90,16 @@ func (m *cacheMap) store(msg *dnsmessage.Message) (err error) {
 		return
 	}
 
-	key := makeCacheKey(&msg.Questions[0])
+	q := msg.Questions[0]
+
+	key := makeCacheKey(&q)
 	exp := time.Now().Add(time.Second * 300)
 
 	m.mu.Lock()
 	m.mem[key] = &cacheEntry{msg: msg, exp: exp}
 	m.mu.Unlock()
 
-	logx.W("[dns] cache.Store %v%v <- %v", msg.Questions[0].Name, msg.Questions[0].Type, toAnswerString(msg.Answers))
+	logx.W("[dns] cache.Store %v%v <- %v", q.Name, q.Type, toAnswerString(msg.Answers))
 
 	return
 }

@@ -22,13 +22,29 @@ extern const error ErrInvalidAddrLen;
 
 ////////////////////////////////////////////////////////////////////////////////
 // AddrType  ...
-enum AddrType {
-    AddrTypeIPv4 = 1,
-    AddrTypeDomain = 3,
-    AddrTypeIPv6 = 4,
+enum class AddrType : uint8 {
+    IPv4 = 1,
+    Domain = 3,
+    IPv6 = 4,
 };
 
+// ToString ...
+inline const char* ToString(const AddrType e) {
+#define CASE_RETURN_ADDRTYPE(e) \
+    case AddrType::e:           \
+        return "Addr" #e
+
+    switch (e) {
+        CASE_RETURN_ADDRTYPE(IPv4);
+        CASE_RETURN_ADDRTYPE(Domain);
+        CASE_RETURN_ADDRTYPE(IPv6);
+        default:
+            return "";
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+// Addr ...
 struct Addr {
     bytez<> B;
 
@@ -90,11 +106,11 @@ R<int /*readlen*/, Ref<Addr>, error> ReadAddr(Reader r) {
     }
 
     int m = 0;
-    if (AddrTypeIPv4 == B[0]) {
+    if (AddrType::IPv4 == AddrType(B[0])) {
         m = 1 + net::IPv4len + 2;
-    } else if (AddrTypeIPv6 == B[0]) {
+    } else if (AddrType::IPv6 == AddrType(B[0])) {
         m = 1 + net::IPv6len + 2;
-    } else if (AddrTypeDomain == B[0]) {
+    } else if (AddrType::Domain == AddrType(B[0])) {
         m = 1 + 1 + B[1] + 2;  // DOMAIN_LEN = B[1]
     } else {
         return {n, nil, ErrInvalidAddrLen};
@@ -115,3 +131,9 @@ R<Ref<Addr>, error> ParseAddr(const bytez<> buf);
 
 }  // namespace socks
 }  // namespace nx
+
+////////////////////////////////////////////////////////////////////////////////
+namespace std {
+// override ostream <<
+inline ostream& operator<<(ostream& o, const nx::socks::AddrType v) { return o << nx::socks::ToString(v); }
+}  // namespace std

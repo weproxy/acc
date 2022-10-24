@@ -20,72 +20,73 @@ const uint8 UserAuthVersion = 0x01;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Command ...
-enum Command {
-    CmdConnect = 0x01,
-    CmdBind = 0x02,
-    CmdAssociate = 0x03,
+enum class Command : uint8 {
+    Connect = 0x01,
+    Bind = 0x02,
+    Associate = 0x03,
 };
 
 // ToString ...
-inline const char* ToString(Command cmd) {
-    switch (cmd) {
-        case CmdConnect:
-            return "CmdConnect";
-        case CmdBind:
-            return "CmdBind";
-        case CmdAssociate:
-            return "CmdAssociate";
+inline const char* ToString(const Command e) {
+#define CASE_RETURN_COMMAND(e) \
+    case Command::e:           \
+        return "Cmd" #e
+
+    switch (e) {
+        CASE_RETURN_COMMAND(Connect);
+        CASE_RETURN_COMMAND(Bind);
+        CASE_RETURN_COMMAND(Associate);
         default:
-            return "<CmdUnknow>";
+            return "";
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Method ...
 enum Method {
-    AuthMethodNotRequired = 0x00,          // no authentication required
-    AuthMethodUserPass = 0x02,             // use username/password
+    AuthMethodNotRequired = 0x00,  // no authentication required
+    AuthMethodUserPass = 0x02,     // use username/password
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Reply
-enum Reply {
-    ReplyAuthSuccess = 0,
-    ReplyAuthFailure = 1,
+enum class Reply : uint8 {
+    AuthSuccess = 0,
+    AuthFailure = 1,
 
-    ReplySuccess = 0,
-    ReplyGeneralFailure = 1,
-    ReplyConnectionNotAllowed = 2,
-    ReplyNetworkUnreachable = 3,
-    ReplyHostUnreachable = 4,
-    ReplyConnectionRefused = 5,
-    ReplyTTLExpired = 6,
-    ReplyCommandNotSupported = 7,
-    ReplyAddressNotSupported = 8,
+    Success = 0,
+    GeneralFailure = 1,
+    ConnectionNotAllowed = 2,
+    NetworkUnreachable = 3,
+    HostUnreachable = 4,
+    ConnectionRefused = 5,
+    TTLExpired = 6,
+    CommandNotSupported = 7,
+    AddressNotSupported = 8,
 
-    ReplyNoAcceptableMethods = 0xff,  // no acceptable authentication methods
+    NoAcceptableMethods = 0xff,  // no acceptable authentication methods
 };
 
 // ToString ...
-inline const char* ToString(Reply e) {
+inline const char* ToString(const Reply e) {
     switch (e) {
-        case ReplySuccess:
+        case Reply::Success:
             return "(0)Succeeded";
-        case ReplyGeneralFailure:
+        case Reply::GeneralFailure:
             return "(1)General socks server failure";
-        case ReplyConnectionNotAllowed:
+        case Reply::ConnectionNotAllowed:
             return "(2)Connection not allowed by ruleset";
-        case ReplyNetworkUnreachable:
+        case Reply::NetworkUnreachable:
             return "(3)Network unreachable";
-        case ReplyHostUnreachable:
+        case Reply::HostUnreachable:
             return "(4)Host unreachable";
-        case ReplyConnectionRefused:
+        case Reply::ConnectionRefused:
             return "(5)Connection refused";
-        case ReplyTTLExpired:
+        case Reply::TTLExpired:
             return "(6)TTL expired";
-        case ReplyCommandNotSupported:
+        case Reply::CommandNotSupported:
             return "(7)Command not supported";
-        case ReplyAddressNotSupported:
+        case Reply::AddressNotSupported:
             return "(8)Address type not supported";
         default:
             return "<socks error>";
@@ -93,7 +94,7 @@ inline const char* ToString(Reply e) {
 }
 
 // ToError ...
-inline error ToError(Reply e) { return errors::New(ToString(e)); }
+inline error ToError(const Reply e) { return errors::New(ToString(e)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // error ...
@@ -170,7 +171,7 @@ error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& che
     //     |  1  |   1    |
 
     buf[0] = UserAuthVersion;
-    buf[1] = err ? ReplyAuthFailure : ReplyAuthSuccess;
+    buf[1] = err ? byte(Reply::AuthFailure) : byte(Reply::AuthSuccess);
     AUTO_R(_5, er5, c->Write(buf(0, 2)));
     if (er5) {
         return er5;
@@ -181,7 +182,7 @@ error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& che
 
 // WriteReply ...
 template <typename Writer, typename std::enable_if<io::xx::has_write<Writer>::value, int>::type = 0>
-error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
+error WriteReply(Writer w, Reply reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
     // <<< REP:
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
     //     +-----+-----+-------+------+----------+----------+
@@ -191,7 +192,7 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
     int len = 3;
 
     buf[0] = Version5;
-    buf[1] = reply;
+    buf[1] = byte(reply);
     buf[2] = resverd;
 
     if (boundAddr) {
@@ -199,14 +200,14 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
 
         auto ip4 = boundAddr->IP.To4();
         if (ip4) {
-            B[0] = AddrTypeIPv4;
+            B[0] = byte(AddrType::IPv4);
             memcpy(B + 1, ip4.B, net::IPv4len);
             B[1 + net::IPv4len] = uint8(boundAddr->Port >> 8);
             B[1 + net::IPv4len + 1] = uint8(boundAddr->Port);
             len += 1 + net::IPv4len + 2;
         } else {
             auto ip6 = boundAddr->IP.To16();
-            B[0] = AddrTypeIPv6;
+            B[0] = byte(AddrType::IPv6);
             memcpy(B + 1, ip6.B, net::IPv6len);
             B[1 + net::IPv6len] = uint8(boundAddr->Port >> 8);
             B[1 + net::IPv6len + 1] = uint8(boundAddr->Port);
@@ -221,3 +222,11 @@ error WriteReply(Writer w, uint8 reply, uint8 resverd = 0, net::Addr boundAddr =
 
 }  // namespace socks
 }  // namespace nx
+
+
+////////////////////////////////////////////////////////////////////////////////
+namespace std {
+// override ostream <<
+inline ostream& operator<<(ostream& o, const nx::socks::Command v) { return o << nx::socks::ToString(v); }
+inline ostream& operator<<(ostream& o, const nx::socks::Reply v) { return o << nx::socks::ToString(v); }
+}  // namespace std

@@ -24,10 +24,10 @@ const error ErrInvalidAddrLen = errors::New("invalid address length");
 // IP ...
 net::IP Addr::IP() const {
     if (len(B) > 0) {
-        switch (B[0]) {
-            case AddrTypeIPv4:
+        switch (AddrType(B[0])) {
+            case AddrType::IPv4:
                 return net::IP(B(1, 1 + net::IPv4len));
-            case AddrTypeIPv6:
+            case AddrType::IPv6:
                 return net::IP(B(1, 1 + net::IPv6len));
             default:
                 break;
@@ -39,12 +39,12 @@ net::IP Addr::IP() const {
 // Port ...
 int Addr::Port() const {
     if (len(B) > 0) {
-        switch (B[0]) {
-            case AddrTypeIPv4:
+        switch (AddrType(B[0])) {
+            case AddrType::IPv4:
                 return int(B[1 + net::IPv4len]) << 8 | int(B[1 + net::IPv4len + 1]);
-            case AddrTypeIPv6:
+            case AddrType::IPv6:
                 return int(B[1 + net::IPv6len]) << 8 | int(B[1 + net::IPv6len + 1]);
-            case AddrTypeDomain:
+            case AddrType::Domain:
                 return int(B[2 + B[1]]) << 8 | int(B[2 + B[1] + 1]);
             default:
                 break;
@@ -61,7 +61,7 @@ void Addr::FromNetAddr(net::Addr addr) {
     auto ip4 = addr->IP.To4();
     if (ip4) {
         B = make(1 + net::IPv4len + 2);
-        B[0] = AddrTypeIPv4;
+        B[0] = byte(AddrType::IPv4);
         copy(B(1, 1 + net::IPv4len), ip4.B);
         B[1 + net::IPv4len] = uint8(addr->Port >> 8);
         B[1 + net::IPv4len + 1] = uint8(addr->Port);
@@ -70,7 +70,7 @@ void Addr::FromNetAddr(net::Addr addr) {
 
     auto ip6 = addr->IP.To16();
     B = make(1 + net::IPv6len + 2);
-    B[0] = AddrTypeIPv6;
+    B[0] = byte(AddrType::IPv6);
     copy(B(1, 1 + net::IPv6len), ip6.B);
     B[1 + net::IPv6len] = uint8(addr->Port >> 8);
     B[1 + net::IPv6len + 1] = uint8(addr->Port);
@@ -97,11 +97,11 @@ R<Ref<Addr>, error> ParseAddr(const bytez<> B) {
     }
 
     int m = 0;
-    if (AddrTypeIPv4 == B[0]) {
+    if (AddrType::IPv4 == AddrType(B[0])) {
         m = 1 + net::IPv4len + 2;
-    } else if (AddrTypeIPv6 == B[0]) {
+    } else if (AddrType::IPv6 == AddrType(B[0])) {
         m = 1 + net::IPv6len + 2;
-    } else if (AddrTypeDomain == B[0]) {
+    } else if (AddrType::Domain == AddrType(B[0])) {
         m = 1 + 1 + B[1] + 2;  // DOMAIN_LEN = B[1]
     } else {
         return {nil, ErrInvalidAddrLen};

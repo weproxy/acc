@@ -12,7 +12,7 @@ namespace nx {
 namespace dns {
 
 // makeCacheKey ...
-string makeCacheKey(const Question& q) { return q.Name.String() + dnsmessage::TypeString(q.Type); }
+string makeCacheKey(const Question& q) { return q.Name.String() + ToString(q.Type); }
 
 // cacheEntry ...
 struct cacheEntry {
@@ -52,7 +52,7 @@ Ref<cacheMap> newCacheMap() {
     return cache;
 }
 
-extern string toAnswerString(slice<dnsmessage::Resource> arr);
+extern string toAnswerString(slice<Resource> arr);
 
 // load ...
 R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
@@ -61,10 +61,36 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
     }
 
     auto& m = *this;
+    auto& q = msg->Questions[0];
 
-    LOGS_I("[dns] cache.Query " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type));
+    LOGS_I("[dns] cache.Query " << q.Name << q.Type);
 
-    auto key = makeCacheKey(msg->Questions[0]);
+#if 0
+    {
+        AUTO_R(amsg, _er1, MakeAnswer(msg.get(), {"1.2.3.4", "2.2.2.2"}));
+        if (_er1) {
+            LOGS_E("[dns] cache.MakeAnswer(), err: " << _er1);
+            return {nil, _er1};
+        }
+        AUTO_R(data, _er2, amsg->Pack());
+        if (_er2) {
+            LOGS_E("[dns] cache.Messagge.Pack(), err: " << _er2);
+            return {nil, _er2};
+        }
+
+        auto answer = NewRef<Answer>();
+        answer->Msg = amsg;
+        answer->Name = strings::TrimSuffix(q.Name.String(), ".");
+        answer->Data = data;
+
+        // time::Sleep(time::Millisecond * 5);
+        LOGS_W("[dns] cache.FakeAnswer " << q.Name << q.Type << " <- " << amsg->Answers);
+
+        return {answer, nil};
+    }
+#endif
+
+    auto key = makeCacheKey(q);
 
     m.mu.Lock();
     DEFER(m.mu.Unlock());
@@ -91,32 +117,31 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
 
     auto answer = NewRef<Answer>();
     answer->Msg = amsg;
-    answer->Name = strings::TrimSuffix(msg->Questions[0].Name.String(), ".");
+    answer->Name = strings::TrimSuffix(q.Name.String(), ".");
     answer->Data = data;
 
-    LOGS_W("[dns] cache.Answer " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type) << " <- "
-                                 << toAnswerString(answer->Msg->Answers));
+    LOGS_W("[dns] cache.Answer " << q.Name << q.Type << " <- " << amsg->Answers);
 
     return {answer, nil};
 }
 
 // store ...
 error cacheMap::store(Ref<Message> msg) {
-    if (msg == nil || msg->Header.RCode != dnsmessage::RCodeSuccess || len(msg->Questions) == 0) {
+    if (msg == nil || msg->Header.RCode != RCode::Success || len(msg->Questions) == 0) {
         return nil;
     }
 
-    auto key = makeCacheKey(msg->Questions[0]);
-    auto exp = time::Now().Add(time::Second * 300);
-
     auto& m = *this;
+    auto& q = msg->Questions[0];
+
+    auto key = makeCacheKey(q);
+    auto exp = time::Now().Add(time::Second * 300);
 
     m.mu.Lock();
     m.mem[key] = NewRef<cacheEntry>(msg, exp);
     m.mu.Unlock();
 
-    LOGS_W("[dns] cache.Store " << msg->Questions[0].Name << dnsmessage::TypeString(msg->Questions[0].Type) << " <- "
-                                << toAnswerString(msg->Answers));
+    LOGS_W("[dns] cache.Store " << q.Name << q.Type << " <- " << msg->Answers);
 
     return nil;
 }
@@ -159,37 +184,11 @@ void cacheMap::cleanUp() {
 
 static Ref<cacheMap> _cache(NewRef<cacheMap>());
 
-// OnRequest ...
-R<Ref<Message>, Ref<Answer>, error> OnRequest(bytez<> b) {
-    auto msg = NewRef<Message>();
-    auto err = msg->Unpack(b);
-    if (err) {
-        LOGS_E("[dns] err: " << err);
-        return {nil, nil, err};
-    }
+// cacheLoad ...
+R<Ref<Answer>, error> cacheLoad(Ref<Message> msg) { return _cache->load(msg); }
 
-    // LOGS_I("[dns] cache.Query: ");
-    AUTO_R(answ, _, _cache->load(msg));
-
-    return {msg, answ, nil};
-}
-
-// OnResponse ...
-R<Ref<Message>, error> OnResponse(bytez<> b) {
-    auto msg = NewRef<Message>();
-    auto err = msg->Unpack(b);
-    if (err) {
-        LOGS_E("[dns] err: " << err);
-        return {nil, err};
-    }
-
-    // if (len(msg->Questions) > 0) {
-    //     LOGS_W("[dns] cache.Store: " << msg->Questions[0].Name);
-    // }
-    err = _cache->store(msg);
-
-    return {msg, nil};
-}
+// cacheStore ...
+error cacheStore(Ref<Message> msg) { return _cache->store(msg); }
 
 }  // namespace dns
 }  // namespace nx

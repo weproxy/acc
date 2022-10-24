@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"weproxy/acc/libgo/logx"
@@ -197,13 +196,6 @@ func runServLoop(ln net.PacketConn) error {
 				continue
 			}
 
-			target := func() string {
-				if msg != nil && len(msg.Questions) > 0 {
-					return strings.TrimSuffix(msg.Questions[0].Name.String(), ".")
-				}
-				return ""
-			}()
-
 			// wrap as udpConn_t
 			rc := &udpConn_t{PacketConn: c}
 
@@ -217,6 +209,13 @@ func runServLoop(ln net.PacketConn) error {
 
 			// remove it after rc closed
 			sess.afterClosedFn = func() { delete(sessMap, key) }
+
+			target := func() string {
+				if msg != nil && len(msg.Questions) > 0 {
+					return msg.Questions[0].Name.String() + msg.Questions[0].Type.String()
+				}
+				return ""
+			}()
 
 			// start recv loop...
 			sess.Start(target)
