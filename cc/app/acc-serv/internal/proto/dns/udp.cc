@@ -107,7 +107,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     udpConn_t(net::PacketConn pc) : net::xx::packetConnWrap_t(pc) {}
 
     // ReadFrom ...
-    // readFrom target server, and writeTo source client
+    // readFrom target server, will writeTo source client
     virtual R<int, net::Addr, error> ReadFrom(bytez<> buf) override {
         // readFrom target server
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf));

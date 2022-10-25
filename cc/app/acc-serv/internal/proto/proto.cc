@@ -49,10 +49,8 @@ static error dnsSetFakeProvideFn() {
 
     // SetFakeProvideFn ...
     nx::dns::SetFakeProvideFn([](const string& domain, nx::dns::Type typ) -> stringz<> {
-        LOGS_D("domain: " << domain);
         AUTO_R(ss, ok, _fakes(domain));
         if (ok) {
-            LOGS_D("ss: " << ss);
             return ss;
         }
         return {};

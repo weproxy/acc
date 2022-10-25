@@ -120,25 +120,20 @@ type udpConn_t struct {
 }
 
 // ReadFrom override
-// readFrom target server, and pack data (to client)
+// readFrom target server, will writeTo source client
 func (m *udpConn_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 	n, addr, err = m.PacketConn.ReadFrom(buf)
-	if err != nil {
-		return
+	if err == nil {
+		// dns cache store
+		dns.OnResponse(buf[:n])
 	}
-
-	// cache store
-	dns.OnResponse(buf[:n])
-
 	return
 }
 
 // WriteTo override
-// unpack data (from source client), and writeTo target server
+// data from source client writeTo target server
 func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
-	n, err = m.PacketConn.WriteTo(buf, addr)
-
-	return
+	return m.PacketConn.WriteTo(buf, addr)
 }
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -172,11 +167,11 @@ func runServLoop(ln net.PacketConn) error {
 		// packet data
 		data := buf[:n]
 
-		// cache query
+		// dns cache query
 		msg, ans, err := dns.OnRequest(data)
-		if err == nil && ans != nil && ans.Msg != nil {
-			// cache answer
-			if b, err := ans.Msg.Pack(); err == nil {
+		if err == nil && ans != nil {
+			// dns cache answer
+			if b := ans.Bytes(); len(b) > 0 {
 				ln.WriteTo(b, caddr)
 				continue
 			}
