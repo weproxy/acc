@@ -13,7 +13,7 @@
 #include "nx/stats/stats.h"
 #include "s5.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace s5 {
 using namespace nx;
@@ -301,4 +301,4 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
 }  // namespace s5
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

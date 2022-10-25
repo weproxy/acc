@@ -6,7 +6,7 @@
 
 #include "../proto.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace dns {
 
@@ -20,4 +20,4 @@ R<proto::Server, error> New(const json::J& j);
 
 }  // namespace dns
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

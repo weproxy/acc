@@ -6,11 +6,11 @@
 
 #include "../def.h"
 
-namespace app {
+namespace internal {
 namespace core {
 
 // Main ...
 int Main(int argc, char* argv[]);
 
 }  // namespace core
-}  // namespace app
+}  // namespace internal

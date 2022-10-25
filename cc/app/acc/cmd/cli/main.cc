@@ -8,6 +8,7 @@
 #include "logx/logx.h"
 
 using namespace gx;
+using namespace internal;
 
 // main ...
 int main(int argc, char* argv[]) {
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]) {
     int r;
     sync::WaitGroup wg(1);
     gx::go([&]() {
-        r = app::core::Main(argc, argv);
+        r = core::Main(argc, argv);
         wg.Done();
     });
     wg.Wait();

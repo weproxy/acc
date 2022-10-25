@@ -7,7 +7,7 @@
 #include "logx/logx.h"
 #include "nx/dns/dns.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,4 +120,4 @@ void Deinit() {
 }
 
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

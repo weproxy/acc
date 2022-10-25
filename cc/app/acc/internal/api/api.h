@@ -6,8 +6,8 @@
 
 #include "../def.h"
 
-namespace app {
+namespace internal {
 namespace api {
 // ...
 }  // namespace api
-}  // namespace app
+}  // namespace internal

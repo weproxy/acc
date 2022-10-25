@@ -5,7 +5,7 @@
 #include "conf.h"
 #include "conf.json.h"
 
-namespace app {
+namespace internal {
 namespace conf {
 
 // ReadConfig ...
@@ -14,4 +14,4 @@ R<json::J, error> ReadConfig() {
 }
 
 }  // namespace conf
-}  // namespace app
+}  // namespace internal

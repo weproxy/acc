@@ -6,6 +6,6 @@
 
 #include "gx/gx.h"
 
-namespace app {
+namespace internal {
 using namespace gx;
-}  // namespace app
+}  // namespace internal

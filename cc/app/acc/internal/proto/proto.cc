@@ -9,7 +9,7 @@
 #include "logx/logx.h"
 #include "rule/rule.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,4 +126,4 @@ error Init() {
 void Deinit() { LOGS_D(TAG << " Deinit()"); }
 
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

@@ -4,10 +4,10 @@
 
 #include "conf.h"
 
-namespace app {
+namespace internal {
 namespace conf {
 
 // ...
 
 }  // namespace conf
-}  // namespace app
+}  // namespace internal

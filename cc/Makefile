@@ -2,6 +2,10 @@
 # weproxy@foxmail.com 2022/10/03
 #
 
+GOOS ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+GOARM ?= $(shell go env GOARM)
+
 app ?= acc
 cmd ?= cli
 arg ?=
@@ -14,6 +18,16 @@ ENV ?= ${env}
 
 ver ?= $(shell date "+%Y%m%d%H%M")
 VER ?= ${ver}
+
+ifeq (${GOOS},darwin)
+	GOOS=macosx
+endif
+
+ifeq (${GOARCH},amd64)
+	GOARCH=x86_64
+else ifeq (${GOARCH},386)
+	GOARCH=i386
+endif
 
 ifeq (${APP},${CMD})
 	NAME = ${APP}
@@ -43,7 +57,7 @@ check:
 pre: check
 
 config: check
-	xmake config -m ${ENV} --with_libcurl=n --fpic=y
+	xmake config -m ${ENV} -p ${GOOS} -a ${GOARCH} --with_libcurl=n --fpic=y
 
 build: pre config
 	xmake build

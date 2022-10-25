@@ -6,7 +6,7 @@
 
 #include "../proto.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace gaap {
 
@@ -20,4 +20,4 @@ R<proto::Handler, error> New(const string& servURL);
 
 }  // namespace gaap
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

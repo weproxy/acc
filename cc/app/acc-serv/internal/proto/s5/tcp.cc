@@ -11,7 +11,7 @@
 #include "nx/stats/stats.h"
 #include "s5.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace s5 {
 using namespace nx;
@@ -113,4 +113,4 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 
 }  // namespace s5
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

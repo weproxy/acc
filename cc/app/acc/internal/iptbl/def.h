@@ -6,7 +6,7 @@
 
 #include "../def.h"
 
-namespace app {
+namespace internal {
 namespace iptbl {
 
 // ProxyMode ...
@@ -70,11 +70,13 @@ inline const char* ToString(const FilterType e) {
 }
 
 }  // namespace iptbl
-}  // namespace app
+}  // namespace internal
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace std {
 // override ostream <<
-inline ostream& operator<<(ostream& o, const app::iptbl::ProxyMode v) { return o << app::iptbl::ToString(v); }
-inline ostream& operator<<(ostream& o, const app::iptbl::FilterType v) { return o << app::iptbl::ToString(v); }
+inline ostream& operator<<(ostream& o, const internal::iptbl::ProxyMode v) { return o << internal::iptbl::ToString(v); }
+inline ostream& operator<<(ostream& o, const internal::iptbl::FilterType v) {
+    return o << internal::iptbl::ToString(v);
+}
 }  // namespace std

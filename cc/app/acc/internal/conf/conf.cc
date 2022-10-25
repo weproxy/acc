@@ -6,7 +6,7 @@
 
 #include "gx/encoding/json/json.h"
 
-namespace app {
+namespace internal {
 namespace conf {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Auth, s5, ss)
@@ -42,4 +42,4 @@ R<Ref<Conf>, error> NewFromJSON(const string& jsonContent) {
 }
 
 }  // namespace conf
-}  // namespace app
+}  // namespace internal

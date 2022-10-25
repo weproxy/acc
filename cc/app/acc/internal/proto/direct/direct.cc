@@ -9,7 +9,7 @@
 #include "logx/logx.h"
 #include "nx/socks/socks.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace direct {
 using namespace nx;
@@ -55,4 +55,4 @@ static auto _ = [] {
 
 }  // namespace direct
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

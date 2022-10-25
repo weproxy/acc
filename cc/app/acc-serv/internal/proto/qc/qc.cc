@@ -8,7 +8,7 @@
 #include "gx/time/time.h"
 #include "logx/logx.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace qc {
 
@@ -45,4 +45,4 @@ static auto _ = [] {
 
 }  // namespace qc
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

@@ -8,7 +8,7 @@
 #include "htp.h"
 #include "logx/logx.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace htp {
 
@@ -17,4 +17,4 @@ error handleProxy(net::Conn c, bytez<> hdr) { return gx_TodoErr(); }
 
 }  // namespace htp
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

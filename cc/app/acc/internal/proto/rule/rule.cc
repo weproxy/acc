@@ -4,7 +4,7 @@
 
 #include "rule.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace rule {
 
@@ -31,4 +31,4 @@ R<string, error> GetDNSRule(const string& host, net::Addr addr) {
 
 }  // namespace rule
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

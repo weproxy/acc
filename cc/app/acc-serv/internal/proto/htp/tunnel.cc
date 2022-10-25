@@ -12,7 +12,7 @@
 #include "nx/netio/netio.h"
 #include "nx/stats/stats.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace htp {
 using namespace nx;
@@ -120,4 +120,4 @@ error handleTunnel(net::Conn c, bytez<> hdr) {
 
 }  // namespace htp
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

@@ -6,7 +6,7 @@
 
 #include "gx/fmt/fmt.h"
 
-namespace app {
+namespace internal {
 namespace server {
 
 // Start ...
@@ -21,4 +21,4 @@ R<io::Closer, error> Start() {
 }
 
 }  // namespace server
-}  // namespace app
+}  // namespace internal

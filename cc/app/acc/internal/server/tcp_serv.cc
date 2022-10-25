@@ -5,7 +5,7 @@
 #include "gx/io/io.h"
 #include "server.h"
 
-namespace app {
+namespace internal {
 namespace server {
 
 // tcpServer ...
@@ -14,4 +14,4 @@ struct tcpServer : public io::xx::closer_t {
 };
 
 }  // namespace server
-}  // namespace app
+}  // namespace internal

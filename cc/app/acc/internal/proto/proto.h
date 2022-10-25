@@ -7,7 +7,7 @@
 #include "../def.h"
 #include "nx/stack/stack.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 using nx::stack::Handler;
 using nx::stack::handler_t;
@@ -35,4 +35,4 @@ error Init();
 void Deinit();
 
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

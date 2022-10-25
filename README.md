@@ -73,7 +73,7 @@ cmd=serv make run
 
 #include "../proto.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace s5 {
 
@@ -87,7 +87,7 @@ R<proto::Server, error> New(const json::J& j);
 
 }  // namespace s5
 }  // namespace proto
-}  // namespace app
+}  // namespace internal
 ```
 
 * s5.cc
@@ -104,7 +104,7 @@ R<proto::Server, error> New(const json::J& j);
 #include "logx/logx.h"
 #include "nx/socks/socks.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace s5 {
 using namespace nx;
@@ -322,7 +322,7 @@ static auto _ = [] {
 
 }  // namespace s5
 }  // namespace proto
-}  // namespace app
+}  // namespace internal
 ```
 
 * tcp.cc
@@ -341,7 +341,7 @@ static auto _ = [] {
 #include "nx/stats/stats.h"
 #include "s5.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace s5 {
 using namespace nx;
@@ -443,7 +443,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
 
 }  // namespace s5
 }  // namespace proto
-}  // namespace app
+}  // namespace internal
 ```
 
 

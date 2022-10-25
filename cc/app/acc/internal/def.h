@@ -6,9 +6,9 @@
 
 #include "gx/gx.h"
 
-#define NS_APP_BEG namespace app {
+#define NS_APP_BEG namespace internal {
 #define NS_APP_END }
 
-namespace app {
+namespace internal {
 using namespace gx;
-}  // namespace app
+}  // namespace internal

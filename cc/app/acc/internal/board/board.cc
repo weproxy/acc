@@ -4,8 +4,8 @@
 
 #include "board.h"
 
-namespace app {
+namespace internal {
 namespace board {
 // ...
 }  // namespace board
-}  // namespace app
+}  // namespace internal

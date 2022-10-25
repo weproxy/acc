@@ -22,6 +22,14 @@ if is_mode("debug") then
 end
 
 if is_plat("windows") then
+    add_defines("build_tag_windows")
+elseif is_plat("linux") then
+    add_defines("build_tag_linux")
+elseif is_plat("darwin") then
+    add_defines("build_tag_darwin")
+end
+
+if is_plat("windows") then
     set_optimize("fastest")  -- faster: -O2  fastest: -Ox  none: -O0
     add_cxflags("/EHsc")
     add_ldflags("/SAFESEH:NO")

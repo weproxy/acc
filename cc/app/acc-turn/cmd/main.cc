@@ -8,35 +8,17 @@
 #include "logx/logx.h"
 
 using namespace gx;
-
-// #define _GXR_SET_V_(v) LOGS_D("_GXR_SET_V_")
-// #define _GXR_SET_Vx(v) LOGS_D("_GXR_SET_Vx")
-
-// #define GET_MACRO_(v, x1, x2) #v[0] == '_' ? x1 : x2
-// #define GET_MACRO(v, x1, x2) GET_MACRO_(v, x1, x2)
-
-// #define _SET_V(v) _GX_EXPAND(GET_MACRO(v, _GXR_SET_V_, _GXR_SET_Vx))(v)
+using namespace internal;
 
 // main ...
 int main(int argc, char* argv[]) {
     LOGX_I("[main] ...");
     DEFER(LOGX_I("[main] exit"));
 
-#if 0
-    extern void unitest_run();
-    {
-        // LOGS_D("_GXR_SET_V(\"_\") =" << _SET_V(_));
-        _SET_V(a_b);
-
-        // unitest_run();
-        return 0;
-    }
-#endif
-
     int r;
     sync::WaitGroup wg(1);
     gx::go([&]() {
-        r = app::core::Main(argc, argv);
+        r = core::Main(argc, argv);
         wg.Done();
     });
     wg.Wait();

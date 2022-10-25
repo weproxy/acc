@@ -4,11 +4,11 @@
 
 #include "spec.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace spec {
 // ...
 
 }  // namespace spec
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

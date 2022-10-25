@@ -4,8 +4,8 @@
 
 #include "server.h"
 
-namespace app {
+namespace internal {
 namespace server {
 // ...
 }  // namespace server
-}  // namespace app
+}  // namespace internal

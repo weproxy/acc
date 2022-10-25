@@ -8,7 +8,7 @@
 #include "gx/time/time.h"
 #include "logx/logx.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace dns {
 
@@ -75,4 +75,4 @@ static auto _ = [] {
 
 }  // namespace dns
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

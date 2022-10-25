@@ -6,7 +6,7 @@
 
 #include "../proto.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace spec {
 
@@ -16,4 +16,4 @@ constexpr const char* TAG = "[spec]";
 
 }  // namespace spec
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

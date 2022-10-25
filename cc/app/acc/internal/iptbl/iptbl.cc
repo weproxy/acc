@@ -4,8 +4,8 @@
 
 #include "iptbl.h"
 
-namespace app {
+namespace internal {
 namespace iptbl {
 
 }  // namespace iptbl
-}  // namespace app
+}  // namespace internal

@@ -13,7 +13,7 @@
 #include "internal/server/server.h"
 #include "logx/logx.h"
 
-namespace app {
+namespace internal {
 namespace core {
 
 // // global ...
@@ -130,4 +130,4 @@ int Main(int argc, char* argv[]) {
 }
 
 }  // namespace core
-}  // namespace app
+}  // namespace internal

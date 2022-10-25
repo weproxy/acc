@@ -6,7 +6,7 @@
 
 #include "../proto.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace qc {
 
@@ -20,4 +20,4 @@ R<proto::Server, error> New(const json::J& j);
 
 }  // namespace qc
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

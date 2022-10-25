@@ -8,7 +8,7 @@
 #include "nx/socks/socks.h"
 #include "ss.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace ss {
 using namespace nx;
@@ -27,4 +27,4 @@ error handleUDP(net::PacketConn pc, net::Addr caddr, const bytez<> buf) {
 
 }  // namespace ss
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

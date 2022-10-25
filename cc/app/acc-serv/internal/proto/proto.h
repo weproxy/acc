@@ -8,7 +8,7 @@
 #include "gx/encoding/json/json.h"
 #include "gx/io/io.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,4 +41,4 @@ error Init(const json::J& j);
 void Deinit();
 
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

@@ -11,7 +11,7 @@
 #include "nx/netio/netio.h"
 #include "nx/stats/stats.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace dns {
 using namespace nx;
@@ -236,4 +236,4 @@ error runServLoop(net::PacketConn ln) {
 
 }  // namespace dns
 }  // namespace proto
-}  // namespace app
+}  // namespace internal

@@ -9,7 +9,7 @@
 #include "internal/proto/proto.h"
 #include "logx/logx.h"
 
-namespace app {
+namespace internal {
 namespace core {
 
 // Main ...
@@ -37,4 +37,4 @@ int Main(int argc, char* argv[]) {
 }
 
 }  // namespace core
-}  // namespace app
+}  // namespace internal

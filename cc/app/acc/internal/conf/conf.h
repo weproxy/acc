@@ -6,7 +6,7 @@
 
 #include "../def.h"
 
-namespace app {
+namespace internal {
 namespace conf {
 
 // Auth ...
@@ -60,4 +60,4 @@ R<Ref<Conf>, error> NewFromJSON(const string& jsonContent);
 Ref<Conf> Default();
 
 }  // namespace conf
-}  // namespace app
+}  // namespace internal

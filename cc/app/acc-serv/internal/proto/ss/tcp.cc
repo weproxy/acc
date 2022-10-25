@@ -10,7 +10,7 @@
 #include "nx/stats/stats.h"
 #include "ss.h"
 
-namespace app {
+namespace internal {
 namespace proto {
 namespace ss {
 using namespace nx;
@@ -52,4 +52,4 @@ error handleTCP(net::Conn c, net::Addr raddr) {
 
 }  // namespace ss
 }  // namespace proto
-}  // namespace app
+}  // namespace internal
