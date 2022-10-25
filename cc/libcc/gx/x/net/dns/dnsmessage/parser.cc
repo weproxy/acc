@@ -199,7 +199,7 @@ R<int, error> header::unpack(bytez<> msg, int off) {
 
     return {newOff, nil};
 }
-} // namespace xx
+}  // namespace xx
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -241,7 +241,8 @@ __Loop:
                 name = append(name, msg(currOff, endOff));
                 name = append(name, '.');
                 currOff = endOff;
-            } break;
+                break;
+            }
             case 0xC0: {  // Pointer
                 if (!allowCompression) {
                     return {off, xx::errCompressedSRV};
@@ -260,7 +261,8 @@ __Loop:
                     return {off, xx::errTooManyPtr};
                 }
                 currOff = (c ^ 0xC0) << 8 | int(c1);
-            } break;
+                break;
+            }
             default:
                 // Prefixes 0x80 and 0x40 are reserved.
                 return {off, xx::errReserved};
@@ -342,15 +344,6 @@ R<Ref<TXTResource>, error> unpackTXTResource(bytez<> msg, int off, uint16 length
         ret->TXT = append(ret->TXT, t);
     }
 
-    return {ret, nil};
-}
-
-R<Ref<AResource>, error> unpackAResource(bytez<> msg, int off) {
-    auto ret = NewRef<AResource>();
-    AUTO_R(_, err, unpackBytes(msg, off, ret->A(0, -1)));
-    if (err != nil) {
-        return {nil, err};
-    }
     return {ret, nil};
 }
 
@@ -454,6 +447,15 @@ R<Ref<SRVResource>, error> unpackSRVResource(bytez<> msg, int off) {
     return {ret, nil};
 }
 
+R<Ref<AResource>, error> unpackAResource(bytez<> msg, int off) {
+    auto ret = NewRef<AResource>();
+    AUTO_R(_, err, unpackBytes(msg, off, ret->A(0, -1)));
+    if (err != nil) {
+        return {nil, err};
+    }
+    return {ret, nil};
+}
+
 R<Ref<AAAAResource>, error> unpackAAAAResource(bytez<> msg, int off) {
     auto ret = NewRef<AAAAResource>();
     AUTO_R(_, err, unpackBytes(msg, off, ret->AAAA(0, -1)));
@@ -499,7 +501,7 @@ R<Ref<UnknownResource>, error> unpackUnknownResource(Type recordType, bytez<> ms
     return {parsed, nil};
 }
 
-R<string, Ref<ResourceBody>, error> _unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr) {
+R<string, ResourceBody, error> _unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr) {
     switch (hdr.Type) {
         case Type::A: {
             AUTO_R(rb, er, unpackAResource(msg, off));
@@ -548,7 +550,7 @@ R<string, Ref<ResourceBody>, error> _unpackResourceBody(bytez<> msg, int off, Re
     }
 }
 
-R<Ref<ResourceBody>, int, error> unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr) {
+R<ResourceBody, int, error> unpackResourceBody(bytez<> msg, int off, ResourceHeader hdr) {
     AUTO_R(name, r, err, _unpackResourceBody(msg, off, hdr));
     if (err != nil) {
         return {nil, off, xx::nestedError(name + " record", err)};

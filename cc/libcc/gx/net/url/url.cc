@@ -259,7 +259,7 @@ string Values::Encode() const {
         return "";
     }
     strings::Builder buf;
-    slice<string> keys = make<string>(0, len(map_));
+    stringz<> keys = make<string>(0, len(map_));
     for (auto& kv : *map_) {
         keys = append(keys, kv.first);
     }

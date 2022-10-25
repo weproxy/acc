@@ -6,7 +6,6 @@ package dns
 
 import (
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -49,6 +48,13 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 
 	logx.I("[dns] cache.Query %v%v", q.Name, q.Type)
 
+	// check if fake provide
+	answer, err = MakeFakeAnswerMsg(msg, nil)
+	if err == nil && answer != nil && answer.Msg != nil {
+		logx.W("[dns] cache.FakeAnswer %v%v <- %s", q.Name, q.Type, toAnswerString(answer.Msg.Answers))
+		return answer, nil
+	}
+
 	key := makeCacheKey(q)
 
 	m.mu.Lock()
@@ -68,15 +74,8 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 	amsg.Header.ID = msg.Header.ID
 	amsg.Header.Response = true
 
-	data, err := amsg.Pack()
-	if err != nil {
-		return nil, err
-	}
-
 	answer = &Answer{
-		Msg:  amsg,
-		Name: strings.TrimSuffix(q.Name.String(), "."),
-		Data: data,
+		Msg: amsg,
 	}
 
 	logx.W("[dns] cache.Answer %v%v <- %v", q.Name, q.Type, toAnswerString(answer.Msg.Answers))
@@ -90,9 +89,9 @@ func (m *cacheMap) store(msg *dnsmessage.Message) (err error) {
 		return
 	}
 
-	q := msg.Questions[0]
+	q := &msg.Questions[0]
 
-	key := makeCacheKey(&q)
+	key := makeCacheKey(q)
 	exp := time.Now().Add(time.Second * 300)
 
 	m.mu.Lock()

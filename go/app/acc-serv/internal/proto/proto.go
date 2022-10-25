@@ -7,7 +7,10 @@ package proto
 import (
 	"encoding/json"
 
+	"golang.org/x/net/dns/dnsmessage"
+
 	"weproxy/acc/libgo/logx"
+	"weproxy/acc/libgo/nx/dns"
 )
 
 // TAG ...
@@ -34,9 +37,44 @@ func Register(proto string, fn NewServerFn) {
 	_protos[proto] = fn
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// _fakes
+var _fakes = make(map[string] /*domain*/ []string /*ips*/)
+
+// dnsSetFakeProvideFn ...
+func dnsSetFakeProvideFn() error {
+	// load fakes...
+	err := func() error {
+		// TODO...
+		_fakes["fake.weproxy.test"] = []string{"1.2.3.4", "5.6.7.8"}
+		return nil
+	}()
+	if err != nil {
+		logx.E("%s load dns fakes, err: %v", TAG, err)
+		return err
+	}
+
+	// SetFakeProvideFn ...
+	dns.SetFakeProvideFn(func(domain string, typ dnsmessage.Type) []string {
+		ss, ok := _fakes[domain]
+		if ok {
+			return ss
+		}
+		return nil
+	})
+
+	return nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Init ..
 func Init(servers []json.RawMessage) error {
 	logx.D("%v Init()", TAG)
+
+	// dns SetFakeProvideFn ...
+	dnsSetFakeProvideFn()
 
 	for _, j := range servers {
 		var s struct {

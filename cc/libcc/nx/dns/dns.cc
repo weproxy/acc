@@ -21,7 +21,7 @@ const error ErrQueryHited = errors::New("hited");
 namespace xx {
 // ToString ...
 string ToString(slice<Resource> arr) {
-    slice<string> answs;
+    stringz<> answs;
 
     for (int i = 0; i < len(arr); i++) {
         auto ans = arr[i];
@@ -58,6 +58,37 @@ extern R<Ref<Answer>, error> cacheLoad(Ref<Message> msg);
 
 // cacheStore ...
 extern error cacheStore(Ref<Message> msg);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Name ...
+string Answer::Name() const {
+    if (Msg && len(Msg->Questions) > 0) {
+        return strings::TrimRight(Msg->Questions[0].Name.String(), ".");
+    }
+    return "";
+}
+
+// Type ...
+Type Answer::Type() const {
+    if (Msg && len(Msg->Questions) > 0) {
+        return Msg->Questions[0].Type;
+    }
+    return Type::A;
+}
+
+// Bytes ...
+bytez<> Answer::Bytes() const {
+    if (Msg) {
+        AUTO_R(b, err, Msg->Pack());
+        if (err == nil) {
+            return b;
+        }
+    }
+    return {};
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // OnRequest ...
 R<Ref<Message>, Ref<Answer>, error> OnRequest(bytez<> b) {

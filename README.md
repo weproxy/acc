@@ -6,35 +6,34 @@
 
 Cross-platform network proxy programe
 
-A game accelerator on Linux/OSX/Windows, iOS/Android, router hardward
+A game accelerator on Linux/OSX/Windows, iOS/Android, and router hardwards
 
 
 
 ### /cc/
 
-* by C++，use coost
+* by C++，use [coost](https://github.com/idealvin/coost) and other libraries
 * use <= C++11 only, to compatible with some low version hardware toolchains
 * coding c++ like golang
 * TODO...
 
 
 
-| dir       |              |                           |
+| dir       | func | desc |
 | ---------- | ------------ | ------------------------- |
 | libcc/gx   | likes golang | g = golag                 |
 | libcc/fx   | functions       | f = func                  |
 | libcc/nx   | network       | n = net                   |
-| libcc/logx | logger       |                           |
+| libcc/logx | logger       | log |
 | libcc/3rd  | third-party     | coost、nlohmann_json... |
-|            |              |                           |
-|            |              |                           |
+| - |              |                           |
 
-| dir         |                |      |
+| dir         | func | desc |
 | ------------ | -------------- | ---- |
-| app/acc      | client     |      |
+| app/acc      | client     | - |
 | app/acc-serv | server     |      |
 | app/acc-turn | control-relay server |      |
-|              |                |      |
+| - |                |      |
 
 
 

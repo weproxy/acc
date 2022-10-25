@@ -63,7 +63,13 @@ static R<bytez<>, error> packText(bytez<> msg, const string& field) {
 }
 
 // packBytes appends the wire format of field to msg.
-static bytez<> packBytes(bytez<> msg, bytez<> field) { return append(msg, field); }
+static bytez<> packBytes(bytez<> msg, bytez<> field) {
+    // for (int i = 0; i < len(field); i++) {
+    //     msg = append(msg, field[i]);
+    // }
+    // return msg;
+    return append(msg, field);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +77,7 @@ static bytez<> packBytes(bytez<> msg, bytez<> field) { return append(msg, field)
 R<uint16, uint16> Header::pack() {
     auto& m = *this;
     uint16 id = m.ID;
-    uint16 bits = uint16(m.OpCode) << 11 | uint16(m.RCode);
+    uint16 bits = (uint16(m.OpCode) << 11) | uint16(m.RCode);
     if (m.RecursionAvailable) {
         bits |= headerBitRA;
     }
@@ -144,29 +150,31 @@ xx::packResult Name::pack(bytez<> msg, map<string, int> compression, int compres
 
     // Allow root domain.
     if (n.Data[0] == '.' && n.Length == 1) {
-        return {append(msg, 0), nil};
+        return {append(msg, byte(0)), nil};
     }
 
     // Emit sequence of counted strings, chopping at dots.
+    auto nData = n.Data(0, n.Length);
+    // println("nData =", nData);
     for (int i = 0, begin = 0; i < int(n.Length); i++) {
         // Check for the end of the segment.
-        if (n.Data[i] == '.') {
+        if (nData[i] == '.') {
             // The two most significant bits have special meaning.
             // It isn't allowed for segments to be long enough to
             // need them.
-            if (i - begin >= 1 << 6) {
+            if ((i - begin) >= (1 << 6)) {
                 return {oldMsg, xx::errSegTooLong};
             }
 
             // Segments must have a non-zero length.
-            if (i - begin == 0) {
+            if ((i - begin) == 0) {
                 return {oldMsg, xx::errZeroSegLen};
             }
 
             msg = append(msg, byte(i - begin));
 
             for (int j = begin; j < i; j++) {
-                msg = append(msg, n.Data[j]);
+                msg = append(msg, nData[j]);
             }
 
             begin = i + 1;
@@ -176,8 +184,9 @@ xx::packResult Name::pack(bytez<> msg, map<string, int> compression, int compres
         // We can only compress domain suffixes starting with a new
         // segment. A pointer is two bytes with the two most significant
         // bits set to 1 to indicate that it is a pointer.
-        if ((i == 0 || n.Data[i - 1] == '.') && compression.size() > 0) {
-            AUTO_R(ptr, ok, compression(string(n.Data(i))));
+        if ((i == 0 || nData[i - 1] == '.') && compression) {
+            auto s = string(nData(i));
+            AUTO_R(ptr, ok, compression(s));
             if (ok) {
                 // Hit. Emit a pointer instead of the rest of
                 // the domain.
@@ -186,18 +195,18 @@ xx::packResult Name::pack(bytez<> msg, map<string, int> compression, int compres
 
             // Miss. Add the suffix to the compression table if the
             // offset can be stored in the available 14 bytes.
-            if (len(msg) <= int(uint16(0xffff) >> 2)) {
-                auto b = n.Data(i);
-                auto s = string((char*)b.data(), len(b));
+            if (len(msg) <= int(maxUint16 >> 2)) {
                 compression[s] = len(msg) - compressionOff;
             }
         }
     }
-    return {append(msg, 0), nil};
+    return {append(msg, byte(0)), nil};
 }
 
-R<bytez<> /*msg*/, int /*lenOff*/, error /*err*/> ResourceHeader::pack(bytez<> oldMsg, map<string, int> compression,
-                                                                       int compressionOff) {
+// pack appends the wire format of the ResourceHeader to oldMsg.
+//
+// lenOff is the offset in msg where the Length field was packed.
+R<bytez<>, int, error> ResourceHeader::pack(bytez<> oldMsg, map<string, int> compression, int compressionOff) {
     auto& h = *this;
     AUTO_R(msg, err, h.Name.pack(oldMsg, compression, compressionOff));
     if (err != nil) {
@@ -211,6 +220,12 @@ R<bytez<> /*msg*/, int /*lenOff*/, error /*err*/> ResourceHeader::pack(bytez<> o
     return {msg, lenOff, nil};
 }
 
+// fixLen updates a packed ResourceHeader to include the length of the
+// ResourceBody.
+//
+// lenOff is the offset of the ResourceHeader.Length field in msg.
+//
+// preLen is the length that msg was before the ResourceBody was packed.
 error ResourceHeader::fixLen(bytez<> msg, int lenOff, int preLen) {
     auto& h = *this;
     int conLen = len(msg) - preLen;
@@ -223,6 +238,18 @@ error ResourceHeader::fixLen(bytez<> msg, int lenOff, int preLen) {
     h.Length = uint16(conLen);
 
     return nil;
+}
+
+xx::packResult CNAMEResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    return CNAME.pack(msg, compression, compressionOff);
+}
+
+xx::packResult NSResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    return NS.pack(msg, compression, compressionOff);
+}
+
+xx::packResult PTRResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
+    return PTR.pack(msg, compression, compressionOff);
 }
 
 xx::packResult MXResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
@@ -282,12 +309,15 @@ xx::packResult SRVResource::pack(bytez<> msg, map<string, int> compression, int 
 
 xx::packResult AResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
     auto& r = *this;
-    return {packBytes(msg, r.A(0, -1)), nil};
+    // println("[dns] AResource::pack() len1 =", len(msg));
+    msg = packBytes(msg, r.A);
+    // println("[dns] AResource::pack() len2 =", len(msg));
+    return {msg, nil};
 }
 
 xx::packResult AAAAResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
     auto& r = *this;
-    return {packBytes(msg, r.AAAA(0, -1)), nil};
+    return {packBytes(msg, r.AAAA), nil};
 }
 
 xx::packResult OPTResource::pack(bytez<> msg, map<string, int> compression, int compressionOff) {
@@ -394,7 +424,7 @@ R<bytez<>, error> Message::AppendPack(bytez<> b) {
     // DNS messages can be a maximum of 512 bytes long. Without compression,
     // many DNS response messages are over this limit, so enabling
     // compression will help ensure compliance.
-    map<string, int> compression;
+    auto compression = makemap<string, int>();
 
     for (int i = 0; i < len(m.Questions); i++) {
         AUTO_R(_msg, _err, m.Questions[i].pack(msg, compression, compressionOff));
@@ -505,7 +535,7 @@ error Builder::Question(dnsmessage::Question q) {
 }
 
 // addResourceBody adds a single ResourceBody.
-error Builder::addResourceBody(ResourceHeader& h, dnsmessage::ResourceBody* r, const char* name) {
+error Builder::addResourceBody(ResourceHeader& h, resourceBody_t* r, const char* name) {
     auto& b = *this;
     auto err = b.checkResourceSection();
     if (err != nil) {

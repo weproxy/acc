@@ -71,7 +71,7 @@ func (m *udpSess_t) Close() error {
 // Start ...
 func (m *udpSess_t) Start(target string) {
 	tag := fmt.Sprintf("%s DNS_%v %v->%s", TAG, nx.NewID(), m.caddr, target)
-	sta := stats.NewUDPStats(stats.TypeS5, tag)
+	sta := stats.NewUDPStats(stats.TypeDNS, tag)
 
 	sta.Start("started")
 	m.sta = sta
@@ -174,10 +174,12 @@ func runServLoop(ln net.PacketConn) error {
 
 		// cache query
 		msg, ans, err := dns.OnRequest(data)
-		if err == nil && ans != nil && len(ans.Data) > 0 {
+		if err == nil && ans != nil && ans.Msg != nil {
 			// cache answer
-			ln.WriteTo(ans.Data, caddr)
-			continue
+			if b, err := ans.Msg.Pack(); err == nil {
+				ln.WriteTo(b, caddr)
+				continue
+			}
 		}
 
 		// lookfor or create sess

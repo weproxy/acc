@@ -12,6 +12,7 @@ namespace app {
 namespace proto {
 namespace dns {
 
+////////////////////////////////////////////////////////////////////////////////
 // runServLoop ...
 extern error runServLoop(net::PacketConn ln);
 

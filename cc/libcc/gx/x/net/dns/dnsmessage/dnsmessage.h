@@ -123,41 +123,6 @@ error nestedError(const string& s, const error err);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// A Name is a non-encoded domain name. It is used instead of strings to avoid
-// allocations.
-struct Name {
-    bytez<> Data{make(xx::nameLen)};  // 255 bytes
-    uint8 Length{0};
-
-    // pack appends the wire format of the Name to msg.
-    //
-    // Domain names are a sequence of counted strings split at the dots. They end
-    // with a zero-length string. Compression can be used to reuse domain suffixes.
-    //
-    // The compression map will be updated with new domain suffixes. If compression
-    // is nil, compression will not be used.
-    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
-
-    // unpack unpacks a domain name.
-    R<int, error> unpack(bytez<> msg, int off) { return unpackCompressed(msg, off, true /* allowCompression */); }
-
-    // unpack unpacks a domain name.
-    R<int, error> unpackCompressed(bytez<> msg, int off, bool allowCompression);
-
-    // String ...
-    string String() const { return string(Data(0, Length)); }
-};
-
-// A Question is a DNS query.
-struct Question {
-    Name Name;
-    Type Type;
-    Class Class;
-
-    // pack appends the wire format of the Question to msg.
-    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
-};
-
 namespace xx {
 using section = uint8;
 const section sectionNotStarted = 0;
@@ -204,7 +169,7 @@ struct header {
 }  // namespace xx
 
 // A ResourceBody is a DNS resource record minus the header.
-struct ResourceBody {
+struct resourceBody_t {
     // pack packs a Resource except for its header.
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) = 0;
 
@@ -216,6 +181,8 @@ struct ResourceBody {
     // virtual string GoString() = 0;
 };
 
+using ResourceBody = Ref<resourceBody_t>;
+
 namespace xx {
 // EDNS(0) wire constants.
 const int edns0Version = 0;
@@ -224,6 +191,41 @@ const int edns0DNSSECOK = 0x00008000;
 const int ednsVersionMask = 0x00ff0000;
 const int edns0DNSSECOKMask = 0x00ff8000;
 }  // namespace xx
+
+// A Name is a non-encoded domain name. It is used instead of strings to avoid
+// allocations.
+struct Name {
+    bytez<> Data{make(xx::nameLen)};  // 255 bytes
+    uint8 Length{0};
+
+    // pack appends the wire format of the Name to msg.
+    //
+    // Domain names are a sequence of counted strings split at the dots. They end
+    // with a zero-length string. Compression can be used to reuse domain suffixes.
+    //
+    // The compression map will be updated with new domain suffixes. If compression
+    // is nil, compression will not be used.
+    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
+
+    // unpack unpacks a domain name.
+    R<int, error> unpack(bytez<> msg, int off) { return unpackCompressed(msg, off, true /* allowCompression */); }
+
+    // unpack unpacks a domain name.
+    R<int, error> unpackCompressed(bytez<> msg, int off, bool allowCompression);
+
+    // String ...
+    string String() const { return string(Data(0, Length)); }
+};
+
+// A Question is a DNS query.
+struct Question {
+    Name Name;
+    Type Type;
+    Class Class;
+
+    // pack appends the wire format of the Question to msg.
+    xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
+};
 
 // A ResourceHeader is the header of a DNS resource record. There are
 // many types of DNS resource records, but they all share the same header.
@@ -250,11 +252,20 @@ struct ResourceHeader {
     // This field will be set automatically during packing.
     uint16 Length{0};
 
+    // pack appends the wire format of the ResourceHeader to oldMsg.
+    //
+    // lenOff is the offset in msg where the Length field was packed.
     R<bytez<> /*msg*/, int /*lenOff*/, error /*err*/> pack(bytez<> oldMsg, map<string, int> compression,
                                                            int compressionOff);
 
     R<int, error> unpack(bytez<> msg, int off);
 
+    // fixLen updates a packed ResourceHeader to include the length of the
+    // ResourceBody.
+    //
+    // lenOff is the offset of the ResourceHeader.Length field in msg.
+    //
+    // preLen is the length that msg was before the ResourceBody was packed.
     error fixLen(bytez<> msg, int lenOff, int preLen);
 
     // SetEDNS0 configures h for EDNS(0).
@@ -296,24 +307,22 @@ struct ResourceHeader {
 // A Resource is a DNS resource record.
 struct Resource {
     ResourceHeader Header;
-    Ref<ResourceBody> Body;
+    ResourceBody Body;
 
     // pack appends the wire format of the Resource to msg.
     xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff);
 };
 
 // A CNAMEResource is a CNAME Resource record.
-struct CNAMEResource : public ResourceBody {
+struct CNAMEResource : public resourceBody_t {
     Name CNAME;
 
     virtual Type realType() override { return Type::CNAME; }
-    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
-        return CNAME.pack(msg, compression, compressionOff);
-    }
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
 // An MXResource is an MX Resource record.
-struct MXResource : public ResourceBody {
+struct MXResource : public resourceBody_t {
     uint16 Pref{0};
     Name MX;
 
@@ -322,27 +331,23 @@ struct MXResource : public ResourceBody {
 };
 
 // An NSResource is an NS Resource record.
-struct NSResource : public ResourceBody {
+struct NSResource : public resourceBody_t {
     Name NS;
 
     virtual Type realType() override { return Type::NS; }
-    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
-        return NS.pack(msg, compression, compressionOff);
-    }
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
 // A PTRResource is a PTR Resource record.
-struct PTRResource : public ResourceBody {
+struct PTRResource : public resourceBody_t {
     Name PTR;
 
     virtual Type realType() override { return Type::PTR; }
-    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override {
-        return PTR.pack(msg, compression, compressionOff);
-    }
+    virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
 // An SOAResource is an SOA Resource record.
-struct SOAResource : public ResourceBody {
+struct SOAResource : public resourceBody_t {
     Name NS;
     Name MBox;
     uint32 Serial{0};
@@ -360,15 +365,15 @@ struct SOAResource : public ResourceBody {
 };
 
 // A TXTResource is a TXT Resource record.
-struct TXTResource : public ResourceBody {
-    slice<string> TXT;
+struct TXTResource : public resourceBody_t {
+    stringz<> TXT;
 
     virtual Type realType() override { return Type::TXT; }
     virtual xx::packResult pack(bytez<> msg, map<string, int> compression, int compressionOff) override;
 };
 
 // An SRVResource is an SRV Resource record.
-struct SRVResource : public ResourceBody {
+struct SRVResource : public resourceBody_t {
     uint16 Priority{0};
     uint16 Weight{0};
     uint16 Port{0};
@@ -379,7 +384,7 @@ struct SRVResource : public ResourceBody {
 };
 
 // An AResource is an A Resource record.
-struct AResource : public ResourceBody {
+struct AResource : public resourceBody_t {
     bytez<> A{make(4)};
 
     virtual Type realType() override { return Type::A; }
@@ -387,7 +392,7 @@ struct AResource : public ResourceBody {
 };
 
 // An AAAAResource is an AAAA Resource record.
-struct AAAAResource : public ResourceBody {
+struct AAAAResource : public resourceBody_t {
     bytez<> AAAA{make(16)};
 
     virtual Type realType() override { return Type::AAAA; }
@@ -407,7 +412,7 @@ struct Option {
 //
 // The pseudo resource record is part of the extension mechanisms for DNS
 // as defined in RFC 6891.
-struct OPTResource : public ResourceBody {
+struct OPTResource : public resourceBody_t {
     slice<Option> Options;
 
     virtual Type realType() override { return Type::OPT; }
@@ -415,7 +420,7 @@ struct OPTResource : public ResourceBody {
 };
 
 // An UnknownResource is a catch-all container for unknown record types.
-struct UnknownResource : public ResourceBody {
+struct UnknownResource : public resourceBody_t {
     dnsmessage::Type Type;
     bytez<> Data;
 
@@ -706,7 +711,7 @@ struct Builder {
     }
 
     // addResourceBody adds a single ResourceBody.
-    error addResourceBody(ResourceHeader& h, dnsmessage::ResourceBody* r, const char* name);
+    error addResourceBody(ResourceHeader& h, resourceBody_t* r, const char* name);
 
     // Question adds a single Question.
     error Question(dnsmessage::Question q);

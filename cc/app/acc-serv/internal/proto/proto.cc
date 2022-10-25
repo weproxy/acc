@@ -5,6 +5,7 @@
 #include "proto.h"
 
 #include "logx/logx.h"
+#include "nx/dns/dns.h"
 
 namespace app {
 namespace proto {
@@ -29,9 +30,44 @@ void Register(const string& proto, const NewServerFn& fn) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// dnsSetFakeProvideFn ...
+static error dnsSetFakeProvideFn() {
+    // _fakes
+    static auto _fakes = makemap<string /*domain*/, stringz<> /*ips*/>();
+
+    // load fakes...
+    auto err = []() -> error {
+        // TODO...
+        _fakes[string("fake.weproxy.test")] = {"1.2.3.4", "5.6.7.8"};
+        return nil;
+    }();
+    if (err) {
+        LOGS_E(TAG << " load dns fakes, err: " << err);
+        return err;
+    }
+
+    // SetFakeProvideFn ...
+    nx::dns::SetFakeProvideFn([](const string& domain, nx::dns::Type typ) -> stringz<> {
+        LOGS_D("domain: " << domain);
+        AUTO_R(ss, ok, _fakes(domain));
+        if (ok) {
+            LOGS_D("ss: " << ss);
+            return ss;
+        }
+        return {};
+    });
+
+    return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Init ..
 error Init(const json::J& js) {
     LOGS_D(TAG << " Init()");
+
+    // dns SetFakeProvideFn ...
+    dnsSetFakeProvideFn();
 
     if (!js.is_array()) {
         return errors::New("config empty");

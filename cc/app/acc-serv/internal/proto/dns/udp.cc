@@ -71,7 +71,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         gx::go([thiz] {
             DEFER(thiz->Close());
 
-            netio::CopyOption opt(time::Minute * 5, 0);
+            netio::CopyOption opt(time::Second * 10, 0);
             opt.WriteAddr = thiz->caddr_;
             opt.MaxTimes = 1;  // read 1 packet then close
             opt.ReadTimeout = time::Second * 5;
@@ -172,10 +172,13 @@ error runServLoop(net::PacketConn ln) {
 
         // cache query
         AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
-        if (!erx && ans && len(ans->Data) > 0) {
+        if (!erx && ans) {
             // cache answer
-            ln->WriteTo(ans->Data, caddr);
-            continue;
+            auto b = ans->Bytes();
+            if (len(b) > 0) {
+                ln->WriteTo(b, caddr);
+                continue;
+            }
         }
 
         // lookfor or create sess

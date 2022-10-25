@@ -149,6 +149,10 @@ struct slice {
 template <typename T = byte>
 using bytez = slice<T>;
 
+// stringz ...
+template <typename T = string>
+using stringz = slice<T>;
+
 ////////////////////////////////////////////////////////////////////////////////
 // append ...
 namespace xx {
@@ -156,32 +160,15 @@ template <typename T>
 inline void append(slice<T>&) {}
 
 // append ...
-template <typename T = byte, typename... X>
-void append(slice<T>& dst, const slice<T>& src, X&&... x) {
-    if (len(src) > 0) {
-        dst.vec_->insert(dst.vec_->begin() + dst.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
-        dst.end_ += len(src);
-    }
-    append(dst, std::forward<X>(x)...);
-}
-
-// append ...
-template <typename T = byte, typename... X>
-void append(slice<T>& dst, slice<T>&& src, X&&... x) {
-    if (len(src) > 0) {
-        dst.vec_->insert(dst.vec_->begin() + dst.end_, src.vec_->begin() + src.beg_, src.vec_->begin() + src.end_);
-        dst.end_ += len(src);
-    }
-    append(dst, std::forward<X>(x)...);
-}
-
 template <typename T = byte, typename V = byte, typename... X>
 void append(slice<T>& dst, V&& v, X&&... x) {
-    auto it = dst.vec_->begin() + dst.end_;
-    if (it < dst.vec_->end()) {
+    // std::cout << "slice::append(v)" << std::endl;
+    auto& vec = dst.vec_;
+    auto it = vec->begin() + dst.end_;
+    if (it < vec->end()) {
         *it = std::forward<V>(v);
     } else {
-        dst.vec_->insert(it, std::forward<V>(v));
+        vec->insert(it, std::forward<V>(v));
     }
     dst.end_++;
     append(dst, std::forward<X>(x)...);
@@ -189,6 +176,7 @@ void append(slice<T>& dst, V&& v, X&&... x) {
 
 template <typename T = byte, typename... X>
 void append(slice<T>& dst, X&&... x) {
+    // std::cout << "slice::append(...)" << std::endl;
     append(dst, std::forward<X>(x)...);
 }
 }  // namespace xx
@@ -229,10 +217,25 @@ inline bytez<> append(const bytez<>& dst, const string& src) {
 
 // append ...
 template <typename T = byte, typename... X>
-slice<T> append(const slice<T>& dst, X&&... x) {
+slice<T> append(const slice<T>& dst, const slice<T>& src) {
     slice<T> s(dst);
-    if (sizeof...(x) > 0) {
+    if (len(src) > 0) {
         s._create_if_null();
+        for (int i = 0; i < len(src); i++) {
+            s.vec_->insert(s.vec_->begin() + s.end_ + i, src[i]);
+        }
+        s.end_ += len(src);
+    }
+    return s;
+}
+
+// append ...
+template <typename T = byte, typename V = byte, typename... X>
+slice<T> append(const slice<T>& dst, const V& v, X&&... x) {
+    slice<T> s(dst);
+    s._create_if_null();
+    xx::append(s, v);
+    if (sizeof...(x) > 0) {
         xx::append<T>(s, std::forward<X>(x)...);
     }
     return s;

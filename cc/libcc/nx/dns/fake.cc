@@ -4,27 +4,42 @@
 
 #include "dns.h"
 #include "gx/net/net.h"
+#include "gx/strings/strings.h"
 
 namespace nx {
 namespace dns {
 
-// MakeAnswer ...
-R<Ref<Message>, error> MakeAnswer(const bytez<> msg, slice<string> answerIPs) {
+// _FakeProvideFn ...
+static FakeProvideFn _FakeProvideFn;
+
+// SetFakeProvideFn ...
+void SetFakeProvideFn(const FakeProvideFn& fn) { _FakeProvideFn = fn; }
+
+// MakeFakeAnswer ...
+// if provideFn is nil, use global fn set by SetFakeProvideFn()
+R<Ref<Answer>, error> MakeFakeAnswer(const bytez<> msg, const FakeProvideFn& provideFn) {
     Message m;
     auto err = m.Unpack(msg);
     if (err) {
         return {nil, err};
     }
-    return MakeAnswer(&m, answerIPs);
+    return MakeFakeAnswer(&m, provideFn);
 }
 
-// MakeAnswer ...
-R<Ref<Message>, error> MakeAnswer(const Message* msg, slice<string> answerIPs) {
-    if (!msg || len(msg->Questions) == 0) {
-        return {nil, errors::New("invalid msg")};
+// MakeFakeAnswer ...
+// if provideFn is nil, use global fn set by SetFakeProvideFn()
+R<Ref<Answer>, error> MakeFakeAnswer(const Message* msg, const FakeProvideFn& provideFn) {
+    if ((!provideFn && !_FakeProvideFn) || !msg || len(msg->Questions) == 0) {
+        return {nil, errors::New("invalid param")};
     }
 
     auto& q = msg->Questions[0];
+
+    auto name = strings::TrimSuffix(q.Name.String(), ".");
+    auto ansIPs = provideFn ? provideFn(name, q.Type) : _FakeProvideFn(name, q.Type);
+    if (len(ansIPs) == 0) {
+        return {nil, errors::New("no answer IPs")};
+    }
 
     auto newMsg = NewRef<Message>();
 
@@ -33,8 +48,8 @@ R<Ref<Message>, error> MakeAnswer(const Message* msg, slice<string> answerIPs) {
     newMsg->Additionals = nil;
     newMsg->Header.Response = true;
 
-    for (int i = 0; i < len(answerIPs); i++) {
-        auto ip = net::ParseIP(answerIPs[i]);
+    for (int i = 0; i < len(ansIPs); i++) {
+        auto ip = net::ParseIP(ansIPs[i]);
         if (!ip) {
             continue;
         }
@@ -71,27 +86,16 @@ R<Ref<Message>, error> MakeAnswer(const Message* msg, slice<string> answerIPs) {
         }
     }
 
+    if (len(newMsg->Answers) == 0) {
+        return {nil, errors::New("no answer IPs")};
+    }
+
+    auto answer = NewRef<Answer>();
+    answer->Msg = newMsg;
+
     // println("len(newMsg->Answers) =", len(newMsg->Answers));
 
-    return {newMsg, nil};
-}
-
-// MakeAnswerBytes ...
-R<bytez<>, error> MakeAnswerBytes(const bytez<> msg, slice<string> answerIPs) {
-    AUTO_R(newMsg, err, MakeAnswer(msg, answerIPs));
-    if (err) {
-        return {nil, err};
-    }
-    return newMsg->Pack();
-}
-
-// MakeAnswerBytes ...
-R<bytez<>, error> MakeAnswerBytes(const Message* msg, slice<string> answerIPs) {
-    AUTO_R(newMsg, err, MakeAnswer(msg, answerIPs));
-    if (err) {
-        return {nil, err};
-    }
-    return newMsg->Pack();
+    return {answer, nil};
 }
 
 }  // namespace dns

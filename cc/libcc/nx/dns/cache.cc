@@ -65,30 +65,12 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
 
     LOGS_I("[dns] cache.Query " << q.Name << q.Type);
 
-#if 0
-    {
-        AUTO_R(amsg, _er1, MakeAnswer(msg.get(), {"1.2.3.4", "2.2.2.2"}));
-        if (_er1) {
-            LOGS_E("[dns] cache.MakeAnswer(), err: " << _er1);
-            return {nil, _er1};
-        }
-        AUTO_R(data, _er2, amsg->Pack());
-        if (_er2) {
-            LOGS_E("[dns] cache.Messagge.Pack(), err: " << _er2);
-            return {nil, _er2};
-        }
-
-        auto answer = NewRef<Answer>();
-        answer->Msg = amsg;
-        answer->Name = strings::TrimSuffix(q.Name.String(), ".");
-        answer->Data = data;
-
-        // time::Sleep(time::Millisecond * 5);
-        LOGS_W("[dns] cache.FakeAnswer " << q.Name << q.Type << " <- " << amsg->Answers);
-
+    // check if fake provide
+    AUTO_R(answer, err, MakeFakeAnswer(msg.get(), nil));
+    if (!err && answer && answer->Msg) {
+        LOGS_W("[dns] cache.FakeAnswer " << q.Name << q.Type << " <- " << answer->Msg->Answers);
         return {answer, nil};
     }
-#endif
 
     auto key = makeCacheKey(q);
 
@@ -109,16 +91,8 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
     amsg->Header.ID = msg->Header.ID;
     amsg->Header.Response = true;
 
-    AUTO_R(data, err, amsg->Pack());
-    if (err != nil) {
-        LOGS_E("[dns] Pack err: " << err);
-        return {nil, err};
-    }
-
-    auto answer = NewRef<Answer>();
+    answer = NewRef<Answer>();
     answer->Msg = amsg;
-    answer->Name = strings::TrimSuffix(q.Name.String(), ".");
-    answer->Data = data;
 
     LOGS_W("[dns] cache.Answer " << q.Name << q.Type << " <- " << amsg->Answers);
 

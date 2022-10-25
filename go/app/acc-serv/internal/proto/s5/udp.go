@@ -13,6 +13,7 @@ import (
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx"
+	"weproxy/acc/libgo/nx/dns"
 	"weproxy/acc/libgo/nx/netio"
 	"weproxy/acc/libgo/nx/socks"
 	"weproxy/acc/libgo/nx/stats"
@@ -142,6 +143,11 @@ func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
 		return n, addr, err
 	}
 
+	// dns cache store
+	if addr, ok := addr.(*net.UDPAddr); ok && addr.Port == 53 {
+		dns.OnResponse(buf[pos : pos+n])
+	}
+
 	// pack data
 
 	raddr := socks.FromNetAddr(addr)
@@ -228,6 +234,34 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 
 		// packet data
 		data := buf[:n]
+
+		// dns cache query
+		if caddr, ok := caddr.(*net.UDPAddr); ok && caddr.Port == 53 && len(data) > 10 {
+			_, ans, erx := dns.OnRequest(data)
+			if erx == nil && ans != nil {
+				// cache answer
+				if b := ans.Bytes(); len(b) > 0 {
+					buf[0] = 0 // RSV
+					buf[1] = 0 //
+					buf[2] = 0 // FRAG
+
+					off := 3
+					switch socks.AddrType(buf[3]) {
+					case socks.AddrTypeIPv4:
+						off += 1 + 4 + 2
+					case socks.AddrTypeIPv6:
+						off += 1 + 16 + 2
+					case socks.AddrTypeDomain:
+						off += 1 + 1 + int(buf[4]) + 2
+					default:
+						continue
+					}
+					copy(buf[off:], b)
+					ln.WriteTo(buf[:off+len(b)], caddr)
+					continue
+				}
+			}
+		}
 
 		// lookfor or create sess
 		var sess *udpSess_t

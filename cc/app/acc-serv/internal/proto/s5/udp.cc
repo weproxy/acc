@@ -3,10 +3,11 @@
 //
 
 #include "fx/fx.h"
+#include "gx/encoding/binary/binary.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
-#include "gx/encoding/binary/binary.h"
 #include "logx/logx.h"
+#include "nx/dns/dns.h"
 #include "nx/netio/netio.h"
 #include "nx/socks/socks.h"
 #include "nx/stats/stats.h"
@@ -23,7 +24,7 @@ typedef uint64 key_t;
 
 // makeKey ...
 static key_t makeKey(net::IP ip, uint16 port) {
-    uint64 a = (uint64)binary::LittleEndian.Uint32(ip.B); // ipv4
+    uint64 a = (uint64)binary::LittleEndian.Uint32(ip.B);  // ipv4
     uint64 b = (uint64)port;
     return a << 16 | b;
 }
@@ -128,6 +129,11 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
             return {n, addr, err};
         }
 
+        // dns cache store
+        if (addr->Port == 53) {
+            dns::OnResponse(buf(pos, pos + n));
+        }
+
         // pack data
 
         auto raddr = socks::FromNetAddr(addr);
@@ -168,6 +174,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 
         // writeTo target server
         int pos = 3 + len(raddr->B);
+
         AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
         if (er2) {
             return {n, er2};
@@ -220,6 +227,34 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
 
         // packet data
         auto data = buf(0, n);
+
+        // dns cache query
+        if (caddr->Port == 53 && len(data) > 10) {
+            AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
+            if (!erx && ans) {
+                // cache answer
+                auto b = ans->Bytes();
+                if (len(b) > 0) {
+                    buf[0] = 0;  // RSV
+                    buf[1] = 0;  //
+                    buf[2] = 0;  // FRAG
+
+                    int off = 3;
+                    if (buf[3] == byte(socks::AddrType::IPv4)) {
+                        off += 1 + 4 + 2;
+                    } else if (buf[3] == byte(socks::AddrType::IPv6)) {
+                        off += 1 + 16 + 2;
+                    } else if (buf[3] == byte(socks::AddrType::Domain)) {
+                        off += 1 + 1 + buf[4] + 2;
+                    } else {
+                        continue;
+                    }
+                    copy(buf(off), b);
+                    ln->WriteTo(buf(0, off + len(b)), caddr);
+                    continue;
+                }
+            }
+        }
 
         // lookfor or create sess
         Ref<udpSess_t> sess;

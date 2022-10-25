@@ -12,7 +12,7 @@
 
 ### /cc/
 
-* C++ 版，使用 coost 协程库
+* C++ 版，使用 [coost](https://github.com/idealvin/coost) 协程库及其它
 * 仅采用 C++11，尽量兼容各交叉编译 toolchain，因为它们大多仅支持到这一标准
 * 用 C++ 模拟 Golang 语法
 * TODO...

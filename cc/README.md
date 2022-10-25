@@ -8,7 +8,7 @@
 
 * C++ library like Golang
 
-| Golang                                                       | C++                                                          | 说明                             |
+| Golang                                                       | C++                                                          | Desc                          |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------- |
 | error                                                        | error                                                        | error                            |
 | nil                                                          | nil                                                          | nullptr                          |
@@ -18,6 +18,7 @@
 | []T                                                          | slice\<T\>                                                   | slice                            |
 | []*T                                                         | slice\<Ref\<T\>\>                                            | slice                            |
 | []byte                                                       | bytez\<\>                                                    | byte slice                       |
+| []string                                                       | stringz\<\>                                                    | string slice                       |
 | B[m:n], B[m:], B[:n], B[:]                                   | B(m, n), B(m), B(0,n), B(0,-1)                               | slice                            |
 | len(a), cap(a)                                               | len(a), cap(a)                                               | len, cap                         |
 | make([]T, len, cap)                                          | make\<T\>(len, cap)                                          | make                             |
@@ -27,13 +28,14 @@
 | defer expr                                                   | DEFER(expr)                                                  | defer                            |
 | map[K]V                                                      | map\<K, V\>                                                  | map                              |
 | chan T                                                       | chan\<T\>                                                    | chan                             |
-| \<More\> ...                                                 | ...                                                          | ...                              |
-|                                                              |                                                              |                                  |
+| \<more\> ...                                                 | ...                                                          | ...                              |
+| - | - | - |
 | net.Conn, net.PacketConn                                     | net::Conn, net::PacketConn                                   | net lib                          |
 | strings.Index                                                | strings::Index                                               | strings lib                      |
-| \<More\> ...                                                 | ...                                                          | ...                              |
-|                                                              |                                                              |                                  |
+| \<more\> ...                                                 | ...                                                          | ...                              |
+| - | - | - |
 | print, println, panic                                        | print, println, panic                                        | func                             |
+| - | - | - |
 
 
 

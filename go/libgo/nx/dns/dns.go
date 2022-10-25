@@ -21,16 +21,46 @@ var (
 	ErrQueryHited    = errors.New("hited")
 )
 
+////////////////////////////////////////////////////////////////////////////////
+
 var (
 	_cache = newCacheMap()
 )
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Answer ...
 type Answer struct {
-	Name string
-	Data []byte
-	Msg  *dnsmessage.Message
+	Msg *dnsmessage.Message
 }
+
+// Name ...
+func (m *Answer) Name() string {
+	if m.Msg != nil && len(m.Msg.Questions) > 0 {
+		return strings.TrimSuffix(m.Msg.Questions[0].Name.String(), ".")
+	}
+	return ""
+}
+
+// Bytes ...
+func (m *Answer) Type() dnsmessage.Type {
+	if m.Msg != nil && len(m.Msg.Questions) > 0 {
+		return m.Msg.Questions[0].Type
+	}
+	return dnsmessage.TypeA
+}
+
+// Bytes ...
+func (m *Answer) Bytes() []byte {
+	if m.Msg != nil {
+		if b, err := m.Msg.Pack(); err == nil {
+			return b
+		}
+	}
+	return nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // OnRequest ...
 func OnRequest(b []byte) (msg *dnsmessage.Message, answer *Answer, err error) {
@@ -52,6 +82,8 @@ func OnResponse(b []byte) (msg *dnsmessage.Message, err error) {
 	}
 	return
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // toAnswerString ...
 func toAnswerString(arr []dnsmessage.Resource) string {

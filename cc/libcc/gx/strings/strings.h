@@ -191,7 +191,7 @@ R<string /*before*/, string /*after*/, bool /*found*/> Cut(const string& s, cons
 // Fields splits the string s around each instance of one or more consecutive white space
 // characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
 // empty slice if s contains only white space.
-slice<string> Fields(const string& s);
+stringz<> Fields(const string& s);
 
 // FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
 // and returns an array of slices of s. If all code points in s satisfy f(c) or the
@@ -199,11 +199,11 @@ slice<string> Fields(const string& s);
 //
 // FieldsFunc makes no guarantees about the order in which it calls f(c)
 // and assumes that f always returns the same value for a given c.
-slice<string> FieldsFunc(const string& s, const func<bool(rune)>& f);
+stringz<> FieldsFunc(const string& s, const func<bool(rune)>& f);
 
 // Join concatenates the elements of its first argument to create a single string. The separator
 // string sep is placed between elements in the resulting string.
-string Join(slice<string> elems, const string& sep);
+string Join(stringz<> elems, const string& sep);
 
 }  // namespace strings
 }  // namespace gx

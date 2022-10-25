@@ -419,7 +419,7 @@ static auto _init_asciiSpace = [] {
 // Fields splits the string s around each instance of one or more consecutive white space
 // characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
 // empty slice if s contains only white space.
-slice<string> Fields(const string& s) {
+stringz<> Fields(const string& s) {
     // First count the fields.
     // This is an exact count if s is ASCII, otherwise it is an approximation.
     int n = 0;
@@ -439,7 +439,7 @@ slice<string> Fields(const string& s) {
         return {FieldsFunc(s, unicode::IsSpace)};
     }
     // ASCII fast path
-    slice<string> a = make<string>(n);
+    stringz<> a = make<string>(n);
     int na = 0;
     int fieldStart = 0;
     int i = 0;
@@ -474,7 +474,7 @@ slice<string> Fields(const string& s) {
 //
 // FieldsFunc makes no guarantees about the order in which it calls f(c)
 // and assumes that f always returns the same value for a given c.
-slice<string> FieldsFunc(const string& s, const func<bool(rune)>& f) {
+stringz<> FieldsFunc(const string& s, const func<bool(rune)>& f) {
     // A span is used to record a slice of s of the form s[start:end].
     // The start index is inclusive and the end index is exclusive.
     struct span {
@@ -525,7 +525,7 @@ slice<string> FieldsFunc(const string& s, const func<bool(rune)>& f) {
 
 // Join concatenates the elements of its first argument to create a single string. The separator
 // string sep is placed between elements in the resulting string.
-string Join(slice<string> elems, const string& sep) {
+string Join(stringz<> elems, const string& sep) {
     if (len(elems) == 0) {
         return "";
     } else if (len(elems) == 1) {

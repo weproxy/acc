@@ -61,7 +61,7 @@ void connT::calc() {
 
     for (int i = 0; i < xx::typeCount; i++) {
         Type typ = (Type)(int(Type::Direct) + i);
-        if (typ == Type::MAX || (arr[i].tcpTotal == 0 || arr[i].tcpTotal == 0)) {
+        if (typ == Type::MAX || (arr[i].tcpTotal == 0 && arr[i].udpTotal == 0)) {
             continue;
         }
 

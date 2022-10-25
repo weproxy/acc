@@ -30,7 +30,7 @@ extern const error ErrWriteAfterFlush;
 
 // Header ...
 struct Header : public url::Values {
-    slice<string> Values(const string& key) { return map_[key]; }
+    stringz<> Values(const string& key) { return map_[key]; }
 
     Header Clone() { return {}; }
 };
@@ -65,7 +65,7 @@ struct Request {
 
     int64 ContentLength{0};
 
-    slice<string> TransferEncoding;
+    stringz<> TransferEncoding;
 
     bool Close{false};
 

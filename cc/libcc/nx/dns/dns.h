@@ -16,11 +16,15 @@ extern const error ErrQueryDropped;
 extern const error ErrQueryFaked;
 extern const error ErrQueryHited;
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Answer ...
 struct Answer {
-    string Name;
-    bytez<> Data;
     Ref<Message> Msg;
+
+    string Name() const;
+    Type Type() const;
+    bytez<> Bytes() const;
 };
 
 // OnRequest ...
@@ -29,13 +33,17 @@ R<Ref<Message>, Ref<Answer>, error> OnRequest(bytez<> b);
 // OnResponse ...
 R<Ref<Message>, error> OnResponse(bytez<> b);
 
-// MakeAnswer
-R<Ref<Message>, error> MakeAnswer(const bytez<> msg, slice<string> answerIPs);
-R<Ref<Message>, error> MakeAnswer(const Message* msg, slice<string> answerIPs);
+////////////////////////////////////////////////////////////////////////////////
 
-// MakeAnswerBytes ...
-R<bytez<>, error> MakeAnswerBytes(const bytez<> msg, slice<string> answerIPs);
-R<bytez<>, error> MakeAnswerBytes(const Message* msg, slice<string> answerIPs);
+// FakeProvideFn ...
+using FakeProvideFn = func<stringz<>/*ips*/(const string&/*domain*/, Type/*typ*/)>;
+
+// SetFakeProvideFn ...
+void SetFakeProvideFn(const FakeProvideFn& fn);
+
+// MakeFakeAnswer
+R<Ref<Answer>, error> MakeFakeAnswer(const bytez<> msg, const FakeProvideFn& provideFn);
+R<Ref<Answer>, error> MakeFakeAnswer(const Message* msg, const FakeProvideFn& provideFn);
 
 namespace xx {
 // ToString ...

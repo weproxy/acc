@@ -28,7 +28,7 @@ struct Userinfo {
 // Values ...
 struct Values {
     using K = string;
-    using V = slice<string>;
+    using V = stringz<>;
 
     map<K, V> map_;
 
