@@ -5,9 +5,9 @@
 #include "core.h"
 
 #include "co/os.h"
+#include "fx/signal/signal.h"
 #include "gx/fmt/fmt.h"
 #include "gx/net/net.h"
-#include "gx/os/signal/signal.h"
 #include "internal/conf/conf.h"
 #include "internal/proto/proto.h"
 #include "internal/server/server.h"
@@ -123,7 +123,7 @@ int Main(int argc, char* argv[]) {
     test();
 
     // Wait for Ctrl+C or kill -x
-    signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,
+    fx::signal::WaitNotify([](int sig) { LOGS_W("[signal] got sig = " << sig); }, SIGINT /*ctrl+c*/, SIGQUIT /*kill -3*/,
                        SIGKILL /*kill -9*/, SIGTERM /*kill -15*/);
 
     return 0;

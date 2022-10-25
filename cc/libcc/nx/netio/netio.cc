@@ -4,6 +4,7 @@
 
 #include "netio.h"
 
+#include "gx/sync/sync.h"
 #include "gx/time/time.h"
 
 namespace nx {
@@ -64,7 +65,7 @@ R<size_t /*w*/, error> Copy(net::Conn w, net::Conn r, CopyOption opt) {
 //
 // Relay ...
 error Relay(net::Conn a, net::Conn b, RelayOption opt) {
-    WaitGroup wg(1);
+    sync::WaitGroup wg(1);
 
     error errA2B;
 
@@ -154,7 +155,7 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
 //
 // Relay ...
 error Relay(net::PacketConn a, net::PacketConn b, RelayOption opt) {
-    WaitGroup wg(1);
+    sync::WaitGroup wg(1);
 
     error errA2B;
 

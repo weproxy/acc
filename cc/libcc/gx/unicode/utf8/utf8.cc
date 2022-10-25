@@ -134,17 +134,17 @@ static bytez<> appendRuneNonASCII(const bytez<> p, rune r) {
     // Negative values are erroneous. Making it unsigned addresses the problem.
     uint32 i = uint32(r);
     if (i <= xx::rune2Max) {
-        return append(p, xx::t2 | byte(r >> 6), xx::tx | byte(r) & xx::maskx);
+        return append(p, byte(xx::t2 | byte(r >> 6)), byte(xx::tx | byte(r) & xx::maskx));
     } else {
         if (i > MaxRune || (xx::surrogateMin <= i && i <= xx::surrogateMax)) {
             r = RuneError;
         }
 
         if (i <= xx::rune3Max) {
-            return append(p, xx::t3 | byte(r >> 12), xx::tx | byte(r >> 6) & xx::maskx, xx::tx | byte(r) & xx::maskx);
+            return append(p, byte(xx::t3 | byte(r >> 12)), byte(xx::tx | byte(r >> 6) & xx::maskx), byte(xx::tx | byte(r) & xx::maskx));
         } else {
-            return append(p, xx::t4 | byte(r >> 18), xx::tx | byte(r >> 12) & xx::maskx,
-                          xx::tx | byte(r >> 6) & xx::maskx, xx::tx | byte(r) & xx::maskx);
+            return append(p, byte(xx::t4 | byte(r >> 18)), byte(xx::tx | byte(r >> 12) & xx::maskx),
+                          byte(xx::tx | byte(r >> 6) & xx::maskx), byte(xx::tx | byte(r) & xx::maskx));
         }
     }
 }

@@ -2,6 +2,7 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
+#include "gx/sync/sync.h"
 #include "gx/time/time.h"
 #include "internal/core/core.h"
 #include "logx/logx.h"
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]) {
     DEFER(LOGX_I("[main] exit"));
 
     int r;
-    WaitGroup wg(1);
+    sync::WaitGroup wg(1);
     gx::go([&]() {
         r = app::core::Main(argc, argv);
         wg.Done();

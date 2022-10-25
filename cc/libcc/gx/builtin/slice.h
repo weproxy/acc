@@ -216,7 +216,7 @@ inline bytez<> append(const bytez<>& dst, const string& src) {
 }
 
 // append ...
-template <typename T = byte, typename... X>
+template <typename T = byte>
 slice<T> append(const slice<T>& dst, const slice<T>& src) {
     slice<T> s(dst);
     if (len(src) > 0) {
