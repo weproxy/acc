@@ -91,7 +91,7 @@ func (m *udpSess_t) Start() {
 }
 
 // WriteToRC ...
-func (m *udpSess_t) WriteToRC(buf []byte) error {
+func (m *udpSess_t) WriteToRC(buf []byte, raddr net.Addr) error {
 	if m.rc == nil {
 		return net.ErrClosed
 	}
@@ -100,8 +100,8 @@ func (m *udpSess_t) WriteToRC(buf []byte) error {
 	m.sta.AddRecv(int64(len(buf)))
 
 	// udpConn_t.WriteTo()
-	// unpack data (from source client), and writeTo target server
-	_, err := m.rc.WriteTo(buf, nil)
+	// data (from source client), and writeTo target server
+	_, err := m.rc.WriteTo(buf, raddr)
 
 	return err
 }
@@ -149,52 +149,21 @@ func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
 	}
 
 	// pack data
-
-	raddr := socks.FromNetAddr(addr)
-	copy(buf[3:], raddr.B)
-
-	n += 3 + len(raddr.B)
-
 	buf[0] = 0 // RSV
 	buf[1] = 0 //
 	buf[2] = 0 // FRAG
+
+	raddr := socks.FromNetAddr(addr)
+	copy(buf[3:], raddr.B)
+	n += 3 + len(raddr.B)
 
 	return n, addr, nil
 }
 
 // WriteTo override
-// unpack data (from source client), and writeTo target server
-//
-// >>> REQ:
-//
-//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-//	+-----+------+------+----------+----------+------+
-//	|  2  |  1   |  1   |    ...   |    2     |  ... |
-func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (int, error) {
-	if len(buf) < 10 {
-		return 0, socks.ErrInvalidSocksVersion
-	}
-
-	// unpack data
-
-	raddr, err := socks.ParseAddr(buf[3:])
-	if err != nil {
-		return 0, err
-	}
-
-	m.typ = socks.AddrType(raddr.B[0])
-	if socks.AddrTypeIPv4 != m.typ && socks.AddrTypeIPv6 != m.typ {
-		return 0, socks.ErrInvalidAddrType
-	}
-
-	// writeTo target server
-	pos := 3 + len(raddr.B)
-	n, err := m.PacketConn.WriteTo(buf[pos:], raddr.ToUDPAddr())
-	if err != nil {
-		return n, err
-	}
-
-	return n + pos, nil
+// data (from source client), and writeTo target server
+func (m *udpConn_t) WriteTo(buf []byte, raddr net.Addr) (int, error) {
+	return m.PacketConn.WriteTo(buf, raddr)
 }
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -235,8 +204,21 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 		// packet data
 		data := buf[:n]
 
+		// >>> REQ:
+		//
+		//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
+		//	+-----+------+------+----------+----------+------+
+		//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+		saddr, err := socks.ParseAddr(data[3:])
+		if err != nil {
+			continue
+		}
+
+		raddr := saddr.ToUDPAddr()
+		data = data[3+len(saddr.B):]
+
 		// dns cache query
-		if caddr, ok := caddr.(*net.UDPAddr); ok && caddr.Port == 53 && len(data) > 10 {
+		if raddr.Port == 53 {
 			_, ans, erx := dns.OnRequest(data)
 			if erx == nil && ans != nil {
 				// cache answer
@@ -245,18 +227,9 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 					buf[1] = 0 //
 					buf[2] = 0 // FRAG
 
-					off := 3
-					switch socks.AddrType(buf[3]) {
-					case socks.AddrTypeIPv4:
-						off += 1 + 4 + 2
-					case socks.AddrTypeIPv6:
-						off += 1 + 16 + 2
-					case socks.AddrTypeDomain:
-						off += 1 + 1 + int(buf[4]) + 2
-					default:
-						continue
-					}
+					off := 3 + len(saddr.B)
 					copy(buf[off:], b)
+
 					ln.WriteTo(buf[:off+len(b)], caddr)
 					continue
 				}
@@ -300,7 +273,7 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 		}
 
 		// writeTo target server
-		err = sess.WriteToRC(data)
+		err = sess.WriteToRC(data, raddr)
 		if err != nil {
 			return err
 		}

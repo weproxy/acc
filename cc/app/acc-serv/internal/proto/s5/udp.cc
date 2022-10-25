@@ -83,7 +83,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    error WriteToRC(const bytez<> buf) {
+    error WriteToRC(const bytez<> buf, net::Addr raddr) {
         if (!rc_) {
             return net::ErrClosed;
         }
@@ -92,8 +92,8 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
         sta_->AddRecv(len(buf));
 
         // udpConn_t::WriteTo()
-        // unpack data (from source client), and writeTo target server
-        AUTO_R(_, err, rc_->WriteTo(buf, nil));
+        // data (from source client), and writeTo target server
+        AUTO_R(_, err, rc_->WriteTo(buf, raddr));
 
         return err;
     }
@@ -135,57 +135,27 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         }
 
         // pack data
-
-        auto raddr = socks::FromNetAddr(addr);
-        copy(buf(3), raddr->B);
-
-        n += 3 + len(raddr->B);
-
         buf[0] = 0;  // RSV
         buf[1] = 0;  //
         buf[2] = 0;  // FRAG
+
+        auto raddr = socks::FromNetAddr(addr);
+        copy(buf(3), raddr->B);
+        n += 3 + len(raddr->B);
 
         return {n, addr, nil};
     }
 
     // WriteTo ...
-    // unpack data (from source client), and writeTo target server
-    //
-    // >>> REQ:
-    //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-    //     +-----+------+------+----------+----------+------+
-    //     |  2  |  1   |  1   |    ...   |    2     |  ... |
-    virtual R<int, error> WriteTo(const bytez<> buf, net::Addr) override {
-        if (len(buf) < 10) {
-            return {0, socks::ErrInvalidSocksVersion};
-        }
-
-        // unpack data
-
-        AUTO_R(raddr, er1, socks::ParseAddr(buf(3)));
-        if (er1) {
-            return {0, er1};
-        }
-
-        typ_ = socks::AddrType(raddr->B[0]);
-        if (socks::AddrType::IPv4 != typ_ && socks::AddrType::IPv6 != typ_) {
-            return {0, socks::ErrInvalidAddrType};
-        }
-
+    // data (from source client), and writeTo target server
+    virtual R<int, error> WriteTo(const bytez<> buf, net::Addr raddr) override {
         // writeTo target server
-        int pos = 3 + len(raddr->B);
-
-        AUTO_R(n, er2, wrap_->WriteTo(buf(pos), raddr->ToNetAddr()));
-        if (er2) {
-            return {n, er2};
-        }
-
-        return {n + pos, nil};
+        return wrap_->WriteTo(buf, raddr);
     }
 
     // wrap ...
     static net::PacketConn wrap(net::PacketConn pc) {
-        //
+        // drap
         return NewRef<udpConn_t>(pc);
     }
 };
@@ -221,15 +191,28 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
                 LOGS_E(TAG << " err: " << err);
             }
             break;
-        } else if (n <= 0) {
+        } else if (n <= 10) {
             continue;
         }
 
         // packet data
         auto data = buf(0, n);
 
+        //
+        // >>> REQ:
+        //     | RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
+        //     +-----+------+------+----------+----------+------+
+        //     |  2  |  1   |  1   |    ...   |    2     |  ... |
+        AUTO_R(saddr, er1, socks::ParseAddr(data(3)));
+        if (er1) {
+            continue;
+        }
+
+        auto raddr = saddr->ToNetAddr();
+        data = data(3+len(saddr->B));
+
         // dns cache query
-        if (caddr->Port == 53 && len(data) > 10) {
+        if (raddr->Port == 53) {
             AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
             if (!erx && ans) {
                 // cache answer
@@ -239,17 +222,9 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
                     buf[1] = 0;  //
                     buf[2] = 0;  // FRAG
 
-                    int off = 3;
-                    if (buf[3] == byte(socks::AddrType::IPv4)) {
-                        off += 1 + 4 + 2;
-                    } else if (buf[3] == byte(socks::AddrType::IPv6)) {
-                        off += 1 + 16 + 2;
-                    } else if (buf[3] == byte(socks::AddrType::Domain)) {
-                        off += 1 + 1 + buf[4] + 2;
-                    } else {
-                        continue;
-                    }
+                    int off = len(saddr->B);
                     copy(buf(off), b);
+
                     ln->WriteTo(buf(0, off + len(b)), caddr);
                     continue;
                 }
@@ -290,7 +265,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         }
 
         // writeTo target server
-        err = sess->WriteToRC(data);
+        err = sess->WriteToRC(data, raddr);
         if (err) {
             return err;
         }

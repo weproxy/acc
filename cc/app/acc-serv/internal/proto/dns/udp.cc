@@ -111,29 +111,23 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
     virtual R<int, net::Addr, error> ReadFrom(bytez<> buf) override {
         // readFrom target server
         AUTO_R(n, addr, err, wrap_->ReadFrom(buf));
-        if (err) {
-            return {n, addr, err};
+        if (!err) {
+            // dns cache store
+            nx::dns::OnResponse(buf(0, n));
         }
-
-        // cache store
-        nx::dns::OnResponse(buf(0, n));
-
-        return {n, addr, nil};
+        return {n, addr, err};
     }
 
     // WriteTo ...
     // data from source client writeTo target server
     virtual R<int, error> WriteTo(const bytez<> buf, net::Addr raddr) override {
-        // TODO ... unpack DNS query packet
-
-        AUTO_R(n, err, wrap_->WriteTo(buf, raddr));
-
-        return {n, err};
+        // writeTo target server
+        return wrap_->WriteTo(buf, raddr);
     }
 
     // wrap ...
     static net::PacketConn wrap(net::PacketConn pc) {
-        //
+        // wrap
         return NewRef<udpConn_t>(pc);
     }
 };
@@ -170,10 +164,10 @@ error runServLoop(net::PacketConn ln) {
         // packet data
         auto data = buf(0, n);
 
-        // cache query
+        // dns cache query
         AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
         if (!erx && ans) {
-            // cache answer
+            // dns cache answer
             auto b = ans->Bytes();
             if (len(b) > 0) {
                 ln->WriteTo(b, caddr);
