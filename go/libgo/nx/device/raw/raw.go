@@ -2,7 +2,7 @@
 // weproxy@foxmail.com 2022/10/20
 //
 
-package wfp
+package eth
 
 import (
 	"errors"
@@ -14,12 +14,12 @@ import (
 
 // init ...
 func init() {
-	device.Register(device.TypeWFP, NewDevice)
+	device.Register(device.TypeRAW, NewDevice)
 }
 
 // NewDevice ...
 func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
-	return nil, errors.New("wfp.NewDevice() not impl")
+	return nil, errors.New("eth.NewDevice() not impl")
 }
 
 ////////////////////////////////////////////////////////////////////////////////

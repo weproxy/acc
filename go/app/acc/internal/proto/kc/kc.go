@@ -3,3 +3,5 @@
 //
 
 package kc
+
+const TAG = "[kc]"

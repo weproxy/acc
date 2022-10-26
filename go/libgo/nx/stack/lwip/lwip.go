@@ -12,7 +12,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Stack impl interface netstk.Stack
+// Stack implements netstk.Stack
 type Stack struct {
 	h   netstk.Handler
 	dev netstk.Device
@@ -33,5 +33,5 @@ func (m *Stack) Close() error {
 
 // NewStack ...
 func NewStack() (netstk.Stack, error) {
-	return &Stack{}, errors.New("not impl")
+	return &Stack{}, errors.New("lwip.NewStack() not impl")
 }

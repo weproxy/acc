@@ -3,3 +3,5 @@
 //
 
 package s5
+
+const TAG = "[s5]"

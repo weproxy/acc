@@ -3,3 +3,5 @@
 //
 
 package direct
+
+const TAG = "[direct]"

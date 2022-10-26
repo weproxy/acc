@@ -3,3 +3,5 @@
 //
 
 package spec
+
+const TAG = "[spec]"

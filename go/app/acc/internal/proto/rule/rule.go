@@ -3,3 +3,5 @@
 //
 
 package rule
+
+const TAG = "[rule]"

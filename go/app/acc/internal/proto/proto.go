@@ -7,10 +7,16 @@ package proto
 import (
 	"net"
 
+	"weproxy/acc/libgo/logx"
+	"weproxy/acc/libgo/nx/device"
+	_ "weproxy/acc/libgo/nx/device/mod"
 	"weproxy/acc/libgo/nx/stack"
 	"weproxy/acc/libgo/nx/stack/netstk"
 )
 
+const TAG = "proto"
+
+var _dev netstk.Device
 var _stk netstk.Stack
 
 // Init ...
@@ -20,17 +26,28 @@ func Init() error {
 		return err
 	}
 
-	_stk = stk
+	dev, err := device.NewDevice(device.TypeTUN, nil)
+	if err != nil {
+		return err
+	}
 
-	var dev netstk.Device
+	err = stk.Start(&Handler{}, dev, 1500)
+	if err != nil {
+		dev.Close()
+		return err
+	}
 
-	stk.Start(&Handler{}, dev, 1500)
+	_dev, _stk = dev, stk
 
 	return nil
 }
 
 // Deinit ...
 func Deinit() error {
+	if _dev != nil {
+		_dev.Close()
+		_dev = nil
+	}
 	if _stk != nil {
 		_stk.Close()
 		_stk = nil
@@ -48,11 +65,11 @@ func (m *Handler) Close() error {
 }
 
 // Handle TCP ...
-func (m *Handler) Handle(netstk.Conn, net.Addr) {
-
+func (m *Handler) Handle(c netstk.Conn, addr net.Addr) {
+	logx.D("%s Handle() addr=%v", addr)
 }
 
 // HandlePacket ...
-func (m *Handler) HandlePacket(netstk.PacketConn) {
-
+func (m *Handler) HandlePacket(pc netstk.PacketConn) {
+	logx.D("%s HandlePacket() addr=%v", pc.LocalAddr())
 }

@@ -3,3 +3,5 @@
 //
 
 package ss
+
+const TAG = "[ss]"

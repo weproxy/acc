@@ -3,3 +3,5 @@
 //
 
 package gaap
+
+const TAG = "[gaap]"

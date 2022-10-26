@@ -3,3 +3,5 @@
 //
 
 package qc
+
+const TAG = "[qc]"
