@@ -164,6 +164,8 @@ func runServLoop(ln net.PacketConn) error {
 			continue
 		}
 
+		logx.V("%s ReadFrom() %v", TAG, caddr)
+
 		// packet data
 		data := buf[:n]
 
@@ -220,7 +222,7 @@ func runServLoop(ln net.PacketConn) error {
 			sess = v
 		}
 
-		// DNS server
+		// target DNS server
 		raddr := &net.UDPAddr{IP: net.IPv4(223, 5, 5, 5), Port: 53}
 
 		// writeTo target server

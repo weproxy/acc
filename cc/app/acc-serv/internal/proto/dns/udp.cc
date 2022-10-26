@@ -215,7 +215,7 @@ error runServLoop(net::PacketConn ln) {
             sess = it->second;
         }
 
-        // use 8.8.8.8:53
+        // target DNS server
         static net::Addr raddr = net::MakeAddr(net::IPv4(223, 5, 5, 5), 53);
 
         // writeTo target server

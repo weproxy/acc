@@ -91,17 +91,16 @@ func (m *udpSess_t) Start() {
 }
 
 // WriteToRC ...
-func (m *udpSess_t) WriteToRC(buf []byte, raddr net.Addr) error {
+// unpackedBuf is from source client
+func (m *udpSess_t) WriteToRC(unpackedBuf []byte, raddr net.Addr) error {
 	if m.rc == nil {
 		return net.ErrClosed
 	}
 
-	// buf is from source client
-	m.sta.AddRecv(int64(len(buf)))
+	m.sta.AddRecv(int64(len(unpackedBuf)))
 
-	// udpConn_t.WriteTo()
-	// data (from source client), and writeTo target server
-	_, err := m.rc.WriteTo(buf, raddr)
+	// udpConn_t.WriteTo target server
+	_, err := m.rc.WriteTo(unpackedBuf, raddr)
 
 	return err
 }
@@ -149,21 +148,17 @@ func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
 	}
 
 	// pack data
-	buf[0] = 0 // RSV
-	buf[1] = 0 //
-	buf[2] = 0 // FRAG
-
 	raddr := socks.FromNetAddr(addr)
 	copy(buf[3:], raddr.B)
-	n += 3 + len(raddr.B)
+	buf[0], buf[1], buf[2] = 0, 0, 0 // RSV|FRAG
 
-	return n, addr, nil
+	return 3 + len(raddr.B) + n, addr, nil
 }
 
 // WriteTo override
-// data (from source client), and writeTo target server
-func (m *udpConn_t) WriteTo(buf []byte, raddr net.Addr) (int, error) {
-	return m.PacketConn.WriteTo(buf, raddr)
+// unpackedBuf from source client, and writeTo target server
+func (m *udpConn_t) WriteTo(unpackedBuf []byte, raddr net.Addr) (int, error) {
+	return m.PacketConn.WriteTo(unpackedBuf, raddr)
 }
 
 // //////////////////////////////////////////////////////////////////////////////
@@ -221,15 +216,11 @@ func handleUDP(ln net.PacketConn, caddr, raddr net.Addr) error {
 		if raddr.Port == 53 {
 			_, ans, erx := dns.OnRequest(data)
 			if erx == nil && ans != nil {
-				// cache answer
+				// dns cache answer
 				if b := ans.Bytes(); len(b) > 0 {
-					buf[0] = 0 // RSV
-					buf[1] = 0 //
-					buf[2] = 0 // FRAG
-
+					buf[0], buf[1], buf[2] = 0, 0, 0 // RSV|FRAG
 					off := 3 + len(saddr.B)
 					copy(buf[off:], b)
-
 					ln.WriteTo(buf[:off+len(b)], caddr)
 					continue
 				}

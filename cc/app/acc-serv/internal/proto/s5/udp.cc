@@ -83,17 +83,16 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
     }
 
     // WriteToRC ...
-    error WriteToRC(const bytez<> buf, net::Addr raddr) {
+    // unpackedBuf is from source client
+    error WriteToRC(const bytez<> unpackedBuf, net::Addr raddr) {
         if (!rc_) {
             return net::ErrClosed;
         }
 
-        // buf is from source client
-        sta_->AddRecv(len(buf));
+        sta_->AddRecv(len(unpackedBuf));
 
-        // udpConn_t::WriteTo()
-        // data (from source client), and writeTo target server
-        AUTO_R(_, err, rc_->WriteTo(buf, raddr));
+        // udpConn_t::WriteTo target server
+        AUTO_R(_, err, rc_->WriteTo(unpackedBuf, raddr));
 
         return err;
     }
@@ -135,27 +134,23 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
         }
 
         // pack data
-        buf[0] = 0;  // RSV
-        buf[1] = 0;  //
-        buf[2] = 0;  // FRAG
-
         auto raddr = socks::FromNetAddr(addr);
         copy(buf(3), raddr->B);
-        n += 3 + len(raddr->B);
+        buf[0] = buf[1] = buf[2] = 0;  // RSV|FRAG
 
-        return {n, addr, nil};
+        return {3 + len(raddr->B) + n, addr, nil};
     }
 
     // WriteTo ...
-    // data (from source client), and writeTo target server
-    virtual R<int, error> WriteTo(const bytez<> buf, net::Addr raddr) override {
+    // unpackedBuf from source client, and writeTo target server
+    virtual R<int, error> WriteTo(const bytez<> unpackedBuf, net::Addr raddr) override {
         // writeTo target server
-        return wrap_->WriteTo(buf, raddr);
+        return wrap_->WriteTo(unpackedBuf, raddr);
     }
 
     // wrap ...
     static net::PacketConn wrap(net::PacketConn pc) {
-        // drap
+        // wrap
         return NewRef<udpConn_t>(pc);
     }
 };
@@ -209,22 +204,18 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         }
 
         auto raddr = saddr->ToNetAddr();
-        data = data(3+len(saddr->B));
+        data = data(3 + len(saddr->B));
 
         // dns cache query
         if (raddr->Port == 53) {
             AUTO_R(msg, ans, erx, nx::dns::OnRequest(data));
             if (!erx && ans) {
-                // cache answer
+                // dns cache answer
                 auto b = ans->Bytes();
                 if (len(b) > 0) {
-                    buf[0] = 0;  // RSV
-                    buf[1] = 0;  //
-                    buf[2] = 0;  // FRAG
-
-                    int off = len(saddr->B);
+                    buf[0] = buf[1] = buf[2] = 0;  // RSV|FRAG
+                    int off = 3 + len(saddr->B);
                     copy(buf(off), b);
-
                     ln->WriteTo(buf(0, off + len(b)), caddr);
                     continue;
                 }

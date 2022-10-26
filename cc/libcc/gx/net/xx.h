@@ -34,45 +34,15 @@ typedef union {
 } AddrIn;
 
 // ToAddr ...
-inline Addr ToAddr(const AddrIn& addr) {
-    IP ip;
-    uint16 port = 0;
-    if (addr.v4.sin_family == AF_INET) {
-        ip.B = make(IPv4len);
-        copy(ip.B, &addr.v4.sin_addr.s_addr, IPv4len);
-        port = ntoh16(addr.v4.sin_port);
-    } else if (addr.v6.sin6_family == AF_INET6) {
-        ip.B = make(IPv6len);
-        copy(ip.B, &addr.v6.sin6_addr.__u6_addr, IPv6len);
-        port = ntoh16(addr.v6.sin6_port);
-    }
-    return MakeAddr(ip, port);
-}
+Addr ToAddr(const AddrIn& addr);
 
 // FromAddr ...
-inline R<AddrIn, int> FromAddr(Addr addr) {
-    AddrIn ain;
-    memset(&ain, 0, sizeof(ain));
-
-    auto ip4 = addr->IP.To4();
-    if (ip4) {
-        ain.v4.sin_family = AF_INET;
-        memcpy(&ain.v4.sin_addr.s_addr, ip4.B.data(), IPv4len);
-        ain.v4.sin_port = hton16(addr->Port);
-        return {ain, sizeof(ain.v4)};
-    } else {
-        auto ip6 = addr->IP.To16();
-        ain.v4.sin_family = AF_INET6;
-        memcpy(&ain.v6.sin6_addr.__u6_addr, ip6.B.data(), IPv6len);
-        ain.v6.sin6_port = hton16(addr->Port);
-        return {ain, sizeof(ain.v6)};
-    }
-}
+R<AddrIn, int> FromAddr(Addr addr);
 
 // GetAddrInfo ...
 R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, const string& port);
-inline R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, uint16 port) { return GetAddrInfo(host, GX_SS(port)); }
 R<Ref<AddrInfo>, error> GetAddrInfo(const string& addr);
+inline R<Ref<AddrInfo>, error> GetAddrInfo(const string& host, uint16 port) { return GetAddrInfo(host, GX_SS(port)); }
 
 // GetSockAddr ...
 Addr GetSockAddr(SOCKET fd);

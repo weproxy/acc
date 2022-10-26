@@ -170,7 +170,6 @@ func CopyPacket(w net.PacketConn, r net.PacketConn, opt CopyOption) (written int
 			// read MaxTimes packets then close
 			break
 		}
-
 	}
 
 	// println("io::Copy(", r, "->", w, ")", written, "bytes");

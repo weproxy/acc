@@ -12,8 +12,23 @@ namespace net {
 constexpr int IPv4len = 4;
 constexpr int IPv6len = 16;
 
+constexpr const char* hexDigit = "0123456789abcdef";
+
 ////////////////////////////////////////////////////////////////////////////////
 //
+
+// IPMask ...
+struct IPMask {
+    bytez<> B;
+
+    // Size returns the number of leading ones and total bits in the mask.
+    // If the mask is not in the canonical form--ones followed by zeros--then
+    // Size returns 0, 0.
+    R<int /*ones*/, int /*bits*/> Size() const;
+
+    // String returns the hexadecimal form of m, with no punctuation.
+    string String() const;
+};
 
 // IP ...
 struct IP final {
@@ -22,8 +37,6 @@ struct IP final {
     IP(const void* p = nil){};
     IP(const bytez<> b) : B(b) {}
     IP(const IP& ip) : B(ip.B) {}
-
-    uint8 len() const { return B.size(); }
 
     operator bool() const { return bool(B); }
 
@@ -77,21 +90,27 @@ struct IP final {
     // local IPv6 unicast address space.
     bool IsGlobalUnicast() const;
 
+    // To4 converts the IPv4 address ip to a 4-byte representation.
+    // If ip is not an IPv4 address, To4 returns nil.
     IP To4() const;
+
+    // To16 converts the IP address ip to a 16-byte representation.
+    // If ip is not an IP address (it is the wrong length), To16 returns nil.
     IP To16() const;
-};
 
-// IPMask ...
-struct IPMask {
-    bytez<> B;
+    // DefaultMask returns the default IP mask for the IP address ip.
+    // Only IPv4 addresses have default masks; DefaultMask returns
+    // nil if ip is not a valid IPv4 address.
+    IPMask DefaultMask() const;
 
-    string String();
+    // Mask returns the result of masking the IP address ip with mask.
+    IP Mask(IPMask mask);
 };
 
 // IPNet ...
 struct IPNet {
-    IP ip;
-    IPMask mask;
+    IP IP;
+    IPMask IPMask;
 
     string String();
 };
@@ -119,12 +138,36 @@ extern const IP IPv6linklocalallrouters;
 // IPv4 address a.b.c.d.
 IP IPv4(uint8 a, uint8 b, uint8 c, uint8 d);
 
+// makeIPv6 ...
+namespace xx {
+IP makeIPv6(uint8 a0, uint8 a1, uint8 a14, uint8 a15);
+}  // namespace xx
+
 // IPv4Mask returns the IP mask (in 4-byte form) of the
 // IPv4 mask a.b.c.d.
 IPMask IPv4Mask(uint8 a, uint8 b, uint8 c, uint8 d);
 
-// ParseIP ...
+// CIDRMask returns an IPMask consisting of 'ones' 1 bits
+// followed by 0s up to a total length of 'bits' bits.
+// For a mask of this form, CIDRMask is the inverse of IPMask.Size.
+IPMask CIDRMask(int ones, int bits);
+
+// ParseIP parses s as an IP address, returning the result.
+// The string s can be in IPv4 dotted decimal ("192.0.2.1"), IPv6
+// ("2001:db8::68"), or IPv4-mapped IPv6 ("::ffff:192.0.2.1") form.
+// If s is not a valid textual representation of an IP address,
+// ParseIP returns nil.
 IP ParseIP(const string& s);
+
+// ParseCIDR parses s as a CIDR notation IP address and prefix length,
+// like "192.0.2.0/24" or "2001:db8::/32", as defined in
+// RFC 4632 and RFC 4291.
+//
+// It returns the IP address and the network implied by the IP and
+// prefix length.
+// For example, ParseCIDR("192.0.2.1/24") returns the IP address
+// 192.0.2.1 and the network 192.0.2.0/24.
+R<IP, Ref<IPNet>, error> ParseCIDR(const string& s);
 
 }  // namespace net
 }  // namespace gx
