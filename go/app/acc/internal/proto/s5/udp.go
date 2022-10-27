@@ -85,7 +85,8 @@ func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
 	sta.Start("connecting...")
 	defer sta.Done("closed")
 
-	rc, bound, err := m.dial(socks.CmdAssociate, m.serv, raddr, sta)
+	// dial server
+	rc, bound, err := m.dial(socks.CmdAssociate, raddr, sta)
 	if err != nil {
 		logx.E("%s err: %v", tag, err)
 		return

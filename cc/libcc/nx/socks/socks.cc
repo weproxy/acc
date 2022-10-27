@@ -120,7 +120,7 @@ static error clientAuth(ReadWriter c, bool userPassRequired, const ProvideUserPa
 }
 
 // ClientHandshake ...
-R<Ref<Addr>, error> ClientHandshake(net::Conn c, Command cmd, addr net::Addr,
+R<Ref<Addr>, error> ClientHandshake(net::Conn c, Command cmd, net::Addr addr,
                                     const ProvideUserPassFn& provideUserPassFn) {
     return {nil, nil};
 }
@@ -135,7 +135,6 @@ static error serverAuth(ReadWriter c, bool userPassRequired, const CheckUserPass
     //     | VER | METHOD |
     //     +-----+--------+
     //     |  1  |   1    |
-
     buf[0] = Version5;
     buf[1] = userPassRequired ? AuthMethodUserPass : AuthMethodNotRequired;
     AUTO_R(_1, er1, c->Write(buf(0, 2)));
@@ -151,7 +150,6 @@ static error serverAuth(ReadWriter c, bool userPassRequired, const CheckUserPass
     //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
     //     +-----+------+----------+------+----------+
     //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
     AUTO_R(_2, er2, io::ReadFull(c, buf(0, 2)));
     if (er2) {
         return er2;
@@ -187,7 +185,6 @@ static error serverAuth(ReadWriter c, bool userPassRequired, const CheckUserPass
     //     | VER | STATUS |
     //     +-----+--------+
     //     |  1  |   1    |
-
     buf[0] = UserAuthVersion;
     buf[1] = err ? byte(Reply::AuthFailure) : byte(Reply::AuthSuccess);
     AUTO_R(_5, er5, c->Write(buf(0, 2)));
@@ -210,7 +207,6 @@ R<Command, Ref<Addr>, error> ServerHandshake(net::Conn c, const CheckUserPassFn&
     //     | VER | NMETHODS | METHODS  |
     //     +-----+----------+----------+
     //     |  1  |    1     | 1 to 255 |
-
     AUTO_R(_1, er1, io::ReadFull(c, buf(0, 2)));
     if (er1) {
         WriteReply(c, Reply::AuthFailure);
@@ -272,7 +268,6 @@ R<Command, Ref<Addr>, error> ServerHandshake(net::Conn c, const CheckUserPassFn&
     //     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
     //     +-----+-----+-------+------+----------+----------+
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-
     AUTO_R(_3, er3, io::ReadFull(c, buf(0, 3)));
     if (er3) {
         WriteReply(c, Reply::AddressNotSupported);

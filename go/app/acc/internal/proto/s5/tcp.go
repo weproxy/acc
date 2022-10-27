@@ -6,7 +6,6 @@ package s5
 
 import (
 	"fmt"
-	"net"
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/netio"
@@ -14,28 +13,6 @@ import (
 	"weproxy/acc/libgo/nx/stack/netstk"
 	"weproxy/acc/libgo/nx/stats"
 )
-
-// dial ...
-func (m *Handler) dial(cmd socks.Command, serv, addr net.Addr, sta *stats.Stats) (rc net.Conn, bound *socks.Addr, err error) {
-	rc, err = net.Dial("tcp", serv.String())
-	if err != nil {
-		return
-	}
-
-	sta.LogI("connected")
-
-	// handshake
-	bound, err = socks.ClientHandshake(rc, cmd, addr, func() (user, pass string) {
-		return "user", "pass"
-	})
-	if err != nil {
-		return
-	}
-
-	sta.LogI("handshaked, bound %v", bound)
-
-	return
-}
 
 // Handle TCP ...
 func (m *Handler) Handle(c netstk.Conn, head []byte) {
@@ -47,7 +24,8 @@ func (m *Handler) Handle(c netstk.Conn, head []byte) {
 	sta.Start("connecting...")
 	defer sta.Done("closed")
 
-	rc, bound, err := m.dial(socks.CmdConnect, m.serv, raddr, sta)
+	// dial server
+	rc, bound, err := m.dial(socks.CmdConnect, raddr, sta)
 	if err != nil {
 		logx.E("%s err: %v", tag, err)
 		return

@@ -10,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 
+	"weproxy/acc/libgo/nx/socks"
+	"weproxy/acc/libgo/nx/stats"
+
 	"weproxy/acc/app/acc/internal/proto"
 )
 
@@ -49,4 +52,28 @@ type Handler struct {
 // Close ...
 func (m *Handler) Close() error {
 	return nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// dial ...
+func (m *Handler) dial(cmd socks.Command, addr net.Addr, sta *stats.Stats) (rc net.Conn, bound *socks.Addr, err error) {
+	rc, err = net.Dial("tcp", m.serv.String())
+	if err != nil {
+		return
+	}
+
+	sta.LogI("connected")
+
+	// handshake
+	bound, err = socks.ClientHandshake(rc, cmd, addr, func() (user, pass string) {
+		return "user", "pass"
+	})
+	if err != nil {
+		return
+	}
+
+	sta.LogI("handshaked, bound %v", bound)
+
+	return
 }

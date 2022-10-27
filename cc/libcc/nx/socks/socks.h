@@ -112,7 +112,6 @@ error WriteReply(Writer w, Reply reply, uint8 resverd = 0, net::Addr boundAddr =
     //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
     //     +-----+-----+-------+------+----------+----------+
     //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-
     bytez<> buf = make(boundAddr ? 3 + MaxAddrLen : 8);
     int len = 3;
 
@@ -154,7 +153,8 @@ using ProvideUserPassFn = func<R<string, string>()>;
 using CheckUserPassFn = func<error(const string& user, const string& pass)>;
 
 // ClientHandshake ...
-R<Ref<Addr>, error> ClientHandshake(net::Conn c, Command cmd, addr net::Addr, const ProvideUserPassFn& provideUserPassFn);
+R<Ref<Addr>, error> ClientHandshake(net::Conn c, Command cmd, net::Addr addr,
+                                    const ProvideUserPassFn& provideUserPassFn);
 
 // ServerHandshake ...
 R<Command, Ref<Addr>, error> ServerHandshake(net::Conn c, const CheckUserPassFn& checkUserPassFn);

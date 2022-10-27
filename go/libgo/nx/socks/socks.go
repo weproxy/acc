@@ -80,7 +80,6 @@ func WriteReply(w io.Writer, reply Reply, resverd byte, boundAddr net.Addr) erro
 	//     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
 	//     +-----+-----+-------+------+----------+----------+
 	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-
 	buf := make([]byte, 3+MaxAddrLen)
 	cnt := 3
 
@@ -113,6 +112,8 @@ var (
 	ErrNoSupportedAuth      = errors.New("no supported authentication mechanism")
 )
 
+////////////////////////////////////////////////////////////////////////////////
+
 // ProvideUserPassFn ...
 type ProvideUserPassFn func() (user, pass string)
 
@@ -121,6 +122,56 @@ type CheckUserPassFn func(user, pass string) error
 
 // clientAuth ...
 func clientAuth(c io.ReadWriter, userPassRequired bool, provideUserPassFn ProvideUserPassFn) error {
+	if !userPassRequired {
+		return nil
+	}
+
+	user, pass, err := func() ([]byte, []byte, error) {
+		if provideUserPassFn == nil {
+			return nil, nil, errors.New("miss provideUserPassFn")
+		}
+
+		user, pass := provideUserPassFn()
+		if len(user) == 0 || len(pass) == 0 {
+			return nil, nil, errors.New("missing user/pass")
+		}
+
+		return []byte(user), []byte(pass), nil
+	}()
+	if err != nil {
+		return nil
+	}
+
+	buf := make([]byte, 512)
+
+	// >>> REQ:
+	//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+	//     +-----+------+----------+------+----------+
+	//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+	buf[0] = UserAuthVersion
+	buf[1] = byte(len(user))
+	copy(buf[2:], user)
+	buf[2+len(user)] = byte(len(pass))
+	copy(buf[2+len(user)+1:], pass)
+	_, err = c.Write(buf[0 : 3+len(user)+len(pass)])
+	if err != nil {
+		return err
+	}
+
+	// <<< REP:
+	//     | VER | STATUS |
+	//     +-----+--------+
+	//     |  1  |   1    |
+	if _, err = io.ReadFull(c, buf[0:2]); err != nil {
+		return err
+	}
+	if buf[0] != UserAuthVersion {
+		return fmt.Errorf("invalid auth version: %d", buf[0])
+	}
+	if r := Reply(buf[1]); r != ReplyAuthSuccess {
+		return ToError(r)
+	}
+
 	return nil
 }
 
@@ -132,7 +183,6 @@ func serverAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUse
 	//     | VER | METHOD |
 	//     +-----+--------+
 	//     |  1  |   1    |
-
 	buf[0] = Version5
 	buf[1] = byte(AuthMethodNotRequired)
 	if userPassRequired {
@@ -151,7 +201,6 @@ func serverAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUse
 	//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
 	//     +-----+------+----------+------+----------+
 	//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
 	if _, err = io.ReadFull(c, buf[0:2]); err != nil {
 		return err
 	}
@@ -188,7 +237,6 @@ func serverAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUse
 	//     | VER | STATUS |
 	//     +-----+--------+
 	//     |  1  |   1    |
-
 	buf[0] = UserAuthVersion
 	buf[1] = byte(ReplyAuthSuccess)
 	if err != nil {
@@ -215,6 +263,11 @@ func ClientHandshake(c net.Conn, cmd Command, addr net.Addr, provideUserPassFn P
 	if _, err = c.Write(buf[:2+int(buf[1])]); err != nil {
 		return
 	}
+
+	// <<< REP:
+	//     | VER | METHOD |
+	//     +-----+--------+
+	//     |  1  |   1    |
 	_, err = io.ReadFull(c, buf[0:2])
 	if err != nil {
 		return
@@ -223,11 +276,6 @@ func ClientHandshake(c net.Conn, cmd Command, addr net.Addr, provideUserPassFn P
 	switch buf[1] {
 	case byte(AuthMethodNotRequired):
 	case byte(AuthMethodUserPass):
-		// <<< REP:
-		//     | VER | METHOD |
-		//     +-----+--------+
-		//     |  1  |   1    |
-
 		// >>> REQ:
 		//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
 		//     +-----+------+----------+------+----------+
@@ -285,7 +333,6 @@ func ServerHandshake(c net.Conn, checkUserPassFn CheckUserPassFn) (Command, *Add
 	//     | VER | NMETHODS | METHODS  |
 	//     +-----+----------+----------+
 	//     |  1  |    1     | 1 to 255 |
-
 	_, err := io.ReadFull(c, buf[0:2])
 	if err != nil {
 		WriteReply(c, ReplyAuthFailure, 0, nil)
@@ -343,7 +390,6 @@ func ServerHandshake(c net.Conn, checkUserPassFn CheckUserPassFn) (Command, *Add
 	//     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
 	//     +-----+-----+-------+------+----------+----------+
 	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-
 	_, err = io.ReadFull(c, buf[0:3])
 	if err != nil {
 		WriteReply(c, ReplyAddressNotSupported, 0, nil)
