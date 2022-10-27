@@ -7,38 +7,21 @@ package netstk
 import (
 	"io"
 	"net"
-	"time"
 )
-
-// baseConn ...
-type baseConn interface {
-	io.Closer
-
-	ID() uint64
-	LocalAddr() net.Addr
-	RemoteAddr() net.Addr
-	SetDeadline(t time.Time) error
-	SetReadDeadline(t time.Time) error
-	SetWriteDeadline(t time.Time) error
-}
 
 // Conn ...
 type Conn interface {
-	baseConn
-	io.ReadWriter
+	net.Conn
+	ID() uint64
 	CloseRead() error
 	CloseWrite() error
 }
 
 // PacketConn ...
 type PacketConn interface {
-	baseConn
-
-	// ReadTo readFrom device to dstAddr
-	ReadTo(p []byte) (n int, dstAddr net.Addr, err error)
-
-	// WriteFrom writeTo device from srcAddr
-	WriteFrom(p []byte, srcAddr net.Addr) (int, error)
+	net.PacketConn
+	ID() uint64
+	RemoteAddr() net.Addr
 }
 
 // Device ...
@@ -60,7 +43,7 @@ type Handler interface {
 	io.Closer
 
 	// Handle TCP ...
-	Handle(Conn, net.Addr)
+	Handle(Conn)
 
 	// HandlePacket UDP ...
 	HandlePacket(PacketConn)

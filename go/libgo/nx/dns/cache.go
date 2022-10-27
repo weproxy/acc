@@ -49,8 +49,8 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 	logx.I("[dns] cache.Query %v%v", q.Name, q.Type)
 
 	// check if fake provide
-	answer, err = MakeFakeAnswerMsg(msg, nil)
-	if err == nil && answer != nil && answer.Msg != nil {
+	answer, _ = MakeFakeAnswerMsg(msg, nil)
+	if answer != nil && answer.Msg != nil {
 		logx.W("[dns] cache.FakeAnswer %v%v <- %s", q.Name, q.Type, toAnswerString(answer.Msg.Answers))
 		return answer, nil
 	}

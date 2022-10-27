@@ -269,9 +269,9 @@ func (m *Stack) HandleStream(r *tcp.ForwarderRequest) {
 	}
 
 	conn := NewConn(gonet.NewTCPConn(&wq, ep))
-	addr := &net.TCPAddr{IP: net.IP(id.LocalAddress), Port: int(id.LocalPort)}
+	// addr := &net.TCPAddr{IP: net.IP(id.LocalAddress), Port: int(id.LocalPort)}
 
-	go m.h.Handle(conn, addr)
+	go m.h.Handle(conn)
 }
 
 // HandlePacket is to handle UDP connections
@@ -313,14 +313,14 @@ func (m *Stack) HandlePacket(ep stack.TransportEndpointID, pkt *stack.PacketBuff
 	conn := NewPacketConn(key, ep, pkt, m)
 	m.udps.Add(key, conn)
 	vv := pkt.Data().ExtractVV()
-	conn.HandlePacket(vv.ToView(), conn.LocalAddr().(*net.UDPAddr))
+	conn.HandlePacket(vv.ToView(), conn.RemoteAddr().(*net.UDPAddr))
 
 	if m.h == nil {
 		panic("m.h == nil")
 	}
 
-	if conn.LocalAddr() == nil {
-		panic("con.LocalAddr() == nil")
+	if conn.RemoteAddr() == nil {
+		panic("con.RemoteAddr() == nil")
 	}
 
 	go m.h.HandlePacket(conn)
@@ -415,10 +415,10 @@ func loopRead(r netstk.Device, size, offset int, ep *channel.Endpoint) {
 		nr, err := r.Read(buf, offset)
 		if err != nil {
 			break
-		}
-		if nr == 0 {
+		} else if nr <= 0 {
 			continue
 		}
+
 		dat := buf[offset : offset+nr]
 
 		pkt := stack.NewPacketBuffer(stack.PacketBufferOptions{

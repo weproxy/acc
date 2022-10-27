@@ -26,6 +26,106 @@ const (
 	ADAPTER_KEY              = `SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}`
 )
 
+// openTunDevice ...
+func openTunDevice(c *conf) (io.ReadWriteCloser, error) {
+	componentId, devName, err := getTuntapComponentId(c.name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get component ID: %v", err)
+	}
+	println("TAP device name: %s", devName)
+
+	devId, _ := windows.UTF16FromString(fmt.Sprintf(`\\.\Global\%s.tap`, componentId))
+	// set dhcp with netsh
+	cmd := exec.Command("netsh", "interface", "ip", "set", "address", devName, "dhcp")
+	cmd.Run()
+	cmd = exec.Command("netsh", "interface", "ip", "set", "dns", devName, "dhcp")
+	cmd.Run()
+	// open
+	fd, err := windows.CreateFile(
+		&devId[0],
+		windows.GENERIC_READ|windows.GENERIC_WRITE,
+		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE,
+		nil,
+		windows.OPEN_EXISTING,
+		windows.FILE_ATTRIBUTE_SYSTEM|windows.FILE_FLAG_OVERLAPPED,
+		//windows.FILE_ATTRIBUTE_SYSTEM,
+		0,
+	)
+	if err != nil {
+		return nil, err
+	}
+	// set addresses with dhcp
+	var returnLen uint32
+	tunAddr := net.ParseIP(c.addr).To4()
+	tunMask := net.ParseIP(c.mask).To4()
+	gwAddr := net.ParseIP(c.gw).To4()
+	addrParam := append(tunAddr, tunMask...)
+	addrParam = append(addrParam, gwAddr...)
+	lease := make([]byte, 4)
+	binary.BigEndian.PutUint32(lease[:], 86400)
+	addrParam = append(addrParam, lease...)
+	err = windows.DeviceIoControl(
+		fd,
+		TAP_WIN_IOCTL_CONFIG_DHCP_MASQ,
+		&addrParam[0],
+		uint32(len(addrParam)),
+		&addrParam[0],
+		uint32(len(addrParam)),
+		&returnLen,
+		nil,
+	)
+	if err != nil {
+		windows.Close(fd)
+		return nil, err
+	} else {
+		println("Set %s with net/mask: %s/%s through DHCP", devName, c.addr, c.mask)
+	}
+
+	// set dns with dncp
+	dnsParam := []byte{6, 4}
+	primaryDNS := net.ParseIP(c.dns[0]).To4()
+	dnsParam = append(dnsParam, primaryDNS...)
+	if len(c.dns) >= 2 {
+		secondaryDNS := net.ParseIP(c.dns[1]).To4()
+		dnsParam = append(dnsParam, secondaryDNS...)
+		dnsParam[1] += 4
+	}
+	err = windows.DeviceIoControl(
+		fd,
+		TAP_WIN_IOCTL_CONFIG_DHCP_SET_OPT,
+		&dnsParam[0],
+		uint32(len(dnsParam)),
+		&addrParam[0],
+		uint32(len(dnsParam)),
+		&returnLen,
+		nil,
+	)
+	if err != nil {
+		windows.Close(fd)
+		return nil, err
+	} else {
+		println("Set %s with DNS: %s through DHCP", devName, strings.Join(c.dns, ","))
+	}
+
+	// set connect.
+	inBuffer := []byte("\x01\x00\x00\x00")
+	err = windows.DeviceIoControl(
+		fd,
+		TAP_IOCTL_SET_MEDIA_STATUS,
+		&inBuffer[0],
+		uint32(len(inBuffer)),
+		&inBuffer[0],
+		uint32(len(inBuffer)),
+		&returnLen,
+		nil,
+	)
+	if err != nil {
+		windows.Close(fd)
+		return nil, err
+	}
+	return newWinTapDev(fd, c.addr, c.gw), nil
+}
+
 func ctl_code(device_type, function, method, access uint32) uint32 {
 	return (device_type << 16) | (access << 14) | (function << 2) | method
 }
@@ -155,105 +255,6 @@ func getTuntapComponentId(ifaceName string) (string, string, error) {
 		}
 	}
 	return "", "", errors.New("not found component id")
-}
-
-func openTunDevice(c *conf) (io.ReadWriteCloser, error) {
-	componentId, devName, err := getTuntapComponentId(c.name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get component ID: %v", err)
-	}
-	println("TAP device name: %s", devName)
-
-	devId, _ := windows.UTF16FromString(fmt.Sprintf(`\\.\Global\%s.tap`, componentId))
-	// set dhcp with netsh
-	cmd := exec.Command("netsh", "interface", "ip", "set", "address", devName, "dhcp")
-	cmd.Run()
-	cmd = exec.Command("netsh", "interface", "ip", "set", "dns", devName, "dhcp")
-	cmd.Run()
-	// open
-	fd, err := windows.CreateFile(
-		&devId[0],
-		windows.GENERIC_READ|windows.GENERIC_WRITE,
-		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE,
-		nil,
-		windows.OPEN_EXISTING,
-		windows.FILE_ATTRIBUTE_SYSTEM|windows.FILE_FLAG_OVERLAPPED,
-		//windows.FILE_ATTRIBUTE_SYSTEM,
-		0,
-	)
-	if err != nil {
-		return nil, err
-	}
-	// set addresses with dhcp
-	var returnLen uint32
-	tunAddr := net.ParseIP(c.addr).To4()
-	tunMask := net.ParseIP(c.mask).To4()
-	gwAddr := net.ParseIP(c.gw).To4()
-	addrParam := append(tunAddr, tunMask...)
-	addrParam = append(addrParam, gwAddr...)
-	lease := make([]byte, 4)
-	binary.BigEndian.PutUint32(lease[:], 86400)
-	addrParam = append(addrParam, lease...)
-	err = windows.DeviceIoControl(
-		fd,
-		TAP_WIN_IOCTL_CONFIG_DHCP_MASQ,
-		&addrParam[0],
-		uint32(len(addrParam)),
-		&addrParam[0],
-		uint32(len(addrParam)),
-		&returnLen,
-		nil,
-	)
-	if err != nil {
-		windows.Close(fd)
-		return nil, err
-	} else {
-		println("Set %s with net/mask: %s/%s through DHCP", devName, c.addr, c.mask)
-	}
-
-	// set dns with dncp
-	dnsParam := []byte{6, 4}
-	primaryDNS := net.ParseIP(c.dns[0]).To4()
-	dnsParam = append(dnsParam, primaryDNS...)
-	if len(c.dns) >= 2 {
-		secondaryDNS := net.ParseIP(c.dns[1]).To4()
-		dnsParam = append(dnsParam, secondaryDNS...)
-		dnsParam[1] += 4
-	}
-	err = windows.DeviceIoControl(
-		fd,
-		TAP_WIN_IOCTL_CONFIG_DHCP_SET_OPT,
-		&dnsParam[0],
-		uint32(len(dnsParam)),
-		&addrParam[0],
-		uint32(len(dnsParam)),
-		&returnLen,
-		nil,
-	)
-	if err != nil {
-		windows.Close(fd)
-		return nil, err
-	} else {
-		println("Set %s with DNS: %s through DHCP", devName, strings.Join(c.dns, ","))
-	}
-
-	// set connect.
-	inBuffer := []byte("\x01\x00\x00\x00")
-	err = windows.DeviceIoControl(
-		fd,
-		TAP_IOCTL_SET_MEDIA_STATUS,
-		&inBuffer[0],
-		uint32(len(inBuffer)),
-		&inBuffer[0],
-		uint32(len(inBuffer)),
-		&returnLen,
-		nil,
-	)
-	if err != nil {
-		windows.Close(fd)
-		return nil, err
-	}
-	return newWinTapDev(fd, c.addr, c.gw), nil
 }
 
 type winTapDev struct {

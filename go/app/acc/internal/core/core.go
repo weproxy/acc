@@ -11,6 +11,15 @@ import (
 	"weproxy/acc/libgo/logx"
 
 	"weproxy/acc/app/acc/internal/proto"
+
+	_ "weproxy/acc/app/acc/internal/proto/direct"
+	_ "weproxy/acc/app/acc/internal/proto/gaap"
+	_ "weproxy/acc/app/acc/internal/proto/htp"
+	_ "weproxy/acc/app/acc/internal/proto/kc"
+	_ "weproxy/acc/app/acc/internal/proto/qc"
+	_ "weproxy/acc/app/acc/internal/proto/s5"
+	_ "weproxy/acc/app/acc/internal/proto/ss"
+	_ "weproxy/acc/libgo/nx/device/mod"
 )
 
 func Main() {

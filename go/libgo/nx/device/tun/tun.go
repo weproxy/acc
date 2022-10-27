@@ -5,7 +5,11 @@
 package tun
 
 import (
+	"errors"
+	"fmt"
 	"io"
+	"os/exec"
+	"strings"
 
 	"weproxy/acc/libgo/nx/device"
 	"weproxy/acc/libgo/nx/stack/netstk"
@@ -69,4 +73,25 @@ func (m *Device) Read(p []byte, offset int) (n int, err error) {
 // Write to device
 func (m *Device) Write(p []byte, offset int) (n int, err error) {
 	return m.rwc.Write(p[offset:])
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// shellExec ...
+func shellExec(format string, args ...interface{}) (err error) {
+	str := fmt.Sprintf(format, args...)
+	arr := strings.Split(str, " ")
+	if len(arr) < 1 {
+		return errors.New("empty cmd")
+	}
+
+	out, err := exec.Command(arr[0], arr[1:]...).Output()
+	if err != nil {
+		if len(out) != 0 {
+			err = fmt.Errorf("%v, output: %s", err, out)
+		}
+		return
+	}
+
+	return
 }

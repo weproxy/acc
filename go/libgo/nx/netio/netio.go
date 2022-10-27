@@ -140,12 +140,24 @@ func CopyPacket(w net.PacketConn, r net.PacketConn, opt CopyOption) (written int
 		if opt.ReadTimeout > 0 {
 			r.SetReadDeadline(time.Now().Add(opt.ReadTimeout))
 		}
-		nr, _, err := r.ReadFrom(buf)
+		nr, addr, err := r.ReadFrom(buf)
 		if nr > 0 {
 			if opt.WriteTimeout > 0 {
 				w.SetWriteDeadline(time.Now().Add(opt.WriteTimeout))
 			}
-			nw, er2 := w.WriteTo(buf[0:nr], opt.WriteAddr)
+
+			raddr := opt.WriteAddr
+			if raddr == nil {
+				raddr = addr
+			}
+
+			if opt.MaxTimes <= 0 {
+				if uaddr, ok := raddr.(*net.UDPAddr); ok && (uaddr.Port == 53 || uaddr.Port == 23) {
+					opt.MaxTimes = 1
+				}
+			}
+
+			nw, er2 := w.WriteTo(buf[0:nr], raddr)
 			if nw > 0 {
 				written += int64(nw)
 				if opt.CopingFn != nil {

@@ -35,6 +35,16 @@ func (m *Conn) ID() uint64 {
 	return m.id
 }
 
+// LocalAddr ...
+func (m *Conn) LocalAddr() net.Addr {
+	return m.TCPConn.RemoteAddr()
+}
+
+// RemoteAddr ...
+func (m *Conn) RemoteAddr() net.Addr {
+	return m.TCPConn.LocalAddr()
+}
+
 // NewConn ...
 func NewConn(c *gonet.TCPConn) *Conn {
 	return &Conn{TCPConn: c, id: nx.NewID()}
@@ -99,16 +109,16 @@ func (m *PacketConn) Close() error {
 
 // LocalAddr ...
 func (m *PacketConn) LocalAddr() net.Addr {
-	return &net.UDPAddr{IP: net.IP(m.info.ep.LocalAddress), Port: int(m.info.ep.LocalPort)}
+	return &net.UDPAddr{IP: net.IP(m.info.ep.RemoteAddress), Port: int(m.info.ep.RemotePort)}
 }
 
 // RemoteAddr ...
 func (m *PacketConn) RemoteAddr() net.Addr {
-	return &net.UDPAddr{IP: net.IP(m.info.ep.RemoteAddress), Port: int(m.info.ep.RemotePort)}
+	return &net.UDPAddr{IP: net.IP(m.info.ep.LocalAddress), Port: int(m.info.ep.LocalPort)}
 }
 
-// ReadTo readFrom device to dstAddr
-func (m *PacketConn) ReadTo(p []byte) (n int, dstAddr net.Addr, err error) {
+// ReadFrom readFrom device to dstAddr
+func (m *PacketConn) ReadFrom(p []byte) (n int, dstAddr net.Addr, err error) {
 	deadline := m.readCancel()
 	select {
 	case <-deadline:
@@ -122,8 +132,8 @@ func (m *PacketConn) ReadTo(p []byte) (n int, dstAddr net.Addr, err error) {
 	return
 }
 
-// WriteFrom writeTo device from srcAddr
-func (m *PacketConn) WriteFrom(p []byte, srcAddr net.Addr) (n int, err error) {
+// WriteTo writeTo device from srcAddr
+func (m *PacketConn) WriteTo(p []byte, srcAddr net.Addr) (n int, err error) {
 	v := buffer.View(p)
 	if len(v) > header.UDPMaximumPacketSize {
 		return 0, errors.New((&tcpip.ErrMessageTooLong{}).String())
@@ -131,10 +141,14 @@ func (m *PacketConn) WriteFrom(p []byte, srcAddr net.Addr) (n int, err error) {
 
 	src, ok := srcAddr.(*net.UDPAddr)
 	if !ok {
-		return 0, errors.New("gvisor.WriteFrom error: addr type error")
+		return 0, errors.New("gvisor.WriteTo error: addr type error")
+	}
+	srcIP := src.IP.To4()
+	if srcIP == nil {
+		srcIP = src.IP.To16()
 	}
 
-	route, tcperr := m.stk.stk.FindRoute(m.info.nic, tcpip.Address(src.IP), m.info.src, m.info.prot, false)
+	route, tcperr := m.stk.stk.FindRoute(m.info.nic, tcpip.Address(srcIP), m.info.src, m.info.prot, false)
 	if tcperr != nil {
 		return 0, errors.New(tcperr.String())
 	}

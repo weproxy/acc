@@ -30,7 +30,7 @@ type Device struct {
 
 // Type ...
 func (m *Device) Type() string {
-	return device.TypeTUN
+	return device.TypePCAP
 }
 
 // Close implements io.Closer
