@@ -5,8 +5,10 @@
 package s5
 
 import (
-	"weproxy/acc/libgo/logx"
-	"weproxy/acc/libgo/nx/stack/netstk"
+	"net"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"weproxy/acc/app/acc/internal/proto"
 )
@@ -19,30 +21,32 @@ func init() {
 
 // New ...
 func New(serv string) (proto.Handler, error) {
-	return &Handler{}, nil
+	var raddr net.Addr
+	if strings.Contains(serv, "://") {
+		if url, err := url.Parse(serv); err == nil {
+			if host, port, err := net.SplitHostPort(url.Host); err == nil {
+				if ip := net.ParseIP(host); ip != nil {
+					var pn int
+					if n, err := strconv.Atoi(port); err == nil {
+						pn = n
+					}
+					raddr = &net.UDPAddr{IP: ip, Port: pn}
+				}
+			}
+		}
+	}
+
+	return &Handler{serv: raddr}, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Handler implements proto.Handler
 type Handler struct {
+	serv net.Addr
 }
 
 // Close ...
 func (m *Handler) Close() error {
 	return nil
-}
-
-// Handle TCP ...
-func (m *Handler) Handle(c netstk.Conn, head []byte) {
-	srcAddr, dstAddr := c.LocalAddr(), c.RemoteAddr()
-
-	logx.D("%s Handle() %v->%v", TAG, srcAddr, dstAddr)
-}
-
-// HandlePacket ...
-func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
-	srcAddr, dstAddr := pc.LocalAddr(), pc.RemoteAddr()
-
-	logx.D("%s HandlePacket() %v->%v", TAG, srcAddr, dstAddr)
 }

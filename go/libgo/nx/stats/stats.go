@@ -185,30 +185,30 @@ func (m *Stats) Elapsed() time.Duration {
 }
 
 // LogD ..
-func (m *Stats) LogD(msg string) {
-	logx.D("%v %v, %v", m.tag, msg, m.Elapsed())
+func (m *Stats) LogD(format string, args ...interface{}) {
+	logx.D("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogI ..
-func (m *Stats) LogI(msg string) {
-	logx.I("%v %v, %v", m.tag, msg, m.Elapsed())
+func (m *Stats) LogI(format string, args ...interface{}) {
+	logx.I("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogW ..
-func (m *Stats) LogW(msg string) {
-	logx.W("%v %v, %v", m.tag, msg, m.Elapsed())
+func (m *Stats) LogW(format string, args ...interface{}) {
+	logx.W("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogE ..
-func (m *Stats) LogE(msg string) {
-	logx.W("%v %v, %v", m.tag, msg, m.Elapsed())
+func (m *Stats) LogE(format string, args ...interface{}) {
+	logx.W("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // Start ...
-func (m *Stats) Start(msg string) *Stats {
+func (m *Stats) Start(format string, args ...interface{}) *Stats {
 	m.start = time.Now()
 
-	logx.I("%v %v", m.tag, msg)
+	logx.I("%v %v", m.tag, fmt.Sprintf(format, args...))
 
 	if m.tcp {
 		m.conn.AddTCP(m.typ, 1)
@@ -219,7 +219,7 @@ func (m *Stats) Start(msg string) *Stats {
 }
 
 // Done ...
-func (m *Stats) Done(msg string) *Stats {
+func (m *Stats) Done(format string, args ...interface{}) *Stats {
 	if m.tcp {
 		m.conn.AddTCP(m.typ, -1)
 	} else {
@@ -230,13 +230,13 @@ func (m *Stats) Done(msg string) *Stats {
 
 	if m.sentx > 0 || m.recvx > 0 {
 		logmsg = fmt.Sprintf("%v %v, sent=%v+%v, recv=%v+%v, %v",
-			m.tag, msg,
+			m.tag, fmt.Sprintf(format, args...),
 			fx.FormatBytes(m.sentx), fx.FormatBytes(m.sent),
 			fx.FormatBytes(m.recvx), fx.FormatBytes(m.recv),
 			m.Elapsed())
 	} else {
 		logmsg = fmt.Sprintf("%v %v, sent=%v, recv=%v, %v",
-			m.tag, msg,
+			m.tag, fmt.Sprintf(format, args...),
 			fx.FormatBytes(m.sent), fx.FormatBytes(m.recv),
 			m.Elapsed())
 	}

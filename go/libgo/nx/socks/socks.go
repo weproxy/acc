@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,11 +113,19 @@ var (
 	ErrNoSupportedAuth      = errors.New("no supported authentication mechanism")
 )
 
+// ProvideUserPassFn ...
+type ProvideUserPassFn func() (user, pass string)
+
 // CheckUserPassFn ...
 type CheckUserPassFn func(user, pass string) error
 
-// ServerAuth ...
-func ServerAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUserPassFn) error {
+// clientAuth ...
+func clientAuth(c io.ReadWriter, userPassRequired bool, provideUserPassFn ProvideUserPassFn) error {
+	return nil
+}
+
+// serverAuth ...
+func serverAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUserPassFn) error {
 	buf := make([]byte, 512)
 
 	// <<< REP:
@@ -189,4 +198,172 @@ func ServerAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUse
 	_, err = c.Write(buf[0:2])
 
 	return err
+}
+
+// ClientHandshake ...
+func ClientHandshake(c net.Conn, cmd Command, addr net.Addr, provideUserPassFn ProvideUserPassFn) (bound *Addr, err error) {
+	c.SetDeadline(time.Now().Add(time.Second * 5))
+	defer c.SetDeadline(time.Time{})
+
+	buf := make([]byte, 512)
+
+	// >>> REQ:
+	//     | VER | NMETHODS | METHODS  |
+	//     +-----+----------+----------+
+	//     |  1  |    1     | 1 to 255 |
+	buf[0], buf[1], buf[2], buf[4] = Version5, 2, byte(AuthMethodNotRequired), byte(AuthMethodUserPass)
+	if _, err = c.Write(buf[:2+int(buf[1])]); err != nil {
+		return
+	}
+	_, err = io.ReadFull(c, buf[0:2])
+	if err != nil {
+		return
+	}
+
+	switch buf[1] {
+	case byte(AuthMethodNotRequired):
+	case byte(AuthMethodUserPass):
+		// <<< REP:
+		//     | VER | METHOD |
+		//     +-----+--------+
+		//     |  1  |   1    |
+
+		// >>> REQ:
+		//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+		//     +-----+------+----------+------+----------+
+		//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+
+		// <<< REP:
+		//     | VER | STATUS |
+		//     +-----+--------+
+		//     |  1  |   1    |
+		err = clientAuth(c, true, provideUserPassFn)
+	default:
+		err = ErrNoSupportedAuth
+	}
+	if err != nil {
+		return
+	}
+
+	// >>> REQ:
+	//     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+	//     +-----+-----+-------+------+----------+----------+
+	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+	saddr := FromNetAddr(addr)
+	buf[0], buf[1], buf[2] = Version5, byte(cmd), 0
+	copy(buf[3:], saddr.B)
+	_, err = c.Write(buf[0 : 3+len(saddr.B)])
+	if err != nil {
+		return
+	}
+
+	// <<< REP:
+	//     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
+	//     +-----+-----+-------+------+----------+----------+
+	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+	_, err = io.ReadFull(c, buf[0:3])
+	if err != nil {
+		return
+	}
+	_, bound, err = ReadAddr(c)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// ServerHandshake ...
+func ServerHandshake(c net.Conn, checkUserPassFn CheckUserPassFn) (Command, *Addr, error) {
+	c.SetDeadline(time.Now().Add(time.Second * 5))
+	defer c.SetDeadline(time.Time{})
+
+	cmd := Command(0)
+	buf := make([]byte, 256)
+
+	// >>> REQ:
+	//     | VER | NMETHODS | METHODS  |
+	//     +-----+----------+----------+
+	//     |  1  |    1     | 1 to 255 |
+
+	_, err := io.ReadFull(c, buf[0:2])
+	if err != nil {
+		WriteReply(c, ReplyAuthFailure, 0, nil)
+		return cmd, nil, err
+	}
+
+	methodCnt := buf[1]
+
+	if buf[0] != Version5 || methodCnt == 0 || methodCnt > 16 {
+		WriteReply(c, ReplyAuthFailure, 0, nil)
+		return cmd, nil, ErrInvalidSocksVersion
+	}
+
+	n, err := io.ReadFull(c, buf[0:methodCnt])
+	if err != nil {
+		WriteReply(c, ReplyAuthFailure, 0, nil)
+		return cmd, nil, err
+	}
+
+	var methodNotRequired, methodUserPass bool
+	for i := 0; i < n; i++ {
+		switch Method(buf[i]) {
+		case AuthMethodNotRequired:
+			methodNotRequired = true
+		case AuthMethodUserPass:
+			methodUserPass = true
+		}
+	}
+
+	if methodNotRequired || methodUserPass {
+		// <<< REP:
+		//     | VER | METHOD |
+		//     +-----+--------+
+		//     |  1  |   1    |
+
+		// >>> REQ:
+		//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+		//     +-----+------+----------+------+----------+
+		//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
+
+		// <<< REP:
+		//     | VER | STATUS |
+		//     +-----+--------+
+		//     |  1  |   1    |
+		err := serverAuth(c, methodUserPass, checkUserPassFn)
+		if err != nil {
+			return cmd, nil, err
+		}
+	} else {
+		WriteReply(c, ReplyNoAcceptableMethods, 0, nil)
+		return cmd, nil, ErrNoSupportedAuth
+	}
+
+	// >>> REQ:
+	//     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+	//     +-----+-----+-------+------+----------+----------+
+	//     |  1  |  1  | X'00' |  1   |    ...   |    2     |
+
+	_, err = io.ReadFull(c, buf[0:3])
+	if err != nil {
+		WriteReply(c, ReplyAddressNotSupported, 0, nil)
+		return cmd, nil, err
+	}
+
+	// ver := buf[0]
+	cmd = Command(buf[1])
+	// rsv := buf[2]
+
+	if CmdConnect != cmd && CmdAssociate != cmd {
+		WriteReply(c, ReplyCommandNotSupported, 0, nil)
+		return cmd, nil, ToError(ReplyCommandNotSupported)
+	}
+
+	_, raddr, err := ReadAddr(c)
+	if err != nil {
+		WriteReply(c, ReplyAddressNotSupported, 0, nil)
+		return cmd, nil, err
+	}
+
+	return cmd, raddr, nil
 }

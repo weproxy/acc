@@ -238,3 +238,15 @@ func RelayPacket(a net.PacketConn, b net.PacketConn, opt RelayOption) (err error
 	}
 	return errB2A
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Discard is a Writer on which all Write calls succeed
+// without doing anything.
+var Discard disard
+
+type disard int
+
+func (disard) Close() error              { return nil }
+func (disard) Read([]byte) (int, error)  { return 0, nil }
+func (disard) Write([]byte) (int, error) { return 0, nil }

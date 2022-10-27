@@ -105,81 +105,6 @@ extern const error ErrNoSupportedAuth;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// CheckUserPassFn ...
-using CheckUserPassFn = func<error(const string& user, const string& pass)>;
-
-// ServerAuth ...
-template <typename ReadWriter, typename std::enable_if<io::xx::has_read_write<ReadWriter>::value, int>::type = 0>
-error ServerAuth(ReadWriter c, bool userPassRequired, const CheckUserPassFn& checkUserPassFn = {}) {
-    bytez<> buf = make(512);
-
-    // <<< REP:
-    //     | VER | METHOD |
-    //     +-----+--------+
-    //     |  1  |   1    |
-
-    buf[0] = Version5;
-    buf[1] = userPassRequired ? AuthMethodUserPass : AuthMethodNotRequired;
-    AUTO_R(_1, er1, c->Write(buf(0, 2)));
-    if (er1) {
-        return er1;
-    }
-
-    if (!userPassRequired) {
-        return nil;
-    }
-
-    // >>> REQ:
-    //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-    //     +-----+------+----------+------+----------+
-    //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
-    AUTO_R(_2, er2, io::ReadFull(c, buf(0, 2)));
-    if (er2) {
-        return er2;
-    }
-    if (buf[0] != UserAuthVersion) {
-        return fmt::Errorf("invalid auth version: %d", buf[0]);
-    }
-
-    auto userLen = buf[1];
-    if (userLen > len(buf) - 2) {
-        return ErrUserAuthFailed;
-    }
-    AUTO_R(_3, er3, io::ReadFull(c, buf(0, userLen + 1)));
-    if (er3) {
-        return er3;
-    }
-    string user((char*)buf.data(), userLen);
-
-    auto passLen = buf[userLen];
-    if (passLen > len(buf) - 2) {
-        return ErrUserAuthFailed;
-    }
-    AUTO_R(_4, er4, io::ReadFull(c, buf(0, passLen)));
-    if (er4) {
-        return er4;
-    }
-    string pass((char*)buf.data(), passLen);
-
-    // check user pass
-    auto err = checkUserPassFn ? checkUserPassFn(user, pass) : nil;
-
-    // <<< REP:
-    //     | VER | STATUS |
-    //     +-----+--------+
-    //     |  1  |   1    |
-
-    buf[0] = UserAuthVersion;
-    buf[1] = err ? byte(Reply::AuthFailure) : byte(Reply::AuthSuccess);
-    AUTO_R(_5, er5, c->Write(buf(0, 2)));
-    if (er5) {
-        return er5;
-    }
-
-    return err;
-}
-
 // WriteReply ...
 template <typename Writer, typename std::enable_if<io::xx::has_write<Writer>::value, int>::type = 0>
 error WriteReply(Writer w, Reply reply, uint8 resverd = 0, net::Addr boundAddr = nil) {
@@ -220,9 +145,22 @@ error WriteReply(Writer w, Reply reply, uint8 resverd = 0, net::Addr boundAddr =
     return err;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// ProvideUserPassFn ...
+using ProvideUserPassFn = func<R<string, string>()>;
+
+// CheckUserPassFn ...
+using CheckUserPassFn = func<error(const string& user, const string& pass)>;
+
+// ClientHandshake ...
+R<Ref<Addr>, error> ClientHandshake(net::Conn c, Command cmd, addr net::Addr, const ProvideUserPassFn& provideUserPassFn);
+
+// ServerHandshake ...
+R<Command, Ref<Addr>, error> ServerHandshake(net::Conn c, const CheckUserPassFn& checkUserPassFn);
+
 }  // namespace socks
 }  // namespace nx
-
 
 ////////////////////////////////////////////////////////////////////////////////
 namespace std {

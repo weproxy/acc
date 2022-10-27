@@ -22,105 +22,6 @@ static error checkUserPass(const string& user, const string& pass) {
     return nil;
 }
 
-// handshake ...
-static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
-    c->SetDeadline(time::Now().Add(time::Second * 5));
-    DEFER(c->SetDeadline(time::Time{}));
-
-    socks::Command cmd = socks::Command(0);
-    bytez<> buf = make(256);
-
-    // >>> REQ:
-    //     | VER | NMETHODS | METHODS  |
-    //     +-----+----------+----------+
-    //     |  1  |    1     | 1 to 255 |
-
-    AUTO_R(_1, er1, io::ReadFull(c, buf(0, 2)));
-    if (er1) {
-        socks::WriteReply(c, socks::Reply::AuthFailure);
-        return {cmd, nil, er1};
-    }
-
-    auto methodCnt = buf[1];
-
-    if (buf[0] != socks::Version5 || methodCnt == 0 || methodCnt > 16) {
-        socks::WriteReply(c, socks::Reply::AuthFailure);
-        return {cmd, nil, socks::ErrInvalidSocksVersion};
-    }
-
-    AUTO_R(n, er2, io::ReadFull(c, buf(0, methodCnt)));
-    if (er2) {
-        socks::WriteReply(c, socks::Reply::AuthFailure);
-        return {cmd, nil, er2};
-    }
-
-    bool methodNotRequired = false, methodUserPass = false;
-    for (int i = 0; i < n; i++) {
-        switch (buf[i]) {
-            case socks::AuthMethodNotRequired:
-                methodNotRequired = true;
-                break;
-            case socks::AuthMethodUserPass:
-                methodUserPass = true;
-                break;
-            default:
-                break;
-        }
-    }
-
-    if (methodNotRequired || methodUserPass) {
-        // <<< REP:
-        //     | VER | METHOD |
-        //     +-----+--------+
-        //     |  1  |   1    |
-
-        // >>> REQ:
-        //     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-        //     +-----+------+----------+------+----------+
-        //     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
-        // <<< REP:
-        //     | VER | STATUS |
-        //     +-----+--------+
-        //     |  1  |   1    |
-        auto err = socks::ServerAuth(c, methodUserPass, checkUserPass);
-        if (err) {
-            return {cmd, nil, err};
-        }
-    } else {
-        socks::WriteReply(c, socks::Reply::NoAcceptableMethods);
-        return {cmd, nil, socks::ErrNoSupportedAuth};
-    }
-
-    // >>> REQ:
-    //     | VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
-    //     +-----+-----+-------+------+----------+----------+
-    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-
-    AUTO_R(_3, er3, io::ReadFull(c, buf(0, 3)));
-    if (er3) {
-        socks::WriteReply(c, socks::Reply::AddressNotSupported);
-        return {cmd, nil, er3};
-    }
-
-    auto ver = buf[0];
-    cmd = socks::Command(buf[1]);
-    auto rsv = buf[2];
-
-    if (socks::Command::Connect != cmd && socks::Command::Associate != cmd) {
-        socks::WriteReply(c, socks::Reply::CommandNotSupported);
-        return {cmd, nil, socks::ToError(socks::Reply::CommandNotSupported)};
-    }
-
-    AUTO_R(_4, raddr, er4, socks::ReadAddr(c));
-    if (er4) {
-        socks::WriteReply(c, socks::Reply::AddressNotSupported);
-        return {cmd, nil, er4};
-    }
-
-    return {cmd, raddr, nil};
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
 extern error handleTCP(net::Conn c, net::Addr raddr);
@@ -133,7 +34,7 @@ extern error handleAssoc(net::Conn c, net::Addr raddr);
 static error handleConn(net::Conn c) {
     DEFER(c->Close());
 
-    AUTO_R(cmd, raddr, err, handshake(c));
+    AUTO_R(cmd, raddr, err, socks::ServerHandshake(c, checkUserPass));
     if (err || !raddr) {
         auto er = err ? err : socks::ErrInvalidAddrType;
         LOGS_E(TAG << " handshake(), err: " << er);
