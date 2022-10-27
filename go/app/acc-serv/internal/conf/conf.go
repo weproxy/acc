@@ -10,7 +10,7 @@ import (
 )
 
 //go:embed conf.json
-var DEFAULT_CONF []byte
+var _DEFAULT_CONF []byte
 
 // Conf ...
 type Conf struct {
@@ -25,7 +25,7 @@ type Conf struct {
 // ReadConfig ...
 func ReadConfig() (*Conf, error) {
 	var c = &Conf{}
-	if err := json.Unmarshal(DEFAULT_CONF, c); err != nil {
+	if err := json.Unmarshal(_DEFAULT_CONF, c); err != nil {
 		return nil, err
 	}
 	return c, nil

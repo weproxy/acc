@@ -5,9 +5,9 @@
 package rule
 
 import (
-	"math/rand"
 	"net"
-	"time"
+
+	"weproxy/acc/app/acc/internal/conf"
 
 	"weproxy/acc/libgo/logx"
 )
@@ -16,16 +16,15 @@ const TAG = "[rule]"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Rule ...
-type Rule struct {
-	Servs []string
-}
-
-// Serv get one of Servs
-func (m *Rule) Serv() string {
-	if n := len(m.Servs); n > 0 {
-		rand.Seed(time.Now().Unix())
-		return m.Servs[rand.Intn(n)]
+// getIP ...
+func getIP(addr net.Addr) string {
+	if addr != nil {
+		switch addr := addr.(type) {
+		case *net.TCPAddr:
+			return addr.IP.String()
+		case *net.UDPAddr:
+			return addr.IP.String()
+		}
 	}
 	return ""
 }
@@ -36,19 +35,29 @@ func (m *Rule) Serv() string {
 //
 //	srcAddr = user's addr for load a rule config
 //	one of dstHost and dstAddr maybe is nil
-func GetTCPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, error) {
-	r := &Rule{
-		// Servs: []string{"s5://127.0.0.1:19780"},
-		Servs: []string{"direct"},
-	}
+func GetTCPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string, err error) {
+	serv = func() string {
+		c := conf.MustGet(getIP(srcAddr))
+
+		var r *conf.Rule
+		if len(dstHost) > 0 {
+			r, _ = c.GetRule(dstHost)
+		} else if dstAddr != nil {
+			r, _ = c.GetRule(getIP(dstAddr))
+		}
+		if r != nil {
+			return r.GetServ()
+		}
+		return c.GetMain()
+	}()
 
 	if len(dstHost) > 0 || IsHTTPsAddr(dstAddr) {
-		logx.I("%s HTP %s -> %s, from %v", TAG, dstHost, r.Servs, srcAddr)
+		logx.I("%s HTP %s -> %s, from %v", TAG, dstHost, serv, srcAddr)
 	} else {
-		logx.I("%s TCP %v -> %s, from %v", TAG, dstAddr, r.Servs, srcAddr)
+		logx.I("%s TCP %v -> %s, from %v", TAG, dstAddr, serv, srcAddr)
 	}
 
-	return r, nil
+	return serv, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,19 +66,29 @@ func GetTCPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, erro
 //
 //	srcAddr = user's addr for load a rule config
 //	one of dstHost and dstAddr maybe is nil
-func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, error) {
+func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string, err error) {
 	if len(dstHost) > 0 || IsDNSAddr(dstAddr) {
 		return GetDNSRule(srcAddr, dstHost, dstAddr)
 	}
 
-	r := &Rule{
-		// Servs: []string{"s5://127.0.0.1:19780"},
-		Servs: []string{"direct"},
-	}
+	serv = func() string {
+		c := conf.MustGet(getIP(srcAddr))
 
-	logx.I("%s UDP %v -> %s, from %v", TAG, dstAddr, r.Servs, srcAddr)
+		var r *conf.Rule
+		if len(dstHost) > 0 {
+			r, _ = c.GetRule(dstHost)
+		} else if dstAddr != nil {
+			r, _ = c.GetRule(getIP(dstAddr))
+		}
+		if r != nil {
+			return r.GetServ()
+		}
+		return c.GetMain()
+	}()
 
-	return r, nil
+	logx.I("%s UDP %v -> %s, from %v", TAG, dstAddr, serv, srcAddr)
+
+	return serv, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,17 +97,25 @@ func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, erro
 //
 //	srcAddr = user's addr for load a rule config
 //	one of dstHost and dstAddr maybe is nil
-func GetDNSRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, error) {
-	r := &Rule{
-		// Servs: []string{"dns://127.0.0.1:15353"},
-		// Servs: []string{"dns://8.8.8.8:53"},
-		Servs: []string{"dns://direct"},
-		// Servs: []string{"dns://223.5.5.5:53"},
-	}
+func GetDNSRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string, err error) {
+	serv = func() string {
+		c := conf.MustGet(getIP(srcAddr))
 
-	logx.I("%s DNS %s -> %s, from %v", TAG, dstHost, r.Servs, srcAddr)
+		var r *conf.Rule
+		if len(dstHost) > 0 {
+			r, _ = c.GetDNSRule(dstHost)
+		} else if dstAddr != nil {
+			r, _ = c.GetDNSRule(getIP(dstAddr))
+		}
+		if r != nil {
+			return r.GetServ()
+		}
+		return c.GetMain()
+	}()
 
-	return r, nil
+	logx.I("%s DNS %s -> %s, from %v", TAG, dstHost, serv, srcAddr)
+
+	return serv, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@ const TAG = "[dns]"
 
 // init ...
 func init() {
-	proto.Register("dns", New)
+	proto.Register([]string{"dns"}, New)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"net"
 	"time"
-	"weproxy/acc/app/acc/internal/proto/rule"
+
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/dns"
 	"weproxy/acc/libgo/nx/netio"
 	"weproxy/acc/libgo/nx/stack/netstk"
 	"weproxy/acc/libgo/nx/stats"
+
+	"weproxy/acc/app/acc/internal/proto/rule"
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +60,7 @@ func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
 	tag := fmt.Sprintf("%s UDP_%v %v->%s", TAG, pc.ID(), caddr, serv)
 	sta := stats.NewUDPStats(stats.TypeDirect, tag)
 
-	sta.Start("connected...")
+	sta.Start("connected")
 	defer sta.Done("closed")
 
 	c, err := net.ListenPacket("udp", ":0")

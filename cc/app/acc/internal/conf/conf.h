@@ -18,8 +18,8 @@ struct Auth {
 // Server ...
 struct Server {
     Auth auth;
-    strvec tcp;
-    strvec udp;
+    strvec dns;
+    strvec main;
     Map<string, strvec> geo;
 };
 
@@ -32,6 +32,7 @@ struct Rule {
 // Conf ...
 struct Conf {
     Server server;
+    Vec<Rule> dns;
     Vec<Rule> rules;
 
     // String ...
@@ -44,10 +45,6 @@ struct Conf {
    private:
     // Fix ...
     error Fix();
-
-   private:
-    Vec<Rule> dnsRules;
-    Vec<Rule> netRules;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

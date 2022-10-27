@@ -32,9 +32,11 @@ type Server interface {
 type NewServerFn func(j json.RawMessage) (Server, error)
 
 // Register ...
-func Register(proto string, fn NewServerFn) {
-	logx.D("%v Register(%s)", TAG, proto)
-	_protos[proto] = fn
+func Register(protos []string, fn NewServerFn) {
+	logx.D("%v Register(%s)", TAG, protos)
+	for _, proto := range protos {
+		_protos[proto] = fn
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

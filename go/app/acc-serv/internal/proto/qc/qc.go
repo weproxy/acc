@@ -17,7 +17,7 @@ const TAG = "[qc]"
 
 // init ...
 func init() {
-	proto.Register("qc", New)
+	proto.Register([]string{"qc", "quic"}, New)
 }
 
 // New ...

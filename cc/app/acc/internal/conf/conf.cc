@@ -10,9 +10,9 @@ namespace internal {
 namespace conf {
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Auth, s5, ss)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, auth, tcp, udp, geo)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Server, auth, dns, main, geo)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Rule, host, serv)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Conf, server, rules)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Conf, server, dns, rules)
 
 // _default ...
 static Ref<Conf> _default(NewRef<Conf>());
@@ -28,6 +28,7 @@ string Conf::String() const {
 
 // ParseJSON ...
 error Conf::ParseJSON(const string& jsonContent) {
+    //
     return gx::json::Unmarshal(jsonContent, this);
 }
 

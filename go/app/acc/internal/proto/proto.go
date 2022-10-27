@@ -151,13 +151,12 @@ func (m *StackHandler) Handle(c netstk.Conn) {
 
 	// get rule
 	proto, serv := func() (string, string) {
-		hit, err := rule.GetTCPRule(caddr, dstHost, raddr)
+		serv, err := rule.GetTCPRule(caddr, dstHost, raddr)
 		if err == nil {
-			serv := hit.Serv()
 			if !strings.Contains(serv, "://") {
 				return serv, serv
-			} else if url, err := url.Parse(serv); err == nil {
-				return url.Scheme, serv
+			} else if uri, err := url.Parse(serv); err == nil {
+				return uri.Scheme, serv
 			}
 		}
 		return "", ""
@@ -191,14 +190,12 @@ func (m *StackHandler) HandlePacket(pc netstk.PacketConn) {
 
 	// get rule
 	proto, serv := func() (string, string) {
-		var hit *rule.Rule
-		hit, err := rule.GetUDPRule(caddr, dstHost, raddr)
+		serv, err := rule.GetUDPRule(caddr, dstHost, raddr)
 		if err == nil {
-			serv := hit.Serv()
 			if !strings.Contains(serv, "://") {
 				return serv, serv
-			} else if url, err := url.Parse(serv); err == nil {
-				return url.Scheme, serv
+			} else if uri, err := url.Parse(serv); err == nil {
+				return uri.Scheme, serv
 			}
 		}
 		return "", ""

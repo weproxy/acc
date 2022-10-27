@@ -1,0 +1,40 @@
+{
+    "server": {
+        "auth": {
+            "s5": "",
+            "ss": ""
+        },
+        "dns": ["dns://direct"],
+        "main": ["direct"],
+        "geo": {
+            "us": [],
+            "jp": []
+        }
+    },
+
+    "dns": [
+        {
+            "host": ["*"],
+            "serv": ["dns://direct"]
+        },
+        {
+            "host": ["*"],
+            "serv": ["dns://8.8.8.8:53"]
+        },
+        {
+            "host": ["*"],
+            "serv": ["dns://s5"]
+        }
+    ],
+
+    "rules": [
+        {
+            "host": ["*"],
+            "serv": ["direct"]
+        },
+        {
+            "host": ["*"],
+            "serv": ["default"]
+        }
+    ]
+}

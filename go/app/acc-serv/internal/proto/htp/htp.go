@@ -17,7 +17,7 @@ const TAG = "[htp]"
 
 // init ...
 func init() {
-	proto.Register("htp", New)
+	proto.Register([]string{"htp", "cdn", "cdnx"}, New)
 }
 
 // New ...
