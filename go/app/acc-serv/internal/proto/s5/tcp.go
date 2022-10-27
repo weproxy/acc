@@ -52,11 +52,11 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	opt.A2B.CopingFn = func(n int) { sta.AddRecv(int64(n)) }
 	opt.B2A.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 
-	// Relay c <-. rc
+	// Relay c <--> rc
 	err = netio.Relay(c, rc, opt)
 	if err != nil {
 		if !errors.Is(err, net.ErrClosed) {
-			logx.E("%s relay %s, err: %v", TAG, tag, err)
+			logx.E("%s relay err: %v", tag, err)
 		}
 	}
 
@@ -77,7 +77,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 
 	ln, err := net.ListenPacket("udp", ":0")
 	if err != nil {
-		logx.E("%s dial, err: %v", TAG, err)
+		logx.E("%s dial err: %v", tag, err)
 		socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
 		return err
 	}
@@ -93,7 +93,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 	err = socks.WriteReply(c, socks.ReplySuccess, 0, ln.LocalAddr())
 	if err != nil {
 		if !errors.Is(err, net.ErrClosed) {
-			logx.E("%s err: %v", TAG, err)
+			logx.E("%s err: %v", tag, err)
 		}
 		return err
 	}
@@ -101,7 +101,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 	_, err = io.Copy(io.Discard, c)
 	if err != nil {
 		if !errors.Is(err, net.ErrClosed) {
-			logx.E("%s err: %v", TAG, err)
+			logx.E("%s err: %v", tag, err)
 		}
 		return err
 	}

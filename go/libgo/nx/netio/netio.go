@@ -106,9 +106,13 @@ func Relay(a net.Conn, b net.Conn, opt RelayOption) (err error) {
 			if opt.A2B.WriteTimeout > 0 {
 				b.SetWriteDeadline(time.Now().Add(opt.A2B.WriteTimeout))
 			}
-			_, errA2B = b.Write(opt.ToB.Data)
-			if errA2B != nil {
+			nw, err := b.Write(opt.ToB.Data)
+			if err != nil {
+				errA2B = err
 				return
+			}
+			if nw > 0 && opt.A2B.CopingFn != nil {
+				opt.A2B.CopingFn(nw)
 			}
 		}
 
@@ -208,9 +212,13 @@ func RelayPacket(a net.PacketConn, b net.PacketConn, opt RelayOption) (err error
 			if opt.A2B.WriteTimeout > 0 {
 				b.SetWriteDeadline(time.Now().Add(opt.A2B.WriteTimeout))
 			}
-			_, errA2B = b.WriteTo(opt.ToB.Data, opt.ToB.Addr)
-			if errA2B != nil {
+			nw, err := b.WriteTo(opt.ToB.Data, opt.ToB.Addr)
+			if err != nil {
+				errA2B = err
 				return
+			}
+			if nw > 0 && opt.A2B.CopingFn != nil {
+				opt.A2B.CopingFn(nw)
 			}
 		}
 

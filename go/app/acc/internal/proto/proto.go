@@ -21,7 +21,7 @@ import (
 	"weproxy/acc/app/acc/internal/proto/rule"
 )
 
-const TAG = "[proto]"
+const TAG = "proto"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,8 +137,7 @@ func (m *StackHandler) Close() error {
 // Handle TCP ...
 func (m *StackHandler) Handle(c netstk.Conn) {
 	caddr, raddr := c.LocalAddr(), c.RemoteAddr()
-	logx.D("%s Handle() %v->%v", TAG, caddr, raddr)
-
+	// logx.D("%s Handle() %v->%v", TAG, caddr, raddr)
 	defer c.Close()
 
 	var head []byte
@@ -155,7 +154,9 @@ func (m *StackHandler) Handle(c netstk.Conn) {
 		hit, err := rule.GetTCPRule(caddr, dstHost, raddr)
 		if err == nil {
 			serv := hit.Serv()
-			if url, err := url.Parse(serv); err == nil {
+			if !strings.Contains(serv, "://") {
+				return serv, serv
+			} else if url, err := url.Parse(serv); err == nil {
 				return url.Scheme, serv
 			}
 		}
@@ -177,7 +178,6 @@ func (m *StackHandler) Handle(c netstk.Conn) {
 func (m *StackHandler) HandlePacket(pc netstk.PacketConn) {
 	caddr, raddr := pc.LocalAddr(), pc.RemoteAddr()
 	// logx.D("%s HandlePacket() %v->%v", TAG, caddr, raddr)
-
 	defer pc.Close()
 
 	var head []byte

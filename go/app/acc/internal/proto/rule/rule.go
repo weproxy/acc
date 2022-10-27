@@ -38,7 +38,8 @@ func (m *Rule) Serv() string {
 //	one of dstHost and dstAddr maybe is nil
 func GetTCPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, error) {
 	r := &Rule{
-		Servs: []string{"s5://127.0.0.1:19780"},
+		// Servs: []string{"s5://127.0.0.1:19780"},
+		Servs: []string{"direct"},
 	}
 
 	if len(dstHost) > 0 || IsHTTPsAddr(dstAddr) {
@@ -79,9 +80,10 @@ func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, erro
 //	one of dstHost and dstAddr maybe is nil
 func GetDNSRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, error) {
 	r := &Rule{
-		Servs: []string{"dns://127.0.0.1:15353"},
+		// Servs: []string{"dns://127.0.0.1:15353"},
 		// Servs: []string{"dns://8.8.8.8:53"},
-		// Servs: []string{"dns://drect"},
+		Servs: []string{"dns://direct"},
+		// Servs: []string{"dns://223.5.5.5:53"},
 	}
 
 	logx.I("%s DNS %s -> %s, from %v", TAG, dstHost, r.Servs, srcAddr)
@@ -93,22 +95,26 @@ func GetDNSRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (*Rule, erro
 
 // IsHTTPsAddr ...
 func IsHTTPsAddr(addr net.Addr) bool {
-	switch addr := addr.(type) {
-	case *net.TCPAddr:
-		return IsHTTPsPort(addr.Port)
-	case *net.UDPAddr:
-	default:
+	if addr != nil {
+		switch addr := addr.(type) {
+		case *net.TCPAddr:
+			return IsHTTPsPort(addr.Port)
+		case *net.UDPAddr:
+		default:
+		}
 	}
 	return false
 }
 
 // IsDNSAddr ...
 func IsDNSAddr(addr net.Addr) bool {
-	switch addr := addr.(type) {
-	case *net.TCPAddr:
-	case *net.UDPAddr:
-		return IsDNSPort(addr.Port)
-	default:
+	if addr != nil {
+		switch addr := addr.(type) {
+		case *net.TCPAddr:
+		case *net.UDPAddr:
+			return IsDNSPort(addr.Port)
+		default:
+		}
 	}
 	return false
 }

@@ -81,10 +81,13 @@ error Relay(net::Conn a, net::Conn b, RelayOption opt) {
             if (opt.A2B.WriteTimeout) {
                 b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
             }
-            AUTO_R(_, e, b->Write(opt.ToB.Data));
+            AUTO_R(nw, e, b->Write(opt.ToB.Data));
             if (e) {
                 errA2B = e;
                 return;
+            }
+            if (nw > 0 && opt.A2B.CopingFn) {
+                opt.A2B.CopingFn(nw);
             }
         }
 
@@ -116,12 +119,13 @@ R<size_t /*w*/, error> Copy(net::PacketConn w, net::PacketConn r, CopyOption opt
         if (opt.ReadTimeout) {
             r->SetReadDeadline(time::Now().Add(opt.ReadTimeout));
         }
-        AUTO_R(nr, _, err, r->ReadFrom(buf));
+        AUTO_R(nr, addr, err, r->ReadFrom(buf));
         if (nr > 0) {
             if (opt.WriteTimeout) {
                 w->SetWriteDeadline(time::Now().Add(opt.WriteTimeout));
             }
-            AUTO_R(nw, er2, w->WriteTo(buf(0, nr), opt.WriteAddr));
+            auto raddr = opt.WriteAddr ? opt.WriteAddr : addr;
+            AUTO_R(nw, er2, w->WriteTo(buf(0, nr), raddr));
             if (nw > 0) {
                 written += nw;
                 if (opt.CopingFn) {
@@ -171,10 +175,13 @@ error Relay(net::PacketConn a, net::PacketConn b, RelayOption opt) {
             if (opt.A2B.WriteTimeout) {
                 b->SetWriteDeadline(time::Now().Add(opt.A2B.WriteTimeout));
             }
-            AUTO_R(_, e, b->WriteTo(opt.ToB.Data, opt.ToB.Addr));
+            AUTO_R(nw, e, b->WriteTo(opt.ToB.Data, opt.ToB.Addr));
             if (e) {
                 errA2B = e;
                 return;
+            }
+            if (nw > 0 && opt.A2B.CopingFn) {
+                opt.A2B.CopingFn(nw);
             }
         }
 

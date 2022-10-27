@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"weproxy/acc/libgo/logx"
-	"weproxy/acc/libgo/nx/stack/netstk"
 
 	"weproxy/acc/app/acc/internal/proto"
 )
@@ -51,24 +49,4 @@ type Handler struct {
 // Close ...
 func (m *Handler) Close() error {
 	return nil
-}
-
-// Handle TCP ...
-func (m *Handler) Handle(c netstk.Conn, head []byte) {
-	srcAddr, raddr := c.LocalAddr(), c.RemoteAddr()
-
-	logx.D("%s Handle() %v->%v", TAG, srcAddr, raddr)
-}
-
-// HandlePacket ...
-func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
-	caddr, raddr := pc.LocalAddr(), pc.RemoteAddr()
-	// logx.D("%s HandlePacket() %v->%v", TAG, caddr, raddr)
-
-	sess := m.getUDPSess(pc, caddr, raddr)
-
-	if sess != nil && len(head) > 0 {
-		// writeTo target server
-		sess.WriteToRC(head, raddr)
-	}
 }
