@@ -104,7 +104,7 @@ func handleConn(c net.Conn) error {
 	switch cmd {
 	case socks.CmdConnect:
 		return handleTCP(c, raddr.ToTCPAddr())
-	case socks.CmdAssociate:
+	case socks.CmdAssoc:
 		return handleAssoc(c, raddr.ToUDPAddr())
 	case socks.CmdBind:
 		return errors.New("not support socks command: bind")

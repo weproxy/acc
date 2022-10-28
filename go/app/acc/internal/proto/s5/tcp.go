@@ -6,6 +6,7 @@ package s5
 
 import (
 	"fmt"
+	"time"
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/netio"
@@ -34,7 +35,7 @@ func (m *Handler) Handle(c netstk.Conn, head []byte) {
 	defer rc.Close()
 
 	var opt netio.RelayOption
-	// opt.B2A.ReadTimeout = time.Second * 180
+	opt.B2A.ReadTimeout = time.Second * 60
 	opt.ToB.Data = head
 	opt.A2B.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 	opt.B2A.CopingFn = func(n int) { sta.AddRecv(int64(n)) }

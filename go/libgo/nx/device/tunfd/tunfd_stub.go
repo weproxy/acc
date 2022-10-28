@@ -1,3 +1,10 @@
+//
+// weproxy@foxmail.com 2022/10/20
+//
+
+//go:build !linux
+// +build !linux
+
 package tunfd
 
 import (
@@ -6,6 +13,6 @@ import (
 )
 
 // openTunDeviceWithFD ...
-func openTunDeviceWithFD(tunFD int) (io.ReadWriteCloser, error) {
-	return nil, errors.New("not support")
+func openTunDeviceWithFD(tunFD int, persist bool) (io.ReadWriteCloser, error) {
+	return nil, errors.New("tunfd not support on this platform")
 }

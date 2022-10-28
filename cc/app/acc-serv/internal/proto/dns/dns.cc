@@ -68,8 +68,7 @@ R<proto::Server, error> New(const json::J& j) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("dns", New);
+    proto::Register({"dns"}, New);
     return true;
 }();
 

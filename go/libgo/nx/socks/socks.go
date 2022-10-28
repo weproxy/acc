@@ -19,6 +19,7 @@ const Version5 byte = 5
 
 // UserAuthVersion ...
 const UserAuthVersion byte = 0x01
+const UserAuthVersionX byte = 0xe
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,14 +27,22 @@ const UserAuthVersion byte = 0x01
 type Command byte
 
 const (
-	CmdConnect   Command = 0x01
-	CmdBind      Command = 0x02
-	CmdAssociate Command = 0x03
+	CmdConnect Command = 0x01
+	CmdBind    Command = 0x02
+	CmdAssoc   Command = 0x03
 )
 
 // String ...
 func (m Command) String() string {
-	return "Command"
+	switch m {
+	case CmdConnect:
+		return "CmdConnect"
+	case CmdBind:
+		return "CmdBind"
+	case CmdAssoc:
+		return "CmdAssoc"
+	}
+	return fmt.Sprintf("<Cmd%d>", int(m))
 }
 
 // Method ...
@@ -46,7 +55,13 @@ const (
 
 // String ...
 func (m Method) String() string {
-	return "Method"
+	switch m {
+	case AuthMethodNotRequired:
+		return "AuthMethodNotRequired"
+	case AuthMethodUserPass:
+		return "AuthMethodUserPass"
+	}
+	return fmt.Sprintf("<AuthMethod%d>", int(m))
 }
 
 // Reply ...
@@ -71,7 +86,27 @@ const (
 
 // String ...
 func (m Reply) String() string {
-	return "Reply"
+	switch m {
+	case ReplySuccess:
+		return "(0)Succeeded"
+	case ReplyGeneralFailure:
+		return "(1)General socks server failure"
+	case ReplyConnectionNotAllowed:
+		return "(2)Connection not allowed by ruleset"
+	case ReplyNetworkUnreachable:
+		return "(3)Network unreachable"
+	case ReplyHostUnreachable:
+		return "(4)Host unreachable"
+	case ReplyConnectionRefused:
+		return "(5)Connection refused"
+	case ReplyTTLExpired:
+		return "(6)TTL expired"
+	case ReplyCommandNotSupported:
+		return "(7)Command not supported"
+	case ReplyAddressNotSupported:
+		return "(8)Address type not supported"
+	}
+	return fmt.Sprintf("<Reply%d>", int(m))
 }
 
 // WriteReply ...
@@ -121,8 +156,8 @@ type ProvideUserPassFn func() (user, pass string)
 type CheckUserPassFn func(user, pass string) error
 
 // clientAuth ...
-func clientAuth(c io.ReadWriter, userPassRequired bool, provideUserPassFn ProvideUserPassFn) error {
-	if !userPassRequired {
+func clientAuth(c io.ReadWriter, userAuthVer byte, provideUserPassFn ProvideUserPassFn) error {
+	if userAuthVer != UserAuthVersion && userAuthVer != UserAuthVersionX {
 		return nil
 	}
 
@@ -148,7 +183,7 @@ func clientAuth(c io.ReadWriter, userPassRequired bool, provideUserPassFn Provid
 	//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
 	//     +-----+------+----------+------+----------+
 	//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-	buf[0] = UserAuthVersion
+	buf[0] = userAuthVer
 	buf[1] = byte(len(user))
 	copy(buf[2:], user)
 	buf[2+len(user)] = byte(len(pass))
@@ -204,40 +239,42 @@ func serverAuth(c io.ReadWriter, userPassRequired bool, checkUserPassFn CheckUse
 	if _, err = io.ReadFull(c, buf[0:2]); err != nil {
 		return err
 	}
-	if buf[0] != UserAuthVersion {
+	if buf[0] == UserAuthVersion {
+		userLen := buf[1]
+		if int(userLen) > len(buf)-2 {
+			return ErrUserAuthFailed
+		}
+
+		if _, err = io.ReadFull(c, buf[0:userLen+1]); err != nil {
+			return err
+		}
+
+		user := string(buf[:userLen])
+
+		passLen := buf[userLen]
+		if int(passLen) > len(buf)-2 {
+			return ErrUserAuthFailed
+		}
+		if _, err = io.ReadFull(c, buf[0:passLen]); err != nil {
+			return err
+		}
+		pass := string(buf[:passLen])
+
+		// check user pass
+		if checkUserPassFn != nil {
+			err = checkUserPassFn(user, pass)
+		}
+	} else if buf[0] == UserAuthVersionX {
+		// TODO ...
+	} else {
 		return fmt.Errorf("invalid auth version: %d", buf[0])
-	}
-
-	userLen := buf[1]
-	if int(userLen) > len(buf)-2 {
-		return ErrUserAuthFailed
-	}
-
-	if _, err = io.ReadFull(c, buf[0:userLen+1]); err != nil {
-		return err
-	}
-
-	user := string(buf[:userLen])
-
-	passLen := buf[userLen]
-	if int(passLen) > len(buf)-2 {
-		return ErrUserAuthFailed
-	}
-	if _, err = io.ReadFull(c, buf[0:passLen]); err != nil {
-		return err
-	}
-	pass := string(buf[:passLen])
-
-	// check user pass
-	if checkUserPassFn != nil {
-		err = checkUserPassFn(user, pass)
 	}
 
 	// <<< REP:
 	//     | VER | STATUS |
 	//     +-----+--------+
 	//     |  1  |   1    |
-	buf[0] = UserAuthVersion
+	// buf[0] = UserAuthVersion
 	buf[1] = byte(ReplyAuthSuccess)
 	if err != nil {
 		buf[1] = byte(ReplyAuthFailure)
@@ -276,16 +313,7 @@ func ClientHandshake(c net.Conn, cmd Command, addr net.Addr, provideUserPassFn P
 	switch buf[1] {
 	case byte(AuthMethodNotRequired):
 	case byte(AuthMethodUserPass):
-		// >>> REQ:
-		//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-		//     +-----+------+----------+------+----------+
-		//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
-		// <<< REP:
-		//     | VER | STATUS |
-		//     +-----+--------+
-		//     |  1  |   1    |
-		err = clientAuth(c, true, provideUserPassFn)
+		err = clientAuth(c, UserAuthVersion, provideUserPassFn)
 	default:
 		err = ErrNoSupportedAuth
 	}
@@ -363,20 +391,6 @@ func ServerHandshake(c net.Conn, checkUserPassFn CheckUserPassFn) (Command, *Add
 	}
 
 	if methodNotRequired || methodUserPass {
-		// <<< REP:
-		//     | VER | METHOD |
-		//     +-----+--------+
-		//     |  1  |   1    |
-
-		// >>> REQ:
-		//     | VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-		//     +-----+------+----------+------+----------+
-		//     |  1  |  1   | 1 to 255 |  1   | 1 to 255 |
-
-		// <<< REP:
-		//     | VER | STATUS |
-		//     +-----+--------+
-		//     |  1  |   1    |
 		err := serverAuth(c, methodUserPass, checkUserPassFn)
 		if err != nil {
 			return cmd, nil, err
@@ -400,7 +414,7 @@ func ServerHandshake(c net.Conn, checkUserPassFn CheckUserPassFn) (Command, *Add
 	cmd = Command(buf[1])
 	// rsv := buf[2]
 
-	if CmdConnect != cmd && CmdAssociate != cmd {
+	if CmdConnect != cmd && CmdAssoc != cmd {
 		WriteReply(c, ReplyCommandNotSupported, 0, nil)
 		return cmd, nil, ToError(ReplyCommandNotSupported)
 	}

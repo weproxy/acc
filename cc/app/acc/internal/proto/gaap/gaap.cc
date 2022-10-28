@@ -45,8 +45,7 @@ R<proto::Handler, error> New(const string& servURL) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("gaap", New);
+    proto::Register({"ga", "gaap"}, New);
     return true;
 }();
 

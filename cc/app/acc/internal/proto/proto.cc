@@ -20,12 +20,14 @@ static Box<ProtoMap> _protos;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Register ...
-void Register(const string& proto, const NewHandlerFn& fn) {
-    LOGS_D(TAG << " Register(" << proto << ")");
+void Register(const stringz<>& protos, const NewHandlerFn& fn) {
+    LOGS_D(TAG << " Register(" << protos << ")");
     if (!_protos) {
         _protos = NewBox<ProtoMap>();
     }
-    (*_protos)[proto] = fn;
+    for (int i = 0; i < len(protos); i++) {
+        (*_protos)[protos[i]] = fn;
+    }
 }
 
 // error ...

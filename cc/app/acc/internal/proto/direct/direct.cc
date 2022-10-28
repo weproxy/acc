@@ -48,8 +48,7 @@ R<proto::Handler, error> New(const string& servURL) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("direct", New);
+    proto::Register({"di", "direct", "dns"}, New);
     return true;
 }();
 

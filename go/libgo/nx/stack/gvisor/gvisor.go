@@ -32,8 +32,8 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// NewStack ...
-func NewStack() (netstk.Stack, error) {
+// New ...
+func New() (netstk.Stack, error) {
 	return &Stack{udps: newUDPMap()}, nil
 }
 

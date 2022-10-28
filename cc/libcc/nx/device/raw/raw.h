@@ -8,8 +8,8 @@
 
 namespace nx {
 namespace device {
-namespace eth {
+namespace raw {
 // ...
-}  // namespace eth
+}  // namespace raw
 }  // namespace device
 }  // namespace nx

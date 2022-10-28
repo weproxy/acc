@@ -2,12 +2,12 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "ioutil.h"
+#include "os.h"
 
 #include "gx/fmt/fmt.h"
 
 namespace gx {
-namespace ioutil {
+namespace os {
 
 // ReadFile ...
 R<bytez<>, error> ReadFile(const string& filename) {
@@ -21,5 +21,5 @@ error WriteFile(const string& filename, const void* data, size_t size) {
     return gx_TodoErr();
 }
 
-}  // namespace ioutil
+}  // namespace os
 }  // namespace gx

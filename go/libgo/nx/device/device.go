@@ -31,10 +31,10 @@ func Register(typ string, fn NewDeviceFn) {
 	_devs[typ] = fn
 }
 
-// NewDevice ...
-func NewDevice(typ string, cfg map[string]interface{}) (netstk.Device, error) {
+// New ...
+func New(typ string, cfg map[string]interface{}) (netstk.Device, error) {
 	if fn, ok := _devs[strings.ToLower(typ)]; ok && fn != nil {
 		return fn(cfg)
 	}
-	return nil, errors.New("device.NewDevice() unkown type: " + typ)
+	return nil, errors.New("device.New() unkown type: " + typ)
 }

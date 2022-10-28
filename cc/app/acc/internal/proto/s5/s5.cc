@@ -45,8 +45,7 @@ R<proto::Handler, error> New(const string& servURL) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("s5", New);
+    proto::Register({"s5", "s5x"}, New);
     return true;
 }();
 

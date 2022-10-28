@@ -2,8 +2,8 @@
 // weproxy@foxmail.com 2022/10/20
 //
 
-//go:build linux && raw
-// +build linux,raw
+//go:build linux
+// +build linux
 
 package mod
 

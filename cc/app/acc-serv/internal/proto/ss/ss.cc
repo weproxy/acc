@@ -116,8 +116,7 @@ R<proto::Server, error> New(const json::J& j) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("ss", New);
+    proto::Register({"ss", "ssx"}, New);
     return true;
 }();
 

@@ -7,17 +7,17 @@ import (
 )
 
 // openTunDeviceWithFD ...
-func openTunDeviceWithFD(tunFD int) (io.ReadWriteCloser, error) {
+func openTunDeviceWithFD(tunFD int, persist bool) (io.ReadWriteCloser, error) {
 	cfg := water.Config{
 		DeviceType: water.TUN,
 		TunFD:      tunFD,
 	}
 	cfg.Persist = persist
 
-	tunDev, err := water.New(cfg)
+	dev, err := water.New(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return tunDev, nil
+	return dev, nil
 }

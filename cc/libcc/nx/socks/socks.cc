@@ -278,7 +278,7 @@ R<Command, Ref<Addr>, error> ServerHandshake(net::Conn c, const CheckUserPassFn&
     cmd = Command(buf[1]);
     auto rsv = buf[2];
 
-    if (Command::Connect != cmd && Command::Associate != cmd) {
+    if (Command::Connect != cmd && Command::Assoc != cmd) {
         WriteReply(c, Reply::CommandNotSupported);
         return {cmd, nil, ToError(Reply::CommandNotSupported)};
     }

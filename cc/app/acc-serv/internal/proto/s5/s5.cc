@@ -46,7 +46,7 @@ static error handleConn(net::Conn c) {
     switch (cmd) {
         case socks::Command::Connect:
             return handleTCP(c, raddr->ToNetAddr());
-        case socks::Command::Associate:
+        case socks::Command::Assoc:
             return handleAssoc(c, raddr->ToNetAddr());
         case socks::Command::Bind:
             return errors::New("not support socks command: bind");
@@ -121,8 +121,7 @@ R<proto::Server, error> New(const json::J& j) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("s5", New);
+    proto::Register({"s5", "s5x"}, New);
     return true;
 }();
 

@@ -78,8 +78,8 @@ func dnsSetFakeProvideFn() error {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-var _dev netstk.Device
-var _stk netstk.Stack
+// _closers ...
+var _closers []io.Closer
 
 // Init ...
 func Init() error {
@@ -88,37 +88,47 @@ func Init() error {
 	// dns SetFakeProvideFn ...
 	dnsSetFakeProvideFn()
 
-	stk, err := stack.NewStack()
+	var err error
+	defer func() {
+		if err != nil {
+			closeAll()
+		}
+	}()
+
+	// net stack
+	stk, err := stack.New()
 	if err != nil {
 		return err
 	}
+	_closers = append(_closers, stk)
 
-	dev, err := device.NewDevice(device.TypeTUN, nil)
+	// net device
+	dev, err := device.New(device.TypeTUN, nil)
 	if err != nil {
 		return err
 	}
+	_closers = append(_closers, dev)
 
+	// start stack
 	err = stk.Start(&StackHandler{}, dev, 1500)
 	if err != nil {
-		dev.Close()
 		return err
 	}
-
-	_dev, _stk = dev, stk
 
 	return nil
 }
 
+// closeAll ...
+func closeAll() {
+	for i := len(_closers) - 1; i >= 0; i-- {
+		_closers[i].Close()
+	}
+	_closers = nil
+}
+
 // Deinit ...
 func Deinit() error {
-	if _dev != nil {
-		_dev.Close()
-		_dev = nil
-	}
-	if _stk != nil {
-		_stk.Close()
-		_stk = nil
-	}
+	closeAll()
 	logx.D("%v Deinit()", TAG)
 	return nil
 }
@@ -257,7 +267,7 @@ func parseDNS(pc netstk.PacketConn) (dstHost string, head []byte, done bool) {
 		}
 	}
 
-	if len(msg.Questions) > 0 {
+	if msg != nil && len(msg.Questions) > 0 {
 		dstHost = strings.TrimSuffix(msg.Questions[0].Name.String(), ".")
 	}
 

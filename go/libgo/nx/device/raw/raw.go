@@ -6,44 +6,138 @@ package eth
 
 import (
 	"errors"
-	"io"
+	"net"
+	"sync"
+	"syscall"
+	"time"
 
+	"github.com/google/gopacket"
+
+	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/device"
+	"weproxy/acc/libgo/nx/device/eth"
 	"weproxy/acc/libgo/nx/stack/netstk"
+	"weproxy/acc/libgo/nx/util"
 )
 
 // init ...
 func init() {
-	device.Register(device.TypeRAW, NewDevice)
+	device.Register(device.TypeRAW, New)
 }
 
-// NewDevice ...
-func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
-	return nil, errors.New("eth.NewDevice() not impl")
+// New ...
+func New(cfg map[string]interface{}) (netstk.Device, error) {
+	var ifname, cidr string
+
+	createDevFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Device, error) {
+		if err := util.SetPromiscMode(ifname, true); err != nil {
+			logx.E("[raw] SetPromiscMode(%s) fail: %v", ifname, err)
+			return nil, err
+		}
+
+		dev := &rawDevice{
+			ifIdx:  ifc.Index,
+			ifName: ifc.Name,
+			tmpBuf: make([]byte, 2048),
+		}
+		if err := dev.Open(ifc, cidr); err != nil {
+			return nil, err
+		}
+		return dev, nil
+	}
+
+	dev := eth.New()
+
+	err := dev.Open(ifname, cidr, createDevFn)
+	if err != nil {
+		return nil, err
+	}
+	return nil, errors.New("eth.New() not impl")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Device implements netstk.Device
-type Device struct {
+// rawDevice implements eth.Device
+type rawDevice struct {
+	fd     int
+	ifIdx  int
+	ifName string
+	toAddr syscall.SockaddrLinklayer // Sendto(...&sa)
+	tmpBuf []byte
+	mu     sync.Mutex
 }
 
 // Type ...
-func (m *Device) Type() string {
+func (m *rawDevice) Type() string {
 	return device.TypeRAW
 }
 
 // Close implements io.Closer
-func (m *Device) Close() error {
+func (m *rawDevice) Close() error {
+	if m.fd > 0 {
+		syscall.Close(m.fd)
+	}
+	if len(m.ifName) > 0 {
+		util.SetPromiscMode(m.ifName, false)
+	}
 	return nil
 }
 
-// Read from device
-func (m *Device) Read(p []byte, offset int) (n int, err error) {
-	return 0, io.EOF
+// Open ...
+func (m *rawDevice) Open(ifc *net.Interface, cidr net.IPNet) (err error) {
+	m.toAddr = func(ifc *net.Interface) syscall.SockaddrLinklayer {
+		var haddr [8]byte
+		copy(haddr[0:7], ifc.HardwareAddr[0:7])
+		return syscall.SockaddrLinklayer{
+			// Protocol: syscall.ETH_P_IP,
+			Ifindex: ifc.Index,
+			Halen:   uint8(len(ifc.HardwareAddr)),
+			Addr:    haddr,
+		}
+	}(ifc)
+
+	m.fd, err = util.CreateRawSocket(true)
+	if err != nil {
+		logx.E("[raw] util.CreateRawSocket() %v", err)
+		return
+	}
+
+	return
 }
 
-// Write to device
-func (m *Device) Write(p []byte, offset int) (n int, err error) {
-	return 0, io.EOF
+// ReadPacketData for gopacket interface
+func (m *rawDevice) ReadPacketData() (data []byte, ci gopacket.CaptureInfo, err error) {
+	// logx.D("[netdev] raw.ReadPacketData...")
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	n, _, err := syscall.Recvfrom(m.fd, m.tmpBuf, 0)
+	if err != nil {
+		// logx.E("[netdev] raw,ReadPacketData, %v", err)
+		return
+	}
+
+	ci.Timestamp = time.Now()
+	ci.Length = n
+	ci.CaptureLength = n
+	ci.InterfaceIndex = m.ifIdx
+
+	data = make([]byte, ci.CaptureLength)
+	n = copy(data, m.tmpBuf[:n])
+
+	// logx.D("[netdev] raw.ReadPacketData, %v bytes", n)
+
+	return
+}
+
+// WritePacketData ...
+func (m *rawDevice) WritePacketData(data []byte) (err error) {
+	err = syscall.Sendto(m.fd, data, 0, &m.toAddr)
+	if err != nil {
+		// logx.E("[netdev] raw,WritePacketData, %v", err)
+	} else {
+		// logx.D("[netdev] raw.WritePacketData, %v bytes", len(data))
+	}
+	return
 }

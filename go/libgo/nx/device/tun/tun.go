@@ -17,7 +17,7 @@ import (
 
 // init ...
 func init() {
-	device.Register(device.TypeTUN, NewDevice)
+	device.Register(device.TypeTUN, New)
 }
 
 // conf ...
@@ -28,8 +28,8 @@ type conf struct {
 	persist        bool
 }
 
-// NewDevice ...
-func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
+// New ...
+func New(cfg map[string]interface{}) (netstk.Device, error) {
 	c := &conf{
 		name:    "utun",
 		addr:    "10.6.6.2",

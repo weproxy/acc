@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -161,7 +161,7 @@ func ParseBytes(key string, js []byte) (*Conf, error) {
 
 // LoadFile ...
 func LoadFile(key, file string) (*Conf, error) {
-	b, err := ioutil.ReadFile(file)
+	b, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

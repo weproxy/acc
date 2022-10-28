@@ -2,12 +2,12 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "dev.h"
+#include "tunfd.h"
 
 namespace nx {
 namespace device {
-namespace eth {
+namespace tunfd {
 // ...
-}  // namespace eth
+}  // namespace tunfd
 }  // namespace device
 }  // namespace nx

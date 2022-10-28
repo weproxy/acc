@@ -11,7 +11,7 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// NewStack ...
-func NewStack() (netstk.Stack, error) {
-	return gvisor.NewStack()
+// New ...
+func New() (netstk.Stack, error) {
+	return gvisor.New()
 }

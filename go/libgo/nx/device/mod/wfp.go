@@ -2,8 +2,8 @@
 // weproxy@foxmail.com 2022/10/20
 //
 
-//go:build windows && wfp
-// +build windows,wfp
+//go:build windows
+// +build windows
 
 package mod
 

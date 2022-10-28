@@ -86,22 +86,15 @@ func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
 	defer sta.Done("closed")
 
 	// dial server
-	rc, bound, err := m.dial(socks.CmdAssociate, raddr, sta)
+	rc, bound, err := m.dial(socks.CmdAssoc, raddr, sta)
 	if err != nil {
 		logx.E("%s err: %v", tag, err)
 		return
 	}
 	defer rc.Close()
 
-	go func() {
-		// Copy io.Discard <-- rc
-		_, err = io.Copy(io.Discard, rc)
-		// if err != nil {
-		// 	if !errors.Is(err, net.ErrClosed) {
-		// 		logx.E("%s relay err: %v", tag, err)
-		// 	}
-		// }
-	}()
+	// discard
+	go io.Copy(io.Discard, rc)
 
 	// handlePacket ...
 	m.handlePacket(pc, bound, head)
@@ -128,16 +121,13 @@ func (m *Handler) handlePacket(pc netstk.PacketConn, bound *socks.Addr, head []b
 	ln := &udpLocal_t{PacketConn: pc, raddr: m.serv}
 
 	var opt netio.RelayOption
-	opt.B2A.ReadTimeout = time.Second * 180
-	opt.ToB.Data = head
-	opt.ToB.Addr = raddr
+	opt.ToB.Data, opt.ToB.Addr = head, raddr
 	opt.A2B.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 	opt.B2A.CopingFn = func(n int) { sta.AddRecv(int64(n)) }
-
 	if m.serv != nil {
 		opt.B2A.WriteAddr = raddr
 	}
-
+	opt.B2A.ReadTimeout = time.Second * 180
 	if rule.IsDNSAddr(raddr) {
 		opt.B2A.MaxTimes = 1
 		opt.B2A.ReadTimeout = time.Second * 10

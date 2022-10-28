@@ -202,7 +202,7 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
     cmd = socks::Command(buf[1]);
     auto rsv = buf[2];
 
-    if (socks::CmdConnect != cmd && socks::CmdAssociate != cmd) {
+    if (socks::CmdConnect != cmd && socks::CmdAssoc != cmd) {
         socks::WriteReply(c, socks::ReplyCommandNotSupported);
         return {cmd, nil, socks::ToError(socks::ReplyCommandNotSupported)};
     }
@@ -240,7 +240,7 @@ static error handleConn(net::Conn c) {
     switch (cmd) {
         case socks::CmdConnect:
             return handleTCP(c, raddr->ToNetAddr());
-        case socks::CmdAssociate:
+        case socks::CmdAssoc:
             return handleAssoc(c, raddr->ToNetAddr());
         case socks::CmdBind:
             return errors::New("not support socks command: bind");
@@ -565,7 +565,7 @@ func handleConn(c net.Conn) error {
     switch cmd {
     case socks.CmdConnect:
         return handleTCP(c, raddr.ToTCPAddr())
-    case socks.CmdAssociate:
+    case socks.CmdAssoc:
         return handleAssoc(c, raddr.ToUDPAddr())
     case socks.CmdBind:
         return errors.New("not support socks command: bind")
@@ -662,7 +662,7 @@ func handshake(c net.Conn) (socks.Command, *socks.Addr, error) {
     cmd = socks.Command(buf[1])
     // rsv := buf[2]
 
-    if socks.CmdConnect != cmd && socks.CmdAssociate != cmd {
+    if socks.CmdConnect != cmd && socks.CmdAssoc != cmd {
         socks.WriteReply(c, socks.ReplyCommandNotSupported, 0, nil)
         return cmd, nil, socks.ToError(socks.ReplyCommandNotSupported)
     }

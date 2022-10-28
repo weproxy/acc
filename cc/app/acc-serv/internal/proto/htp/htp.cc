@@ -111,8 +111,7 @@ R<proto::Server, error> New(const json::J& j) {
 ////////////////////////////////////////////////////////////////////////////////
 // init ..
 static auto _ = [] {
-    // LOGS_V(TAG << " init()");
-    proto::Register("htp", New);
+    proto::Register({"htp", "cdn", "cdnx"}, New);
     return true;
 }();
 

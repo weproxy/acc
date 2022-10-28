@@ -17,13 +17,14 @@ const uint8 Version5 = 0x05;
 
 // UserAuthVersion ...
 const uint8 UserAuthVersion = 0x01;
+const uint8 UserAuthVersionX = 0xee;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Command ...
 enum class Command : uint8 {
     Connect = 0x01,
     Bind = 0x02,
-    Associate = 0x03,
+    Assoc = 0x03,
 };
 
 // ToString ...
@@ -35,7 +36,7 @@ inline const char* ToString(const Command e) {
     switch (e) {
         CASE_RETURN_COMMAND(Connect);
         CASE_RETURN_COMMAND(Bind);
-        CASE_RETURN_COMMAND(Associate);
+        CASE_RETURN_COMMAND(Assoc);
         default:
             return "";
     }

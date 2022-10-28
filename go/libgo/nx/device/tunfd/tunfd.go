@@ -14,11 +14,11 @@ import (
 
 // init ...
 func init() {
-	device.Register(device.TypeTUNFD, NewDevice)
+	device.Register(device.TypeTUNFD, New)
 }
 
-// NewDevice ...
-func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
+// New ...
+func New(cfg map[string]interface{}) (netstk.Device, error) {
 	tunfd, ok := func() (int, bool) {
 		if cfg != nil {
 			if v, ok := cfg["tunfd"]; ok {
@@ -30,10 +30,10 @@ func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
 		return 0, false
 	}()
 	if !ok {
-		return nil, errors.New("tunfd.NewDevice() err: missing cfg[\"tunfd\"]")
+		return nil, errors.New("tunfd.New() err: missing cfg[\"tunfd\"]")
 	}
 
-	rwc, err := openTunDeviceWithFD(tunfd)
+	rwc, err := openTunDeviceWithFD(tunfd, false)
 	if err != nil {
 		return nil, err
 	}

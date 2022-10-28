@@ -21,7 +21,7 @@ using NewHandlerFn = func<R<Handler, error>(const string& servURL)>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Register ...
-void Register(const string& proto, const NewHandlerFn& fn);
+void Register(const stringz<>& protos, const NewHandlerFn& fn);
 
 // GetHandler ...
 R<Handler, error> GetHandler(const string& servURL);

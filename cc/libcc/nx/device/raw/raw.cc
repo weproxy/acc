@@ -2,12 +2,12 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "dev.h"
+#include "raw.h"
 
 namespace nx {
 namespace device {
-namespace eth {
+namespace raw {
 // ...
-}  // namespace eth
+}  // namespace raw
 }  // namespace device
 }  // namespace nx

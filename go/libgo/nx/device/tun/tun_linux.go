@@ -9,8 +9,8 @@ import (
 // openTunDevice ...
 func openTunDevice(c *conf) (io.ReadWriteCloser, error) {
 	cfg := water.Config{
-		Name:       c.Name,
-		Persist:    persist,
+		Name:       c.name,
+		Persist:    c.persist,
 		DeviceType: water.TUN,
 	}
 

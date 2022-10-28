@@ -6,44 +6,150 @@ package pcap
 
 import (
 	"errors"
-	"io"
+	"fmt"
+	"net"
 
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
+
+	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/device"
+	"weproxy/acc/libgo/nx/device/eth"
 	"weproxy/acc/libgo/nx/stack/netstk"
 )
 
 // init ...
 func init() {
-	device.Register(device.TypePCAP, NewDevice)
+	device.Register(device.TypePCAP, New)
 }
 
-// NewDevice ...
-func NewDevice(cfg map[string]interface{}) (netstk.Device, error) {
-	return nil, errors.New("eth.NewDevice() not impl")
+// New ...
+func New(cfg map[string]interface{}) (netstk.Device, error) {
+	var ifname, cidr string
+
+	createDevFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Device, error) {
+		dev := &pcapDevice{}
+		if err := dev.Open(ifc, cidr); err != nil {
+			return nil, err
+		}
+		return dev, nil
+	}
+
+	dev := eth.New()
+
+	err := dev.Open(ifname, cidr, createDevFn)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, errors.New("eth.New() not impl")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Device implements netstk.Device
-type Device struct {
+// pcapDevice implements eth.Device
+type pcapDevice struct {
+	h *pcap.Handle
 }
 
 // Type ...
-func (m *Device) Type() string {
+func (m *pcapDevice) Type() string {
 	return device.TypePCAP
 }
 
 // Close implements io.Closer
-func (m *Device) Close() error {
+func (m *pcapDevice) Close() error {
+	if m.h != nil {
+		m.h.Close()
+	}
 	return nil
 }
 
-// Read from device
-func (m *Device) Read(p []byte, offset int) (n int, err error) {
-	return 0, io.EOF
+// Open ...
+func (m *pcapDevice) Open(ifc *net.Interface, cidr net.IPNet) (err error) {
+	ip, ipnet, err := net.ParseCIDR(cidr.String())
+	if err != nil {
+		logx.E("[pcap] ParseCIDR(%v) %v", cidr, err)
+		return
+	}
+
+	devName, err := m.getDevName(ifc)
+	if err != nil {
+		logx.E("[pcap] getDevName(%v) %v", ifc.Name, err)
+		return
+	}
+
+	m.h, err = pcap.OpenLive(devName, 2048, true, pcap.BlockForever)
+	if err != nil {
+		logx.E("[pcap] pcap.OpenLive(%v) %v", devName, err)
+		return
+	}
+
+	filter := fmt.Sprintf("arp or (ip and not src host %v and src net %s)", ip.String(), ipnet.String())
+	if err = m.h.SetBPFFilter(filter); err != nil {
+		logx.E("[pcap] pcap.SetBPFFilter(\"%v\") %v", filter, err)
+		return
+	}
+
+	logx.P("[pcap] %v", filter)
+
+	return
 }
 
-// Write to device
-func (m *Device) Write(p []byte, offset int) (n int, err error) {
-	return 0, io.EOF
+// ReadPacketData for gopacket interface
+func (m *pcapDevice) ReadPacketData() (data []byte, ci gopacket.CaptureInfo, err error) {
+	return m.h.ReadPacketData()
+}
+
+// WritePacketData ...
+func (m *pcapDevice) WritePacketData(data []byte) (err error) {
+	return m.h.WritePacketData(data)
+}
+
+// getDevName ...
+func (m *pcapDevice) getDevName(ifc *net.Interface) (devName string, err error) {
+	devices, err := pcap.FindAllDevs()
+	if err != nil {
+		return
+	}
+
+	ifAddrs, err := ifc.Addrs()
+	if err != nil {
+		return
+	}
+
+	matchIfAddrFn := func(devAddr *pcap.InterfaceAddress) bool {
+		for _, ifa := range ifAddrs {
+			switch ifa := ifa.(type) {
+			case *net.IPAddr:
+				if ifa.IP.Equal(devAddr.IP) {
+					return true
+				}
+			case *net.IPNet:
+				if ifa.IP.Equal(devAddr.IP) {
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
+	for _, dev := range devices {
+		for _, addr := range dev.Addresses {
+			if len(dev.Name) > 0 && matchIfAddrFn(&addr) {
+				devName = dev.Name
+				break
+			}
+		}
+		if len(devName) > 0 {
+			break
+		}
+	}
+
+	if len(devName) == 0 {
+		err = errors.New("not found")
+	}
+
+	return
 }
