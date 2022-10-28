@@ -134,10 +134,5 @@ func (m *Handler) handlePacket(pc netstk.PacketConn, bound *socks.Addr, head []b
 	}
 
 	// RelayPacket ln <--> rc
-	err = netio.RelayPacket(ln, rc, opt)
-	// if err != nil {
-	// 	if !errors.Is(err, net.ErrClosed) {
-	// 		logx.E("%s relay err: %v", tag, err)
-	// 	}
-	// }
+	netio.RelayPacket(ln, rc, opt)
 }

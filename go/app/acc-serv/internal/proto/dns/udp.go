@@ -5,7 +5,6 @@
 package dns
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -17,28 +16,6 @@ import (
 	"weproxy/acc/libgo/nx/netio"
 	"weproxy/acc/libgo/nx/stats"
 )
-
-////////////////////////////////////////////////////////////////////////////////
-
-// key_t ...
-type key_t uint64
-
-// makeKey ...
-func makeKeyIPPort(ip net.IP, port uint16) key_t {
-	a := binary.LittleEndian.Uint32(ip)
-	b := uint32(port)
-	return key_t(a)<<16 | key_t(b)
-}
-
-func makeKey(addr net.Addr) key_t {
-	switch addr := addr.(type) {
-	case *net.TCPAddr:
-		return makeKeyIPPort(addr.IP, uint16(addr.Port))
-	case *net.UDPAddr:
-		return makeKeyIPPort(addr.IP, uint16(addr.Port))
-	}
-	return 0
-}
 
 // //////////////////////////////////////////////////////////////////////////////
 // udpSess_t ...
@@ -108,7 +85,7 @@ func (m *udpSess_t) WriteToRC(buf []byte, raddr net.Addr) error {
 }
 
 // udpSessMap ...
-type udpSessMap map[key_t]*udpSess_t
+type udpSessMap map[nx.Key]*udpSess_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -185,7 +162,7 @@ func runServLoop(ln net.PacketConn) error {
 		// use source client addr as key
 		// <TODO-Notice>
 		//  some user's env has multi-outbound-ip, we will get diff caddr although he use one-same-conn
-		key := makeKey(caddr)
+		key := nx.MakeKey(caddr)
 
 		if v, ok := sessMap[key]; !ok {
 			// create a new rc for every new source client

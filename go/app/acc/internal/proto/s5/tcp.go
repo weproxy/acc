@@ -41,10 +41,5 @@ func (m *Handler) Handle(c netstk.Conn, head []byte) {
 	opt.B2A.CopingFn = func(n int) { sta.AddRecv(int64(n)) }
 
 	// Relay c <--> rc
-	err = netio.Relay(c, rc, opt)
-	// if err != nil {
-	// 	if !errors.Is(err, net.ErrClosed) {
-	// 		logx.E("%s relay err: %v", tag, err)
-	// 	}
-	// }
+	netio.Relay(c, rc, opt)
 }

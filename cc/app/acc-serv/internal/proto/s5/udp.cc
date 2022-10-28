@@ -3,7 +3,6 @@
 //
 
 #include "fx/fx.h"
-#include "gx/encoding/binary/binary.h"
 #include "gx/net/net.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
@@ -17,18 +16,6 @@ namespace internal {
 namespace proto {
 namespace s5 {
 using namespace nx;
-
-////////////////////////////////////////////////////////////////////////////////
-// key_t ...
-typedef uint64 key_t;
-
-// makeKey ...
-static key_t makeKey(net::IP ip, uint16 port) {
-    uint64 a = (uint64)binary::LittleEndian.Uint32(ip.B);  // ipv4
-    uint64 b = (uint64)port;
-    return a << 16 | b;
-}
-static key_t makeKey(net::Addr addr) { return makeKey(addr->IP, addr->Port); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // udpSess_t ...
@@ -99,7 +86,7 @@ struct udpSess_t : public std::enable_shared_from_this<udpSess_t> {
 };
 
 // udpSessMap ...
-using udpSessMap = Map<key_t, Ref<udpSess_t>>;
+using udpSessMap = Map<nx::Key, Ref<udpSess_t>>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // udpConn_t
@@ -228,7 +215,7 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         // use source client addr as key
         // <TODO-Notice>
         //  some user's env has multi-outbound-ip, we will get diff caddr although he use one-same-conn
-        key_t key = makeKey(caddr);
+        nx::Key key = nx::MakeKey(caddr);
 
         auto it = sessMap->find((key));
         if (it == sessMap->end()) {

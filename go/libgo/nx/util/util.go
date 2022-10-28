@@ -21,6 +21,11 @@ import (
 
 var ErrLinuxOnly = errors.New("linux only")
 
+// Filer ...
+type Filer interface {
+	File() (*os.File, error)
+}
+
 // SetPromiscMode ...
 func SetPromiscMode(ifName string, promisc bool) error {
 	switch runtime.GOOS {

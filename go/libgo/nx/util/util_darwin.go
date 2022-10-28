@@ -96,3 +96,34 @@ func bindToInterface(fd int, i *net.Interface) error {
 
 	// return errors.New("unsupport network")
 }
+
+// SetMark ..
+func SetMark(fd int, mark int) error {
+	return ErrLinuxOnly
+}
+
+// SetReuseport enables SO_REUSEPORT option on socket.
+func SetReuseport(fd, reusePort int) error {
+	return ErrLinuxOnly
+}
+
+// SetOptTransparent set socket with ip transparent option
+func SetOptTransparent(fd, opt int) (err error) {
+	//
+	return ErrLinuxOnly
+}
+
+// SetOptRecvOrigDst set socket with recv origin dst option
+func SetOptRecvOrigDst(fd, opt int) (err error) {
+	return ErrLinuxOnly
+}
+
+// GetTCPOriginDst ...
+func GetTCPOriginDst(c *net.TCPConn) (*net.TCPAddr, error) {
+	return nil, ErrLinuxOnly
+}
+
+// GetUDPOriginDst ...
+func GetUDPOriginDst(hdr []byte) (*net.UDPAddr, error) {
+	return nil, ErrLinuxOnly
+}

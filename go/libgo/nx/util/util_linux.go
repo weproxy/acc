@@ -129,3 +129,127 @@ func GetBestInterfaceIndex(dstIP string) (ifIdx int, err error) {
 func bindToInterface(fd int, iface *net.Interface) error {
 	return os.NewSyscallError("BindToDevice", syscall.BindToDevice(fd, iface.Name))
 }
+
+// SetMark ..
+func SetMark(fd int, mark int) error {
+	return os.NewSyscallError("setsockopt", syscall.SetsockoptInt(fd, syscall.SOL_SOCKET, syscall.SO_MARK, mark))
+}
+
+// SetReuseport enables SO_REUSEPORT option on socket.
+func SetReuseport(fd, reusePort int) error {
+	if err := os.NewSyscallError("setsockopt", syscall.SetsockoptInt(ConvFd(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, reusePort)); err != nil {
+		return err
+	}
+	return os.NewSyscallError("setsockopt", syscall.SetsockoptInt(ConvFd(fd), syscall.SOL_SOCKET, syscall.SO_REUSEPORT, reusePort))
+}
+
+const (
+	// SOL_IP          = 0
+	SO_ORIGINAL_DST = 80
+)
+
+// SetTCPOptRecvOrigDst set socket with ip transparent option
+func SetTCPOptRecvOrigDst(c Filer) (err error) {
+	file, err := c.File()
+	if err != nil {
+		return err
+	}
+	fd := int(file.Fd())
+	defer file.Close()
+
+	return SetOptTransparent(fd, 1)
+}
+
+// SetUDPOptRecvOrigDst set socket with ip transparent option
+func SetUDPOptRecvOrigDst(c Filer) (err error) {
+	file, err := c.File()
+	if err != nil {
+		return err
+	}
+	fd := int(file.Fd())
+	defer file.Close()
+
+	err = SetOptTransparent(fd, 1)
+	if err != nil {
+		return err
+	}
+
+	err = SetOptRecvOrigDst(fd, 1)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetOptTransparent ...
+func SetOptTransparent(fd, opt int) (err error) {
+	// set socket with ip transparent option
+	return syscall.SetsockoptInt(fd, syscall.SOL_IP, syscall.IP_TRANSPARENT, opt)
+}
+
+// SetOptRecvOrigDst ...
+func SetOptRecvOrigDst(fd, opt int) (err error) {
+	// set socket with recv origin dst option
+	return syscall.SetsockoptInt(fd, syscall.SOL_IP, syscall.IP_RECVORIGDSTADDR, opt)
+}
+
+// GetTCPOriginDst 获取 netfilter 在 REDIRECT 之前的原始目标地址
+func GetTCPOriginDst(c *net.TCPConn) (*net.TCPAddr, error) {
+	f, err := c.File()
+	if err != nil {
+		return nil, err
+	}
+	fd := int(f.Fd())
+	defer f.Close()
+
+	ipv6Mreq, err := syscall.GetsockoptIPv6Mreq(fd, syscall.SOL_IP, SO_ORIGINAL_DST)
+	if err != nil {
+		addr := c.LocalAddr()
+		return net.ResolveTCPAddr(addr.Network(), addr.String())
+	}
+
+	ip := net.IP(ipv6Mreq.Multiaddr[4:8])
+	port := int(binary.BigEndian.Uint16(ipv6Mreq.Multiaddr[2:4]))
+
+	return &net.TCPAddr{IP: ip, Port: port}, nil
+}
+
+var ErrGetOriginDstFail = errors.New("get origin dst fail")
+
+// GetUDPOriginDst ...
+func GetUDPOriginDst(hdr []byte) (dst *net.UDPAddr, err error) {
+	msgs, err := syscall.ParseSocketControlMessage(hdr)
+	if err != nil {
+		return
+	}
+
+	for _, msg := range msgs {
+		if msg.Header.Level == syscall.SOL_IP && msg.Header.Type == syscall.IP_RECVORIGDSTADDR {
+			raw := &syscall.RawSockaddrInet4{}
+
+			err := binary.Read(bytes.NewReader(msg.Data), binary.LittleEndian, raw)
+			if err != nil {
+				continue
+			}
+
+			// only support for ipv4
+			if raw.Family == syscall.AF_INET {
+				pp := (*syscall.RawSockaddrInet4)(unsafe.Pointer(raw))
+				p := (*[2]byte)(unsafe.Pointer(&pp.Port))
+
+				dst = &net.UDPAddr{
+					IP:   net.IPv4(pp.Addr[0], pp.Addr[1], pp.Addr[2], pp.Addr[3]),
+					Port: int(p[0])<<8 + int(p[1]),
+				}
+				return dst, nil
+			}
+		}
+	}
+
+	if dst == nil {
+		err = ErrGetOriginDstFail
+	}
+
+	return
+}

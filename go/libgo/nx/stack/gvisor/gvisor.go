@@ -330,8 +330,12 @@ func (m *Stack) HandlePacket(ep stack.TransportEndpointID, pkt *stack.PacketBuff
 
 // Close is to close the stack
 func (m *Stack) Close() error {
-	m.udps.Clear()
-	m.stk.Close()
+	if m.udps != nil {
+		m.udps.Clear()
+	}
+	if m.stk != nil {
+		m.stk.Close()
+	}
 	return nil
 }
 

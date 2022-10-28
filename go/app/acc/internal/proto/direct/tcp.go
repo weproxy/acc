@@ -7,6 +7,7 @@ package direct
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/netio"
@@ -34,16 +35,11 @@ func (m *Handler) Handle(c netstk.Conn, head []byte) {
 	sta.LogI("connected")
 
 	var opt netio.RelayOption
-	// opt.B2A.ReadTimeout = time.Second * 180
+	opt.B2A.ReadTimeout = time.Second * 180
 	opt.ToB.Data = head
 	opt.A2B.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 	opt.B2A.CopingFn = func(n int) { sta.AddRecv(int64(n)) }
 
 	// Relay c <--> rc
-	err = netio.Relay(c, rc, opt)
-	// if err != nil {
-	// 	if !errors.Is(err, net.ErrClosed) {
-	// 		logx.E("%s relay err: %v", tag, err)
-	// 	}
-	// }
+	netio.Relay(c, rc, opt)
 }

@@ -78,17 +78,24 @@ func dnsSetFakeProvideFn() error {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// _stackHandler
+var _stackHandler = &stackHandler{}
+
+// StackHandler ...
+func StackHandler() netstk.Handler {
+	return _stackHandler
+}
+
 // _closers ...
 var _closers []io.Closer
 
 // Init ...
-func Init() error {
+func Init() (err error) {
 	logx.D("%v Init()", TAG)
 
 	// dns SetFakeProvideFn ...
 	dnsSetFakeProvideFn()
 
-	var err error
 	defer func() {
 		if err != nil {
 			closeAll()
@@ -115,7 +122,7 @@ func Init() error {
 	_closers = append(_closers, dev)
 
 	// start stack
-	err = stk.Start(&StackHandler{}, dev, 1500)
+	err = stk.Start(StackHandler(), dev, 1500)
 	if err != nil {
 		return err
 	}
@@ -140,17 +147,17 @@ func Deinit() error {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// StackHandler implements netstk.StackHandler
-type StackHandler struct {
+// stackHandler implements netstk.stackHandler
+type stackHandler struct {
 }
 
 // Close ...
-func (m *StackHandler) Close() error {
+func (m *stackHandler) Close() error {
 	return nil
 }
 
 // Handle TCP ...
-func (m *StackHandler) Handle(c netstk.Conn) {
+func (m *stackHandler) Handle(c netstk.Conn) {
 	caddr, raddr := c.LocalAddr(), c.RemoteAddr()
 	// logx.D("%s Handle() %v->%v", TAG, caddr, raddr)
 	defer c.Close()
@@ -189,7 +196,7 @@ func (m *StackHandler) Handle(c netstk.Conn) {
 }
 
 // HandlePacket UDP ...
-func (m *StackHandler) HandlePacket(pc netstk.PacketConn) {
+func (m *stackHandler) HandlePacket(pc netstk.PacketConn) {
 	caddr, raddr := pc.LocalAddr(), pc.RemoteAddr()
 	// logx.D("%s HandlePacket() %v->%v", TAG, caddr, raddr)
 	defer pc.Close()
