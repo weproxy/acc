@@ -19,8 +19,8 @@ import (
 	"weproxy/acc/libgo/nx/util"
 )
 
-// Device ...
-type Device interface {
+// Inner ...
+type Inner interface {
 	io.Closer
 	Type() string
 	Open(ifc *net.Interface, cidr net.IPNet) error
@@ -28,8 +28,8 @@ type Device interface {
 	WritePacketData(data []byte) (err error)
 }
 
-// ethDvice implements netstk.Device
-type ethDvice struct {
+// ethDevice implements netstk.Device
+type ethDevice struct {
 	p struct {
 		*io.PipeReader
 		*io.PipeWriter
@@ -39,27 +39,24 @@ type ethDvice struct {
 		name  string
 		mac   net.HardwareAddr
 	}
-	ethDev   Device
+	inner    Inner
 	macMap   sync.Map // net.IP ->  net.HardwareAddr
 	cancelFn context.CancelFunc
 	closedCh chan struct{}
 	ipnet    net.IPNet
 }
 
+// NewInnerFn ....
+type NewInnerFn func(ifc *net.Interface, cidr net.IPNet) (Inner, error)
+
 // New ...
-func New() *ethDvice {
-	m := &ethDvice{
+func New(ifname, cidr string, newInnerFn NewInnerFn) (dev *ethDevice, err error) {
+	m := &ethDevice{
 		closedCh: make(chan struct{}),
 	}
+
 	m.p.PipeReader, m.p.PipeWriter = io.Pipe()
-	return m
-}
 
-// createDevFn ....
-type createDevFn func(ifc *net.Interface, cidr net.IPNet) (Device, error)
-
-// Open ...
-func (m *ethDvice) Open(ifname string, cidr string, createDevFn createDevFn) (err error) {
 	defer func() {
 		if err != nil {
 			close(m.closedCh)
@@ -100,9 +97,9 @@ func (m *ethDvice) Open(ifname string, cidr string, createDevFn createDevFn) (er
 		}
 	}()
 
-	m.ethDev, err = createDevFn(ifc, m.ipnet)
+	m.inner, err = newInnerFn(ifc, m.ipnet)
 	if err != nil {
-		logx.E("[eth] createDevFn() %v", err)
+		logx.E("[eth] newInnerFn() %v", err)
 		return
 	}
 
@@ -110,15 +107,15 @@ func (m *ethDvice) Open(ifname string, cidr string, createDevFn createDevFn) (er
 	m.cancelFn = cancelFn
 
 	// linux RAW use iptables
-	if m.ethDev.Type() != device.TypeRAW {
+	if m.inner.Type() != device.TypeRAW {
 		go m.run(ctx) // other pcap etc ...
 	}
 
-	return
+	return m, nil
 }
 
 // Close ...
-func (m *ethDvice) Close() (err error) {
+func (m *ethDevice) Close() (err error) {
 	select {
 	case <-m.closedCh:
 		return nil
@@ -129,8 +126,8 @@ func (m *ethDvice) Close() (err error) {
 		m.cancelFn()
 	}
 
-	if m.ethDev != nil {
-		m.ethDev.Close()
+	if m.inner != nil {
+		m.inner.Close()
 	}
 
 	if m.p.PipeReader != nil {
@@ -143,40 +140,40 @@ func (m *ethDvice) Close() (err error) {
 		logx.I("[eth] DelAdapterIP(%s, %v)", m.ifc.name, m.ipnet.String())
 	}
 
-	if m.ethDev != nil && m.ethDev.Type() != "raw" {
+	if m.inner != nil && m.inner.Type() != "raw" {
 		<-m.closedCh
 	}
 
 	return
 }
 
-// Type impl netstk.ethDvice
-func (m *ethDvice) Type() string {
-	if m.ethDev != nil {
-		return m.ethDev.Type()
+// Type impl netstk.Device
+func (m *ethDevice) Type() string {
+	if m.inner != nil {
+		return m.inner.Type()
 	}
 	return "eth"
 }
 
 // ReadPacketData impl gopacket.PacketDataSource
-func (m *ethDvice) ReadPacketData() (data []byte, ci gopacket.CaptureInfo, err error) {
-	if m.ethDev != nil {
-		return m.ethDev.ReadPacketData()
+func (m *ethDevice) ReadPacketData() (data []byte, ci gopacket.CaptureInfo, err error) {
+	if m.inner != nil {
+		return m.inner.ReadPacketData()
 	}
 	err = io.ErrClosedPipe
 	return
 }
 
 // WritePacketData ...
-func (m *ethDvice) WritePacketData(data []byte) (err error) {
-	if m.ethDev != nil {
-		return m.ethDev.WritePacketData(data)
+func (m *ethDevice) WritePacketData(data []byte) (err error) {
+	if m.inner != nil {
+		return m.inner.WritePacketData(data)
 	}
 	return io.ErrClosedPipe
 }
 
 // run ...
-func (m *ethDvice) run(ctx context.Context) {
+func (m *ethDevice) run(ctx context.Context) {
 	defer func() {
 		if e := recover(); e != nil {
 			logx.E("%v", e)
@@ -213,7 +210,7 @@ func (m *ethDvice) run(ctx context.Context) {
 }
 
 // Read ...
-func (m *ethDvice) Read(p []byte, offset int) (n int, err error) {
+func (m *ethDevice) Read(p []byte, offset int) (n int, err error) {
 	// logx.D("[eth] Read(p, %v)\n", offset)
 	if m.p.PipeReader != nil {
 		return m.p.Read(p[offset:])
@@ -222,11 +219,11 @@ func (m *ethDvice) Read(p []byte, offset int) (n int, err error) {
 }
 
 // Write ...
-func (m *ethDvice) Write(p []byte, offset int) (n int, err error) {
+func (m *ethDevice) Write(p []byte, offset int) (n int, err error) {
 	p = p[offset:]
 	// logx.D("[eth] Write(len(p)=%v)\n", len(p))
 
-	if m.ethDev == nil {
+	if m.inner == nil {
 		return 0, io.ErrClosedPipe
 	}
 
@@ -267,7 +264,7 @@ func (m *ethDvice) Write(p []byte, offset int) (n int, err error) {
 }
 
 // handleIP4Layer ...
-func (m *ethDvice) handleIP4Layer(p gopacket.Packet, lay gopacket.Layer) {
+func (m *ethDevice) handleIP4Layer(p gopacket.Packet, lay gopacket.Layer) {
 	ip4Pkt, ok := lay.(*layers.IPv4)
 	if !ok {
 		// println("!IPv4")
@@ -300,7 +297,7 @@ func (m *ethDvice) handleIP4Layer(p gopacket.Packet, lay gopacket.Layer) {
 var OnArpRequestCallback func(senderIP, targetIP net.IP)
 
 // handleARPLayer ...
-func (m *ethDvice) handleARPLayer(p gopacket.Packet, lay gopacket.Layer) {
+func (m *ethDevice) handleARPLayer(p gopacket.Packet, lay gopacket.Layer) {
 	arpPkt, ok := lay.(*layers.ARP)
 	if !ok {
 		return

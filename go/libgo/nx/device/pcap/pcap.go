@@ -24,30 +24,26 @@ func init() {
 }
 
 // New ...
-func New(cfg map[string]interface{}) (netstk.Device, error) {
-	var ifname, cidr string
+func New(cfg device.Conf) (netstk.Device, error) {
+	ifname, cidr := cfg.Str("ifname"), cfg.Str("cidr")
+	if len(ifname) == 0 || len(cidr) == 0 {
+		return nil, errors.New("missing cfg ifname/cidr")
+	}
 
-	createDevFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Device, error) {
-		dev := &pcapDevice{}
-		if err := dev.Open(ifc, cidr); err != nil {
+	newInnerFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Inner, error) {
+		inner := &pcapDevice{}
+		if err := inner.Open(ifc, cidr); err != nil {
 			return nil, err
 		}
-		return dev, nil
+		return inner, nil
 	}
 
-	dev := eth.New()
-
-	err := dev.Open(ifname, cidr, createDevFn)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, errors.New("eth.New() not impl")
+	return eth.New(ifname, cidr, newInnerFn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// pcapDevice implements eth.Device
+// pcapDevice implements eth.Inner
 type pcapDevice struct {
 	h *pcap.Handle
 }

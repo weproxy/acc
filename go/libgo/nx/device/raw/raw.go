@@ -26,38 +26,35 @@ func init() {
 }
 
 // New ...
-func New(cfg map[string]interface{}) (netstk.Device, error) {
-	var ifname, cidr string
+func New(cfg device.Conf) (netstk.Device, error) {
+	ifname, cidr := cfg.Str("ifname"), cfg.Str("cidr")
+	if len(ifname) == 0 || len(cidr) == 0 {
+		return nil, errors.New("missing cfg ifname/cidr")
+	}
 
-	createDevFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Device, error) {
+	newInnerFn := func(ifc *net.Interface, cidr net.IPNet) (eth.Inner, error) {
 		if err := util.SetPromiscMode(ifname, true); err != nil {
 			logx.E("[raw] SetPromiscMode(%s) fail: %v", ifname, err)
 			return nil, err
 		}
 
-		dev := &rawDevice{
+		inner := &rawDevice{
 			ifIdx:  ifc.Index,
 			ifName: ifc.Name,
 			tmpBuf: make([]byte, 2048),
 		}
-		if err := dev.Open(ifc, cidr); err != nil {
+		if err := inner.Open(ifc, cidr); err != nil {
 			return nil, err
 		}
-		return dev, nil
+		return inner, nil
 	}
 
-	dev := eth.New()
-
-	err := dev.Open(ifname, cidr, createDevFn)
-	if err != nil {
-		return nil, err
-	}
-	return nil, errors.New("eth.New() not impl")
+	return eth.New(ifname, cidr, newInnerFn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// rawDevice implements eth.Device
+// rawDevice implements eth.Inner
 type rawDevice struct {
 	fd     int
 	ifIdx  int

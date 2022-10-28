@@ -29,7 +29,7 @@ type conf struct {
 }
 
 // New ...
-func New(cfg map[string]interface{}) (netstk.Device, error) {
+func New(cfg device.Conf) (netstk.Device, error) {
 	c := &conf{
 		name:    "utun",
 		addr:    "10.6.6.2",

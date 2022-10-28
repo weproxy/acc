@@ -37,7 +37,7 @@ func init() {
 }
 
 // New ...
-func New(cfg map[string]interface{}) (netstk.Device, error) {
+func New(cfg device.Conf) (netstk.Device, error) {
 	return nil, errors.New("wfp.New() not impl")
 }
 

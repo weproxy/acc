@@ -103,7 +103,12 @@ func Init() error {
 	_closers = append(_closers, stk)
 
 	// net device
-	dev, err := device.New(device.TypeTUN, nil)
+	cfg := device.Conf{
+		"ifname": "en0",
+		"cidr":   "10.6.6.1/24",
+	}
+
+	dev, err := device.New(device.TypeTUN, cfg)
 	if err != nil {
 		return err
 	}
