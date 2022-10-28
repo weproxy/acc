@@ -113,11 +113,12 @@ func (m *tproxyServer) loopAccept() {
 		}
 
 		// handle it
-		go m.h.Handle(&tproxyConn{
+		cc := &tproxyConn{
 			TCPConn: c,
 			id:      nx.NewID(),
 			origDst: origDst,
-		})
+		}
+		go m.h.Handle(cc)
 	}
 }
 
@@ -240,7 +241,7 @@ func (m *tproxyServer) loopRecvFrom() {
 				id:     nx.NewID(),
 				laddr:  replyDst,
 				raddr:  origDst,
-				data:   make(chan *nx.Packet, 1024),
+				data:   make(chan *nx.Packet, 256),
 				closed: make(chan struct{}),
 			}
 			_udps[key] = pc
@@ -249,7 +250,10 @@ func (m *tproxyServer) loopRecvFrom() {
 			go m.h.HandlePacket(pc)
 		}
 
-		// push in chan
-		pc.data <- &nx.Packet{Addr: origDst, Data: data}
+		// push in it's chan without blocking this loop
+		select {
+		case pc.data <- &nx.Packet{Addr: origDst, Data: data}:
+		default:
+		}
 	}
 }
