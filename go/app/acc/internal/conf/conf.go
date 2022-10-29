@@ -8,7 +8,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/rand"
 	"os"
 	"regexp"
@@ -159,9 +158,9 @@ func ParseBytes(key string, js []byte) (*Conf, error) {
 	return c, nil
 }
 
-// LoadFile ...
-func LoadFile(key, file string) (*Conf, error) {
-	b, err := os.ReadFile(file)
+// ParseFile ...
+func ParseFile(key, jsfile string) (*Conf, error) {
+	b, err := os.ReadFile(jsfile)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +184,7 @@ func (m *Conf) fix() error {
 			return err
 		}
 	}
-	fmt.Println(m)
+	// fmt.Println(m)
 	return nil
 }
 

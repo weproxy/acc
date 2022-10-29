@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os/exec"
 	"strings"
 
@@ -38,6 +39,16 @@ func New(cfg device.Conf) (netstk.Device, error) {
 		dns:     nil,
 		persist: false,
 	}
+
+	if s := cfg.Str("ifname"); len(s) > 0 {
+		c.name = s
+	}
+	if s := cfg.Str("cidr"); len(s) > 0 {
+		if ip, _, err := net.ParseCIDR(s); err == nil {
+			c.addr, c.gw = ip.String(), ip.String()
+		}
+	}
+
 	rwc, err := openTunDevice(c)
 	if err != nil {
 		return nil, err

@@ -7,6 +7,7 @@ package tproxy
 import (
 	"errors"
 	"net"
+	"sync"
 	"time"
 
 	"weproxy/acc/libgo/logx"
@@ -20,6 +21,7 @@ import (
 type stackPacketConn struct {
 	ln           net.PacketConn
 	id           uint64
+	key          nx.Key
 	laddr, raddr net.Addr
 	data         chan *nx.Packet
 	closed       chan struct{}
@@ -57,6 +59,9 @@ func (m *stackPacketConn) Close() error {
 	select {
 	case <-m.closed:
 	default:
+		_mudp.Lock()
+		delete(_udps, m.key)
+		_mudp.Unlock()
 		close(m.closed)
 	}
 	return nil
@@ -94,6 +99,7 @@ func (m *stackPacketConn) SetWriteDeadline(t time.Time) error {
 
 // _udps ...
 var _udps = make(map[nx.Key]*stackPacketConn)
+var _mudp sync.Mutex
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,7 +130,9 @@ func (m *Server) loopRecvFrom() {
 
 		// lookfor
 		key := nx.MakeKey(replyDst)
+		_mudp.Lock()
 		pc, ok := _udps[key]
+		_mudp.Unlock()
 		if !ok {
 			// new session
 			pc = &stackPacketConn{
@@ -135,7 +143,9 @@ func (m *Server) loopRecvFrom() {
 				data:   make(chan *nx.Packet, 256),
 				closed: make(chan struct{}),
 			}
+			_mudp.Lock()
 			_udps[key] = pc
+			_mudp.Unlock()
 
 			// handle it
 			go m.h.HandlePacket(pc)

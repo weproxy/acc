@@ -104,22 +104,8 @@ func Init() (err error) {
 	}
 	_closers = append(_closers, stk)
 
-	var dev netstk.Device
-
 	// net device
-	if 1 > 0 {
-		cfg := device.Conf{
-			"ifname": "en0",
-			"cidr":   "10.66.66.1/24",
-		}
-		dev, err = device.New(device.TypeTUN, cfg)
-	} else {
-		cfg := device.Conf{
-			"ifname": "en0",
-			"cidr":   "10.6.6.1/24",
-		}
-		dev, err = device.New(device.TypePCAP, cfg)
-	}
+	dev, err := newDevice()
 	if err != nil {
 		return err
 	}
@@ -134,25 +120,80 @@ func Init() (err error) {
 		return err
 	}
 
+	// tproxy/dnat server
 	if runtime.GOOS == "linux" {
-		var svr io.Closer
-
-		// tproxy server
-		svr, err = tproxy.New(h, "10.20.30.40:5000")
+		var svr []io.Closer
+		svr, err = newServer(h)
 		if err != nil {
 			return
 		}
-		_closers = append(_closers, svr)
-
-		// dnat server
-		svr, err = dnat.New(h, "127.0.0.01:5050")
-		if err != nil {
-			return
-		}
-		_closers = append(_closers, svr)
+		_closers = append(_closers, svr...)
 	}
 
 	return nil
+}
+
+// newDevice ...
+func newDevice() (dev netstk.Device, err error) {
+	if runtime.GOOS == "ios" || runtime.GOOS == "android" {
+		// tunfd
+		tunfd := 0 // TODO read from setting
+		cfg := device.Conf{
+			"tunfd": tunfd,
+		}
+		return device.New(device.TypeTUNFD, cfg)
+	}
+
+	if runtime.GOOS == "windows" {
+		// wfp
+		cfg := device.Conf{}
+		return device.New(device.TypeWFP, cfg)
+	}
+
+	if true {
+		// tun
+		cfg := device.Conf{
+			"ifname": "en0",
+			"cidr":   "10.66.66.1/24",
+		}
+		return device.New(device.TypeTUN, cfg)
+	}
+
+	if true && runtime.GOOS == "linux" {
+		// raw
+		cfg := device.Conf{
+			"ifname": "en0",
+		}
+		return device.New(device.TypeRAW, cfg)
+	}
+
+	// pacp
+	cfg := device.Conf{
+		"ifname": "en0",
+		"cidr":   "10.6.6.1/24",
+	}
+	return device.New(device.TypePCAP, cfg)
+}
+
+// newServer ...
+func newServer(h netstk.Handler) (arr []io.Closer, err error) {
+	var svr io.Closer
+
+	// tproxy server
+	svr, err = tproxy.New(h, "10.20.30.40:5000")
+	if err != nil {
+		return
+	}
+	arr = append(arr, svr)
+
+	// dnat server
+	svr, err = dnat.New(h, "127.0.0.01:5050")
+	if err != nil {
+		return
+	}
+	arr = append(arr, svr)
+
+	return
 }
 
 // closeAll ...

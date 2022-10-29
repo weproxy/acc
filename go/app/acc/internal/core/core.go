@@ -6,10 +6,14 @@ package core
 
 import (
 	"os"
+	"runtime"
 
 	"weproxy/acc/libgo/fx/signal"
 	"weproxy/acc/libgo/logx"
 
+	"weproxy/acc/app/acc/internal/api"
+	"weproxy/acc/app/acc/internal/board"
+	"weproxy/acc/app/acc/internal/iptbl"
 	"weproxy/acc/app/acc/internal/proto"
 
 	_ "weproxy/acc/app/acc/internal/proto/direct"
@@ -22,16 +26,36 @@ import (
 	_ "weproxy/acc/libgo/nx/device/mod"
 )
 
+// Main ...
 func Main() {
+	////////////////////////////////////////////////////////
+	// detect
+	if runtime.GOOS == "linux" {
+		board.Detect()
+		iptbl.Detect()
+	}
+
+	////////////////////////////////////////////////////////
 	// proto init
 	err := proto.Init()
-	// proto deinit
-	defer proto.Deinit()
 	if err != nil {
 		logx.E("[core] proto::Init(), err: %v", err)
 		return
 	}
+	// proto deinit
+	defer proto.Deinit()
 
+	////////////////////////////////////////////////////////
+	// api init
+	err = api.Init()
+	if err != nil {
+		logx.E("[core] api::Init(), err: %v", err)
+		return
+	}
+	// api deinit
+	defer api.Deinit()
+
+	////////////////////////////////////////////////////////
 	// Wait for Ctrl+C or kill -x
 	signal.WaitNotify(func() {
 		logx.W("[signal] quit")
