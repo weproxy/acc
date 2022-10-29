@@ -30,7 +30,7 @@ template <typename Writer, typename Reader,
           typename std::enable_if<xx::has_write<Writer>::value && xx::has_read<Reader>::value, int>::type = 0>
 R<int64 /*w*/, error> CopyBuffer(Writer dst, Reader src, bytez<> buf, const CopingFn& copingFn = {}) {
     if (!buf || buf.size() == 0) {
-        buf = make(0, 32 * 1024);
+        buf = make(0, 1024 * 32);
     }
 
     int64 written = 0;

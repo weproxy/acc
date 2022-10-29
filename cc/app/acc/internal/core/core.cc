@@ -54,7 +54,7 @@ void test() {
             }
         }
 
-        bytez<> buf = make(32 * 1024);
+        bytez<> buf = make(1024 * 32);
 
         for (;;) {
             AUTO_R(n, err, c->Read(buf));

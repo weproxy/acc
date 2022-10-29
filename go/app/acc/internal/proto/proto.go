@@ -7,6 +7,7 @@ package proto
 import (
 	"io"
 	"net/url"
+	"runtime"
 	"strings"
 
 	"golang.org/x/net/dns/dnsmessage"
@@ -14,6 +15,8 @@ import (
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/device"
 	"weproxy/acc/libgo/nx/dns"
+	"weproxy/acc/libgo/nx/server/dnat"
+	"weproxy/acc/libgo/nx/server/tproxy"
 	"weproxy/acc/libgo/nx/sni"
 	"weproxy/acc/libgo/nx/stack"
 	"weproxy/acc/libgo/nx/stack/netstk"
@@ -78,14 +81,6 @@ func dnsSetFakeProvideFn() error {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// _stackHandler
-var _stackHandler = &stackHandler{}
-
-// StackHandler ...
-func StackHandler() netstk.Handler {
-	return _stackHandler
-}
-
 // _closers ...
 var _closers []io.Closer
 
@@ -109,22 +104,52 @@ func Init() (err error) {
 	}
 	_closers = append(_closers, stk)
 
-	// net device
-	cfg := device.Conf{
-		"ifname": "en0",
-		"cidr":   "10.6.6.1/24",
-	}
+	var dev netstk.Device
 
-	dev, err := device.New(device.TypeTUN, cfg)
+	// net device
+	if 1 > 0 {
+		cfg := device.Conf{
+			"ifname": "en0",
+			"cidr":   "10.66.66.1/24",
+		}
+		dev, err = device.New(device.TypeTUN, cfg)
+	} else {
+		cfg := device.Conf{
+			"ifname": "en0",
+			"cidr":   "10.6.6.1/24",
+		}
+		dev, err = device.New(device.TypePCAP, cfg)
+	}
 	if err != nil {
 		return err
 	}
 	_closers = append(_closers, dev)
 
+	// stack handler
+	h := &stackHandler{}
+
 	// start stack
-	err = stk.Start(StackHandler(), dev, 1500)
+	err = stk.Start(h, dev, 1500)
 	if err != nil {
 		return err
+	}
+
+	if runtime.GOOS == "linux" {
+		var svr io.Closer
+
+		// tproxy server
+		svr, err = tproxy.New(h, "10.20.30.40:5000")
+		if err != nil {
+			return
+		}
+		_closers = append(_closers, svr)
+
+		// dnat server
+		svr, err = dnat.New(h, "127.0.0.01:5050")
+		if err != nil {
+			return
+		}
+		_closers = append(_closers, svr)
 	}
 
 	return nil

@@ -265,7 +265,7 @@ R<Listener, error> ListenConfig::Listen(const string& addr) {
         return {nil, fmt::Errorf("bind %s failed: %s", addr.c_str(), co::strerror())};
     }
 
-    r = co::listen(fd, 64 * 1024);
+    r = co::listen(fd, 1024 * 64);
     if (r < 0) {
         return {nil, fmt::Errorf("listen error: %s", co::strerror())};
     }

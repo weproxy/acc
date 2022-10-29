@@ -11,7 +11,6 @@ import (
 	"weproxy/acc/libgo/logx"
 
 	"weproxy/acc/app/acc/internal/proto"
-	"weproxy/acc/app/acc/internal/server"
 
 	_ "weproxy/acc/app/acc/internal/proto/direct"
 	_ "weproxy/acc/app/acc/internal/proto/gaap"
@@ -32,13 +31,6 @@ func Main() {
 		logx.E("[core] proto::Init(), err: %v", err)
 		return
 	}
-
-	// server
-	svr := server.New(proto.StackHandler())
-	if err = svr.Start(); err != nil {
-		return
-	}
-	defer svr.Close()
 
 	// Wait for Ctrl+C or kill -x
 	signal.WaitNotify(func() {
