@@ -25,8 +25,8 @@ void Register(const stringz<>& protos, const NewHandlerFn& fn) {
     if (!_protos) {
         _protos = NewBox<ProtoMap>();
     }
-    for (int i = 0; i < len(protos); i++) {
-        (*_protos)[protos[i]] = fn;
+    for (auto& proto : protos) {
+        (*_protos)[proto] = fn;
     }
 }
 

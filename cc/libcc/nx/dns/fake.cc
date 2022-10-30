@@ -48,8 +48,8 @@ R<Ref<Answer>, error> MakeFakeAnswer(const Message* msg, const FakeProvideFn& pr
     newMsg->Additionals = nil;
     newMsg->Header.Response = true;
 
-    for (int i = 0; i < len(ansIPs); i++) {
-        auto ip = net::ParseIP(ansIPs[i]);
+    for (auto& ans : ansIPs) {
+        auto ip = net::ParseIP(ans);
         if (!ip) {
             continue;
         }

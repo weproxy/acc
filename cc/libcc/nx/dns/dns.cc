@@ -23,8 +23,7 @@ namespace xx {
 string ToString(slice<Resource> arr) {
     stringz<> answs;
 
-    for (int i = 0; i < len(arr); i++) {
-        auto ans = arr[i];
+    for (auto& ans : arr) {
         if (ans.Body == nil) {
             continue;
         }
