@@ -4,9 +4,10 @@
 
 
 
-### libcc/gx
+### libgx
 
-* C++ library like Golang
+* A C++ library like Golang
+* see https://github.com/weproxy/libgx
 
 | Golang                                                       | C++                                                          | Desc                          |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------- |

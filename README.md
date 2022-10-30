@@ -4,10 +4,9 @@
 <Status>: under development, not works yet...
 ```
 
-Cross-platform network proxy programe
+A cross platform network capture/proxy program by C++/Go/Rust, run on Linux/OSX/Windows/iOS/Android/Routers.
 
-A game accelerator on Linux/OSX/Windows, iOS/Android, and router hardwards
-
+A game accelerator.
 
 
 ### /cc/
@@ -21,11 +20,11 @@ A game accelerator on Linux/OSX/Windows, iOS/Android, and router hardwards
 
 | dir       | func | desc |
 | ---------- | ------------ | ------------------------- |
-| libcc/gx   | likes golang | g = golag                 |
+| libgx      |  likes golang | g = golag                 |
 | libcc/fx   | functions       | f = func                  |
 | libcc/nx   | network       | n = net                   |
 | libcc/logx | logger       | log |
-| libcc/3rd  | third-party     | coost、nlohmann_json... |
+| libcc/3rd  | third-party     |                         |
 | - |              |                           |
 
 | dir         | func | desc |

@@ -4,9 +4,9 @@
 <状态>: 开发中，尚未能工作...
 ```
 
-跨平台网络代理程序
+一套跨平台网络劫持/代理程序, C++/Go/Rust 编写，运行在 Linux/OSX/Windows、iOS/Android、路由器板子上
 
-游戏加速器，运行在 Linux/OSX/Windows PC、iOS/Android、路由器板子上
+一个游戏加速器。
 
 
 
@@ -21,11 +21,11 @@
 
 | 目录       |              |                           |
 | ---------- | ------------ | ------------------------- |
-| libcc/gx   | 类 golang 库 | g = golag                 |
+| libgx      | 类 golang 库 | g = golag                 |
 | libcc/fx   | 功能库       | f = func                  |
 | libcc/nx   | 网络库       | n = net                   |
 | libcc/logx | 日志库       |                           |
-| libcc/3rd  | 第三方库     | 主用 coost、nlohmann_json |
+| libcc/3rd  | 第三方库     |                           |
 |            |              |                           |
 |            |              |                           |
 
