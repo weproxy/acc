@@ -54,9 +54,11 @@ CMD = os.getenv("cmd") or "cli"
 
 -- include dir
 add_includedirs("libcc")
-add_includedirs("libcc/3rd/coost/include")
-add_includedirs("libcc/3rd/nlohmann_json/single_include")
+add_includedirs("libgx")
+add_includedirs("libgx/3rd/coost/include")
+add_includedirs("libgx/3rd/nlohmann_json/include")
 
 -- include sub-projects
 includes("libcc")
+includes("libgx")
 includes("app")

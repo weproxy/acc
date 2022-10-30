@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../gx/gx.h"
+#include "gx/gx.h"
 
 namespace fx {
 

@@ -4,7 +4,6 @@
 
 #include "core.h"
 
-#include "co/os.h"
 #include "fx/signal/signal.h"
 #include "gx/fmt/fmt.h"
 #include "gx/net/net.h"

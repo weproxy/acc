@@ -1,24 +1,12 @@
 [submodule "cc/libcc/3rd/Divert"]
 	path = cc/libcc/3rd/Divert
 	url = https://github.com/basil00/Divert
-[submodule "cc/libcc/3rd/coost"]
-	path = cc/libcc/3rd/coost
-	url = https://github.com/idealvin/coost
-[submodule "cc/libcc/3rd/nlohmann_json"]
-	path = cc/libcc/3rd/nlohmann_json
-	url = https://github.com/nlohmann/json
-[submodule "cc/libcc/3rd/s_task"]
-	path = cc/libcc/3rd/s_task
-	url = https://github.com/xhawk18/s_task
-[submodule "cc/libcc/3rd/libgo"]
-	path = cc/libcc/3rd/libgo
-	url = https://github.com/yyzybb537/libgo
 [submodule "cc/libcc/3rd/lwip"]
 	path = cc/libcc/3rd/lwip
 	url = https://github.com/lwip-tcpip/lwip
-[submodule "cc/libcc/3rd/botan"]
-	path = cc/libcc/3rd/botan
-	url = https://github.com/randombit/botan
 [submodule "cc/libcc/3rd/PcapPlusPlus"]
 	path = cc/libcc/3rd/PcapPlusPlus
 	url = https://github.com/seladb/PcapPlusPlus
+[submodule "cc/libgx"]
+	path = cc/libgx
+	url = https://github.com/weproxy/libgx
