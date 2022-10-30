@@ -2,10 +2,10 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "iptbl.h"
+#include "board.h"
 
 namespace internal {
-namespace iptbl {
+namespace board {
 // ...
-}  // namespace iptbl
+}  // namespace board
 }  // namespace internal

@@ -4,6 +4,8 @@
 
 package iptbl
 
+const TAG = "[iptbl]"
+
 // Mode ...
 type Mode int
 

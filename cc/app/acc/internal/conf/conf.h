@@ -27,6 +27,10 @@ struct Server {
 struct Rule {
     strvec host;
     strvec serv;
+
+    error CompileRegexp();
+    bool IsMatch(const string& s);
+    string GetServ();
 };
 
 // Conf ...
@@ -39,19 +43,34 @@ struct Conf {
     string String() const;
     operator string() const { return String(); }
 
-    // ParseJSON ...
-    error ParseJSON(const string& jsonContent);
+    // Parse ...
+    error Parse(const string& js);
+
+    string GetMain();
+    string GetDNS();
+
+    R<Ref<Rule>, int> GetRule(const string& s);
+    R<Ref<Rule>, int> GetDNSRule(const string& s);
 
    private:
-    // Fix ...
-    error Fix();
+    // fix ...
+    error fix();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 
-// NewFromJSON ...
-R<Ref<Conf>, error> NewFromJSON(const string& jsonContent);
+// MustGet ...
+Ref<Conf> MustGet(const string& key);
+
+// Parse ...
+R<Ref<Conf>, error> Parse(const string& key, const string& js);
+
+// ParseBytes ...
+R<Ref<Conf>, error> ParseBytes(const string& key, const bytez<>& js);
+
+// ParseFile ...
+R<Ref<Conf>, error> ParseFile(const string& key, const string& jsfile);
 
 // Default ...
 Ref<Conf> Default();

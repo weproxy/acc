@@ -185,27 +185,27 @@ func (m *Stats) Elapsed() time.Duration {
 }
 
 // LogD ..
-func (m *Stats) LogD(format string, args ...interface{}) {
+func (m *Stats) LogD(format string, args ...any) {
 	logx.D("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogI ..
-func (m *Stats) LogI(format string, args ...interface{}) {
+func (m *Stats) LogI(format string, args ...any) {
 	logx.I("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogW ..
-func (m *Stats) LogW(format string, args ...interface{}) {
+func (m *Stats) LogW(format string, args ...any) {
 	logx.W("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // LogE ..
-func (m *Stats) LogE(format string, args ...interface{}) {
+func (m *Stats) LogE(format string, args ...any) {
 	logx.W("%v %v, %v", m.tag, fmt.Sprintf(format, args...), m.Elapsed())
 }
 
 // Start ...
-func (m *Stats) Start(format string, args ...interface{}) *Stats {
+func (m *Stats) Start(format string, args ...any) *Stats {
 	m.start = time.Now()
 
 	logx.I("%v %v", m.tag, fmt.Sprintf(format, args...))
@@ -219,7 +219,7 @@ func (m *Stats) Start(format string, args ...interface{}) *Stats {
 }
 
 // Done ...
-func (m *Stats) Done(format string, args ...interface{}) *Stats {
+func (m *Stats) Done(format string, args ...any) *Stats {
 	if m.tcp {
 		m.conn.AddTCP(m.typ, -1)
 	} else {

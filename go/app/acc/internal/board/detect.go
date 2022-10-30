@@ -4,7 +4,10 @@
 
 package board
 
+import "weproxy/acc/libgo/logx"
+
 // Detect ...
 func Detect() (err error) {
+	logx.D("%v Detect()", TAG)
 	return
 }

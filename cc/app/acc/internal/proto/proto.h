@@ -32,7 +32,7 @@ error Init();
 
 ////////////////////////////////////////////////////////////////////////////////
 // Deinit ...
-void Deinit();
+error Deinit();
 
 }  // namespace proto
 }  // namespace internal

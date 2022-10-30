@@ -32,7 +32,7 @@ type Node32 struct {
 	// Leaf indicates if the node is leaf node and contains any data in Value.
 	Leaf bool
 	// Value contains data associated with key.
-	Value interface{}
+	Value any
 
 	chld [2]*Node32
 }
@@ -62,7 +62,7 @@ func (n *Node32) Dot() string {
 }
 
 // Insert puts new leaf to radix tree and returns pointer to new root. The method uses copy on write strategy so old root doesn't see the change.
-func (n *Node32) Insert(key uint32, bits int, value interface{}) *Node32 {
+func (n *Node32) Insert(key uint32, bits int, value any) *Node32 {
 	// Adjust bits.
 	if bits < 0 {
 		bits = 0
@@ -74,7 +74,7 @@ func (n *Node32) Insert(key uint32, bits int, value interface{}) *Node32 {
 }
 
 // InplaceInsert puts new leaf to radix tree (or replaces value in existing one). The method inserts data directly to current tree so make sure you have exclusive access to it.
-func (n *Node32) InplaceInsert(key uint32, bits int, value interface{}) *Node32 {
+func (n *Node32) InplaceInsert(key uint32, bits int, value any) *Node32 {
 	// Adjust bits.
 	if bits < 0 {
 		bits = 0
@@ -105,7 +105,7 @@ func (n *Node32) Enumerate() chan *Node32 {
 }
 
 // Match locates node which key is equal to or "contains" the key passed as argument.
-func (n *Node32) Match(key uint32, bits int) (interface{}, bool) {
+func (n *Node32) Match(key uint32, bits int) (any, bool) {
 	// If tree is empty -
 	if n == nil {
 		// report nothing.
@@ -128,7 +128,7 @@ func (n *Node32) Match(key uint32, bits int) (interface{}, bool) {
 }
 
 // ExactMatch locates node which exactly matches given key.
-func (n *Node32) ExactMatch(key uint32, bits int) (interface{}, bool) {
+func (n *Node32) ExactMatch(key uint32, bits int) (any, bool) {
 	// If tree is empty -
 	if n == nil {
 		// report nothing.
@@ -236,7 +236,7 @@ func (n *Node32) insert(c *Node32) *Node32 {
 	return m
 }
 
-func (n *Node32) inplaceInsert(key uint32, sbits uint8, value interface{}) *Node32 {
+func (n *Node32) inplaceInsert(key uint32, sbits uint8, value any) *Node32 {
 	var (
 		p      *Node32
 		branch uint32
@@ -430,7 +430,7 @@ func (n *Node32) del(key uint32, bits uint8) (*Node32, bool) {
 	return m, true
 }
 
-func newNode32(key uint32, bits uint8, leaf bool, value interface{}) *Node32 {
+func newNode32(key uint32, bits uint8, leaf bool, value any) *Node32 {
 	return &Node32{
 		Key:   key,
 		Bits:  bits,

@@ -10,6 +10,7 @@ import (
 	"weproxy/acc/libgo/fx/signal"
 	"weproxy/acc/libgo/logx"
 
+	"weproxy/acc/app/acc-serv/internal/api"
 	"weproxy/acc/app/acc-serv/internal/conf"
 	"weproxy/acc/app/acc-serv/internal/proto"
 
@@ -25,19 +26,31 @@ import (
 func Main() {
 	js, err := conf.ReadConfig()
 	if err != nil {
-		logx.E("[core] conf::ReadConfig(), err: %v", err)
+		logx.E("[core] conf.ReadConfig(), err: %v", err)
 		return
 	}
 
+	////////////////////////////////////////////////////////
 	// proto init
 	err = proto.Init(js.Servers)
-	// proto deinit
-	defer proto.Deinit()
 	if err != nil {
-		logx.E("[core] proto::Init(), err: %v", err)
+		logx.E("[core] proto.Init(), err: %v", err)
 		return
 	}
+	// proto deinit
+	defer proto.Deinit()
 
+	////////////////////////////////////////////////////////
+	// api init
+	err = api.Init()
+	if err != nil {
+		logx.E("[core] api.Init(), err: %v", err)
+		return
+	}
+	// api deinit
+	defer api.Deinit()
+
+	////////////////////////////////////////////////////////
 	// Wait for Ctrl+C or kill -x
 	signal.WaitNotify(func() {
 		logx.W("[signal] quit")

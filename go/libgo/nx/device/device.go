@@ -44,7 +44,7 @@ func New(typ string, cfg Conf) (netstk.Device, error) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // Conf ...
-type Conf map[string]interface{}
+type Conf map[string]any
 
 // Int ...
 func (m Conf) Int(key string) int {

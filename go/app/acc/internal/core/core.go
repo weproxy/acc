@@ -39,7 +39,7 @@ func Main() {
 	// proto init
 	err := proto.Init()
 	if err != nil {
-		logx.E("[core] proto::Init(), err: %v", err)
+		logx.E("[core] proto.Init(), err: %v", err)
 		return
 	}
 	// proto deinit
@@ -49,7 +49,7 @@ func Main() {
 	// api init
 	err = api.Init()
 	if err != nil {
-		logx.E("[core] api::Init(), err: %v", err)
+		logx.E("[core] api.Init(), err: %v", err)
 		return
 	}
 	// api deinit

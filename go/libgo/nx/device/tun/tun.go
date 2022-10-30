@@ -89,7 +89,7 @@ func (m *Device) Write(p []byte, offset int) (n int, err error) {
 ////////////////////////////////////////////////////////////////////////////////
 
 // shellExec ...
-func shellExec(format string, args ...interface{}) (err error) {
+func shellExec(format string, args ...any) (err error) {
 	str := fmt.Sprintf(format, args...)
 	arr := strings.Split(str, " ")
 	if len(arr) < 1 {

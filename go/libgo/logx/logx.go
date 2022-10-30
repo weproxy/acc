@@ -101,7 +101,7 @@ func getCallerStack(start int) string {
 
 		return fmt.Sprintf("%v:%v ", file, line)
 
-		// // 取函数名
+		// // get func
 		// var name string
 		// if fn := runtime.FuncForPC(pc); nil != fn {
 		// 	name = fn.Name()
@@ -144,7 +144,7 @@ type logmsg struct {
 }
 
 // logf ...
-func logf(lvl Level, tag string, color Color, format string, args ...interface{}) {
+func logf(lvl Level, tag string, color Color, format string, args ...any) {
 	var s string
 
 	if _cfg.WithColor {
@@ -206,39 +206,39 @@ func init() {
 ///////////////////////////////////////////////////////////////////////////////
 
 // V http post
-func V(format string, args ...interface{}) {
+func V(format string, args ...any) {
 	logf(LeveMax, "[V]", ColorMagenta, format, args...)
 }
 
 // D debug
-func D(format string, args ...interface{}) {
+func D(format string, args ...any) {
 	if _cfg.reach(LeveDbg) {
 		logf(LeveDbg, "[D]", ColorClean, format, args...)
 	}
 }
 
 // I info
-func I(format string, args ...interface{}) {
+func I(format string, args ...any) {
 	if _cfg.reach(LeveMsg) {
 		logf(LeveMsg, "[I]", ColorGreen, format, args...)
 	}
 }
 
 // W warn
-func W(format string, args ...interface{}) {
+func W(format string, args ...any) {
 	if _cfg.reach(LeveWrn) {
 		logf(LeveWrn, "[W]", ColorYellow, format, args...)
 	}
 }
 
 // E error
-func E(format string, args ...interface{}) {
+func E(format string, args ...any) {
 	if _cfg.reach(LeveErr) {
 		logf(LeveErr, "[E]", ColorRed, format, args...)
 	}
 }
 
 // P any
-func P(format string, args ...interface{}) {
+func P(format string, args ...any) {
 	logf(LeveErr, "[P]", ColorCyan, format, args...)
 }

@@ -28,7 +28,7 @@ type Tree struct {
 // Pair represents a key-value pair returned by Enumerate method.
 type Pair struct {
 	Key   *net.IPNet
-	Value interface{}
+	Value any
 }
 
 type subTree64 *Node64
@@ -39,7 +39,7 @@ func NewTree() *Tree {
 }
 
 // InsertNet inserts value using given network as a key. The method returns new tree (old one remains unaffected).
-func (t *Tree) InsertNet(n *net.IPNet, value interface{}) *Tree {
+func (t *Tree) InsertNet(n *net.IPNet, value any) *Tree {
 	if n == nil {
 		return t
 	}
@@ -95,7 +95,7 @@ func (t *Tree) InsertNet(n *net.IPNet, value interface{}) *Tree {
 }
 
 // InplaceInsertNet inserts (or replaces) value using given network as a key in current tree.
-func (t *Tree) InplaceInsertNet(n *net.IPNet, value interface{}) {
+func (t *Tree) InplaceInsertNet(n *net.IPNet, value any) {
 	if n == nil {
 		return
 	}
@@ -131,12 +131,12 @@ func (t *Tree) InplaceInsertNet(n *net.IPNet, value interface{}) {
 }
 
 // InsertIP inserts value using given IP address as a key. The method returns new tree (old one remains unaffected).
-func (t *Tree) InsertIP(ip net.IP, value interface{}) *Tree {
+func (t *Tree) InsertIP(ip net.IP, value any) *Tree {
 	return t.InsertNet(newIPNetFromIP(ip), value)
 }
 
 // InplaceInsertIP inserts (or replaces) value using given IP address as a key in current tree.
-func (t *Tree) InplaceInsertIP(ip net.IP, value interface{}) {
+func (t *Tree) InplaceInsertIP(ip net.IP, value any) {
 	t.InplaceInsertNet(newIPNetFromIP(ip), value)
 }
 
@@ -158,7 +158,7 @@ func (t *Tree) Enumerate() chan Pair {
 }
 
 // GetByNet gets value for network which is equal to or contains given network.
-func (t *Tree) GetByNet(n *net.IPNet) (interface{}, bool) {
+func (t *Tree) GetByNet(n *net.IPNet) (any, bool) {
 	if t == nil || n == nil {
 		return nil, false
 	}
@@ -190,7 +190,7 @@ func (t *Tree) GetByNet(n *net.IPNet) (interface{}, bool) {
 }
 
 // GetByIP gets value for network which is equal to or contains given IP address.
-func (t *Tree) GetByIP(ip net.IP) (interface{}, bool) {
+func (t *Tree) GetByIP(ip net.IP) (any, bool) {
 	return t.GetByNet(newIPNetFromIP(ip))
 }
 

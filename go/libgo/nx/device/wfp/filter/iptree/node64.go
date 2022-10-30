@@ -40,7 +40,7 @@ type Node64 struct {
 	// Leaf indicates if the node is leaf node and contains any data in Value.
 	Leaf bool
 	// Value contains data associated with key.
-	Value interface{}
+	Value any
 
 	chld [2]*Node64
 }
@@ -68,7 +68,7 @@ func (n *Node64) Dot() string {
 }
 
 // Insert puts new leaf to radix tree and returns pointer to new root. The method uses copy on write strategy so old root doesn't see the change.
-func (n *Node64) Insert(key uint64, bits int, value interface{}) *Node64 {
+func (n *Node64) Insert(key uint64, bits int, value any) *Node64 {
 	if bits < 0 {
 		bits = 0
 	} else if bits > Key64BitSize {
@@ -79,7 +79,7 @@ func (n *Node64) Insert(key uint64, bits int, value interface{}) *Node64 {
 }
 
 // InplaceInsert puts new leaf to radix tree (or replaces value in existing one). The method inserts data directly to current tree so make sure you have exclusive access to it.
-func (n *Node64) InplaceInsert(key uint64, bits int, value interface{}) *Node64 {
+func (n *Node64) InplaceInsert(key uint64, bits int, value any) *Node64 {
 	// Adjust bits.
 	if bits < 0 {
 		bits = 0
@@ -108,7 +108,7 @@ func (n *Node64) Enumerate() chan *Node64 {
 }
 
 // Match locates node which key is equal to or "contains" the key passed as argument.
-func (n *Node64) Match(key uint64, bits int) (interface{}, bool) {
+func (n *Node64) Match(key uint64, bits int) (any, bool) {
 	if n == nil {
 		return n, false
 	}
@@ -128,7 +128,7 @@ func (n *Node64) Match(key uint64, bits int) (interface{}, bool) {
 }
 
 // ExactMatch locates node which exactly matches given key.
-func (n *Node64) ExactMatch(key uint64, bits int) (interface{}, bool) {
+func (n *Node64) ExactMatch(key uint64, bits int) (any, bool) {
 	if n == nil {
 		return n, false
 	}
@@ -209,7 +209,7 @@ func (n *Node64) insert(c *Node64) *Node64 {
 	return m
 }
 
-func (n *Node64) inplaceInsert(key uint64, sbits uint8, value interface{}) *Node64 {
+func (n *Node64) inplaceInsert(key uint64, sbits uint8, value any) *Node64 {
 	var (
 		p      *Node64
 		branch uint64
@@ -373,7 +373,7 @@ func (n *Node64) del(key uint64, bits uint8) (*Node64, bool) {
 	return m, true
 }
 
-func newNode64(key uint64, bits uint8, leaf bool, value interface{}) *Node64 {
+func newNode64(key uint64, bits uint8, leaf bool, value any) *Node64 {
 	return &Node64{
 		Key:   key,
 		Bits:  bits,

@@ -2,11 +2,11 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "iptbl.h"
+#include "board.h"
 #include "logx/logx.h"
 
 namespace internal {
-namespace iptbl {
+namespace board {
 
 // Detect ...
 error Detect() {
@@ -14,5 +14,5 @@ error Detect() {
     return nil;
 }
 
-}  // namespace iptbl
+}  // namespace board
 }  // namespace internal

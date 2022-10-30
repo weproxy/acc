@@ -4,6 +4,7 @@
 
 #include "conf.h"
 
+#include "conf.json.h"
 #include "gx/encoding/json/json.h"
 
 namespace internal {
@@ -15,7 +16,10 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Rule, host, serv)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Conf, server, dns, rules)
 
 // _default ...
-static Ref<Conf> _default(NewRef<Conf>());
+static Ref<Conf> _default = []() -> Ref<Conf> {
+    AUTO_R(c, _, Parse("default", _DEFAULT_CONF));
+    return c;
+}();
 
 // Default ...
 Ref<Conf> Default() { return _default; }
@@ -26,16 +30,45 @@ string Conf::String() const {
     return err ? "{}" : str;
 }
 
-// ParseJSON ...
-error Conf::ParseJSON(const string& jsonContent) {
-    //
-    return gx::json::Unmarshal(jsonContent, this);
+// Parse ...
+error Conf::Parse(const string& js) {
+    // parse
+    return gx::json::Unmarshal(js, this);
 }
 
-// NewFromJSON ...
-R<Ref<Conf>, error> NewFromJSON(const string& jsonContent) {
+////////////////////////////////////////////////////////////////////////////////
+
+// _confs ...
+static auto _confs = makemap<string, Ref<Conf>>();
+
+// MustGet ...
+Ref<Conf> MustGet(const string& key) {
+    {
+        AUTO_R(c, ok, _confs(key));
+        if (ok) {
+            return c;
+        }
+    }
+    {
+        AUTO_R(c, ok, _confs("default"));
+        if (ok) {
+            return c;
+        }
+    }
+
+    AUTO_R(c, err, Parse("default", _DEFAULT_CONF));
+
+    if (err == nil) {
+        return c;
+    }
+
+    return NewRef<Conf>();
+}
+
+// Parse ...
+R<Ref<Conf>, error> Parse(const string& key, const string& js) {
     auto c = NewRef<Conf>();
-    auto err = c->ParseJSON(jsonContent);
+    auto err = c->Parse(js);
     if (err) {
         return {nil, err};
     }

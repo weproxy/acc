@@ -8,6 +8,13 @@
 
 namespace internal {
 namespace board {
-// ...
+
+////////////////////////////////////////////////////////////////////////////////
+// TAG ...
+constexpr const char* TAG = "[board]";
+
+// Detect ...
+error Detect();
+
 }  // namespace board
 }  // namespace internal

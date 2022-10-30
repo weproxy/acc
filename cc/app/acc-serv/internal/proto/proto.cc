@@ -111,12 +111,13 @@ error Init(const json::J& js) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Deinit ...
-void Deinit() {
+error Deinit() {
     for (auto it = _servers.rbegin(); it != _servers.rend(); it++) {
         it->second->Close();
     }
     _servers.clear();
     LOGS_D(TAG << " Deinit()");
+    return nil;
 }
 
 }  // namespace proto

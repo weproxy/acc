@@ -38,7 +38,7 @@ error Init(const json::J& j);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Deinit ...
-void Deinit();
+error Deinit();
 
 }  // namespace proto
 }  // namespace internal

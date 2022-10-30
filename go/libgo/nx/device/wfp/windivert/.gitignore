@@ -1,10 +1,6 @@
-# /**
-#  * @file        .gitignore
-#  * @brief
-#  * @version
-#  * @author      liangX <liangx.cn@qq.com>
-#  * @date        2022.07.28
-#  */
+#
+# weproxy@foxmail.com 2022/10/20
+#
 
 !/**/*.dll
 !/**/*.sys

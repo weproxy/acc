@@ -64,7 +64,7 @@ func closeAll() {
 
 // Deinit ...
 func Deinit() (err error) {
-	logx.D("%v Deinit()", TAG)
 	closeAll()
+	logx.D("%v Deinit()", TAG)
 	return nil
 }

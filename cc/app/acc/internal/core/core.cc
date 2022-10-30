@@ -4,110 +4,25 @@
 
 #include "core.h"
 
-#include "co/os.h"
 #include "fx/signal/signal.h"
-#include "gx/fmt/fmt.h"
-#include "gx/net/net.h"
+#include "internal/api/api.h"
+#include "internal/board/board.h"
 #include "internal/conf/conf.h"
+#include "internal/iptbl/iptbl.h"
 #include "internal/proto/proto.h"
-#include "internal/server/server.h"
 #include "logx/logx.h"
 
 namespace internal {
 namespace core {
 
-// // global ...
-// static struct global {
-//     std::list<io::Closer> closers_;
-
-//     ~global() { Close(); }
-
-//     void Append(io::Closer c) { closers_.push_front(c); }
-
-//     void Close() {
-//         for (auto& c : closers_) {
-//             c->Close();
-//         }
-//         closers_.clear();
-//     }
-// } _g;
-
-void test() {
-    gx::go([] {
-        const char* host = "www.baidu.com";
-        // const char* host = "www.qq.com";
-        constexpr int port = 80;
-
-        AUTO_R(c, err, net::Dial(fmt::Sprintf("%s:%d", host, port)));
-        if (err) {
-            LOGX_E(err);
-            return;
-        }
-
-        {
-            auto s = fmt::Sprintf("GET / HTTP/1.0\r\nHost: %s\r\n\r\n", host);
-
-            AUTO_R(_, err, c->Write(bytez<>(s)));
-            if (err) {
-                LOGX_E(err);
-                return;
-            }
-        }
-
-        bytez<> buf = make(1024 * 32);
-
-        for (;;) {
-            AUTO_R(n, err, c->Read(buf));
-            if (n > 0) {
-                buf[n] = 0;
-                LOGX_D((char*)buf.data());
-            }
-
-            if (err) {
-                if (err != net::ErrClosed) {
-                    LOGX_E(err);
-                }
-                break;
-            }
-        }
-    });
-
-    gx::go([] {
-        DEFER(LOGX_D("s closed"));
-
-        AUTO_R(ln, err, net::Listen("127.0.0.1:11223"));
-        if (err) {
-            LOGX_E(err);
-            return;
-        }
-
-        for (;;) {
-            AUTO_R(c, err, ln->Accept());
-            if (err) {
-                LOGX_E(err);
-                break;
-            }
-
-            gx::go([c]() {
-                DEFER(println(c, "closed"));
-                io::Copy(c, c);
-            });
-        }
-    });
-
-    gx::go([] {
-        for (int i = 0;; i++) {
-            LOGX_D(i, "hello");
-            time::Sleep(time::Second);
-        }
-    });
-}
-
 // Main ...
 int Main(int argc, char* argv[]) {
-    LOGX_I("[app] cpunum =", os::cpunum());
-
     flag::init(argc, argv);
+
+    if (true) {
+        board::Detect();
+        iptbl::Detect();
+    }
 
     // proto init
     auto err = proto::Init();
@@ -116,11 +31,18 @@ int Main(int argc, char* argv[]) {
         proto::Deinit();
         return -1;
     }
-
     // proto deinit
     DEFER(proto::Deinit());
 
-    test();
+    // api init
+    err = api::Init();
+    if (err) {
+        LOGS_E("[core] api::Init(), err: " << err);
+        api::Deinit();
+        return -1;
+    }
+    // api deinit
+    DEFER(api::Deinit());
 
     // Wait for Ctrl+C or kill -x
     fx::signal::WaitNotify(

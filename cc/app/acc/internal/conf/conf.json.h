@@ -4,7 +4,7 @@
 
 #pragma once
 
-const char* DEFAULT_CONF = R"({
+const char* _DEFAULT_CONF = R"({
     "server": {
         "auth": {
             "s5": "",

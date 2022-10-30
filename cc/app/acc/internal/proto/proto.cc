@@ -125,7 +125,10 @@ error Init() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Deinit ...
-void Deinit() { LOGS_D(TAG << " Deinit()"); }
+error Deinit() {
+    LOGS_D(TAG << " Deinit()");
+    return nil;
+}
 
 }  // namespace proto
 }  // namespace internal

@@ -4,6 +4,8 @@
 
 package board
 
+const TAG = "[board]"
+
 const (
 	OPENWRT = "OpenWrt"
 	LINUX   = "Linux"
