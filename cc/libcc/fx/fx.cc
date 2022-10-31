@@ -2,7 +2,7 @@
 // weproxy@foxmail.com 2022/10/03
 //
 
-#include "util.h"
+#include "fx.h"
 
 #define KB(n) (1024 * int64_t(n))
 #define MB(n) (KB(1024) * (n))
@@ -13,7 +13,7 @@
 namespace fx {
 
 // FormatBytes ...
-std::string FormatBytes(int64 n) {
+string FormatBytes(int64 n) {
     char buf[64];
     int r;
 
@@ -31,7 +31,7 @@ std::string FormatBytes(int64 n) {
         r = ::snprintf(buf, sizeof(buf), "%lldB", n);
     }
 
-    return std::string(buf, r);
+    return string(buf, r);
 }
 
 }  // namespace fx

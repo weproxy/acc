@@ -59,6 +59,6 @@ add_includedirs("libgx/3rd/coost/include")
 add_includedirs("libgx/3rd/nlohmann_json/include")
 
 -- include sub-projects
-includes("libcc")
 includes("libgx")
+includes("libcc")
 includes("app")

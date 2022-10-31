@@ -7,5 +7,6 @@
 #include "gx/gx.h"
 
 namespace biz {
+using namespace gx;
 
 } // namespace biz

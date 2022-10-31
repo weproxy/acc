@@ -57,7 +57,8 @@ check:
 pre: check
 
 config: check
-	xmake config -m ${ENV} -p ${GOOS} -a ${GOARCH} --with_libcurl=n --fpic=y
+#	xmake config -m ${ENV} -p ${GOOS} -a ${GOARCH} --with_libcurl=n --fpic=y
+	xmake config -m ${ENV} -p ${GOOS} -a ${GOARCH}
 
 build: pre config
 	xmake build
@@ -67,3 +68,5 @@ run: build
 
 clean: config
 	xmake clean
+
+modtidy:

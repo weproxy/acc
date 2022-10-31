@@ -3,7 +3,8 @@
 --
 
 -- target
-target("fx")
+target("libfx")
     set_kind("static")
+    set_basename("fx")
     add_files("**.cc|**_test.cc|**unused**")
 target_end()

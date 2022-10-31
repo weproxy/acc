@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include "util.h"
+#include "gx/gx.h"
 
-#define FX_SS(...)                \
-    [&] {                         \
-        std::ostringstream _s2s_; \
-        _s2s_ << __VA_ARGS__;     \
-        return _s2s_.str();       \
-    }()
+namespace fx {
+using namespace gx;
+
+// FormatBytes ...
+string FormatBytes(int64 n);
+
+}  // namespace fx

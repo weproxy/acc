@@ -62,7 +62,7 @@ static const char* TAGS[] = {"[P] ", "[E] ", "[W] ", "[I] ", "[D] ", "[V] "};
 static const char* COLORS[] = {_TCYAN_, _TRED_, _TYELLOW_, _TGREEN_, _TWHITE_, _TMAGENTA_};
 
 // timestr ...
-static std::string timestr() {
+static string timestr() {
     struct tm t;
     struct timeval tv;
 
@@ -75,7 +75,7 @@ static std::string timestr() {
     int len = ::snprintf(buf, sizeof(buf), "%02d-%02d %02d:%02d:%02d.%06d", t.tm_mon + 1, t.tm_mday, t.tm_hour,
                          t.tm_min, t.tm_sec, (int)tv.tv_usec);
 
-    return std::string(buf, len);
+    return string(buf, len);
 }
 
 // logs ...
@@ -105,14 +105,12 @@ void logs(Level lvl, const char* file, int line, const char* msg) {
         ss << _TCLEAN_;
     }
 
-    std::string str = ss.str();
-
     if (_cfg.StdoutLevel >= lvl) {
-        std::cout << str;
+        std::cout << ss.str();
     }
 
     if (_cfg.ReportLevel >= lvl) {
-        report(str);
+        report(ss.str());
     }
 }
 
