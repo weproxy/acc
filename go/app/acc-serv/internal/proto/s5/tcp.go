@@ -21,6 +21,8 @@ import (
 
 // handleTCP ...
 func handleTCP(c net.Conn, raddr net.Addr) error {
+	defer c.Close()
+
 	tag := fmt.Sprintf("%s TCP_%v %v.%v", TAG, nx.NewID(), c.RemoteAddr(), raddr)
 	sta := stats.NewTCPStats(stats.TypeS5, tag)
 
@@ -34,6 +36,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 		socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
 		return err
 	}
+	rc.(*net.TCPConn).SetKeepAlive(true)
 	defer rc.Close()
 
 	// <<< REP:
@@ -53,12 +56,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	opt.B2A.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 
 	// Relay c <--> rc
-	err = netio.Relay(c, rc, opt)
-	if err != nil {
-		if !errors.Is(err, net.ErrClosed) {
-			logx.E("%s relay err: %v", tag, err)
-		}
-	}
+	netio.Relay(c, rc, opt)
 
 	return err
 }
@@ -83,8 +81,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 	}
 
 	// handleUDP
-	// raddr is not fixed, it maybe be changed after
-	go handleUDP(ln, caddr, raddr)
+	go handleUDP(ln)
 
 	// <<< REP:
 	//     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
@@ -98,13 +95,8 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 		return err
 	}
 
-	_, err = io.Copy(io.Discard, c)
-	if err != nil {
-		if !errors.Is(err, net.ErrClosed) {
-			logx.E("%s err: %v", tag, err)
-		}
-		return err
-	}
+	// discard
+	io.Copy(io.Discard, c)
 
 	return nil
 }

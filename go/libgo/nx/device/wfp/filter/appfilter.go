@@ -1,6 +1,3 @@
-//go:build windows
-// +build windows
-
 package filter
 
 import (
@@ -18,7 +15,7 @@ var (
 	queryFullProcessImageNameW = kernel32.MustFindProc("QueryFullProcessImageNameW")
 )
 
-// QueryFullProcessImageName is ...
+// QueryFullProcessImageName ...
 func QueryFullProcessImageName(process windows.Handle, flags uint32, b []uint16) (string, error) {
 	n := uint32(windows.MAX_PATH)
 
@@ -41,7 +38,7 @@ func QueryFullProcessImageName(process windows.Handle, flags uint32, b []uint16)
 	return windows.UTF16ToString(b[:n]), nil
 }
 
-// QueryNameByPID is ...
+// QueryNameByPID ...
 func QueryNameByPID(id uint32, b []uint16) (string, error) {
 	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, id)
 	if err != nil {
@@ -58,7 +55,7 @@ func QueryNameByPID(id uint32, b []uint16) (string, error) {
 	return file, nil
 }
 
-// AppFilter is ...
+// AppFilter ...
 type AppFilter struct {
 	sync.RWMutex
 	PIDs      map[uint32]struct{}
@@ -67,7 +64,7 @@ type AppFilter struct {
 	startOnce sync.Once
 }
 
-// NewAppFilter is ...
+// NewAppFilter ...
 func NewAppFilter() *AppFilter {
 	m := &AppFilter{
 		PIDs: make(map[uint32]struct{}),
@@ -77,7 +74,7 @@ func NewAppFilter() *AppFilter {
 	return m
 }
 
-// SetPIDs is ...
+// SetPIDs ...
 func (m *AppFilter) SetPIDs(ids []uint32) {
 	m.Lock()
 	for _, v := range ids {
@@ -86,20 +83,20 @@ func (m *AppFilter) SetPIDs(ids []uint32) {
 	m.Unlock()
 }
 
-// Add 如 Add("msedge.exe")
-func (m *AppFilter) Add(s string) {
+// Add -> exeFileName e.g. "msedge.exe"
+func (m *AppFilter) Add(exeFileName string) {
 	m.Lock()
-	m.UnsafeAdd(s)
+	m.UnsafeAdd(exeFileName)
 	m.Unlock()
 }
 
-// UnsafeAdd 如 UnsafeAdd("msedge.exe")
-func (m *AppFilter) UnsafeAdd(s string) {
-	s = strings.TrimSpace(strings.ToLower(s))
-	m.Apps[s] = struct{}{}
+// UnsafeAdd -> exeFileName e.g. "msedge.exe"
+func (m *AppFilter) UnsafeAdd(exeFileName string) {
+	exeFileName = strings.TrimSpace(strings.ToLower(exeFileName))
+	m.Apps[exeFileName] = struct{}{}
 }
 
-// Lookup is ...
+// Lookup ...
 func (m *AppFilter) Lookup(id uint32) bool {
 	m.RLock()
 	defer m.RUnlock()
@@ -119,34 +116,3 @@ func (m *AppFilter) Lookup(id uint32) bool {
 
 	return ok
 }
-
-// // loopFix 消掉自动加的/已不存在的 pid
-// func (m *AppFilter) loopFix() {
-// 	fix := func() {
-// 		m.RLock()
-// 		defer m.RUnlock()
-
-// 		for id, flg := range m.PIDs {
-// 			if flg == _PID_ADDED {
-// 				continue // 不消除主动加的那些
-// 			}
-
-// 			file, err := QueryNameByPID(id, m.buff)
-// 			if err != nil {
-// 				delete(m.PIDs, id)
-// 				continue
-// 			}
-
-// 			s := strings.ToLower(file)
-// 			if _, ok := m.Apps[s]; !ok {
-// 				// 这个 pid 可能已经是新进程，名字已不是我们加的那个了
-// 				delete(m.PIDs, id)
-// 			}
-// 		}
-// 	}
-
-// 	t := time.NewTicker(time.Second * 20)
-// 	for range t.C {
-// 		fix() // 消掉自动加的/已不存在的 pid
-// 	}
-// }

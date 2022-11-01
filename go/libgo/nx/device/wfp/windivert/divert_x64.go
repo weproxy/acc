@@ -1,5 +1,4 @@
-//go:build windows && (amd64 || arm64)
-// +build windows
+//go:build amd64 || arm64
 // +build amd64 arm64
 
 package windivert

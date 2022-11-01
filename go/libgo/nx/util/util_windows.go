@@ -31,7 +31,7 @@ func ConvFd(fd int) syscall.Handle { return syscall.Handle(fd) }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// GetBestInterfaceIndex is ...
+// GetBestInterfaceIndex ...
 func GetBestInterfaceIndex(dstIP string) (ifIdx int, err error) {
 	destAddr := windows.RawSockaddr{}
 
@@ -53,7 +53,7 @@ func GetBestInterfaceIndex(dstIP string) (ifIdx int, err error) {
 	return getBestInterface(&destAddr)
 }
 
-// getBestInterface is ...
+// getBestInterface ...
 func getBestInterface(addr *windows.RawSockaddr) (ifIdx int, err error) {
 	dwBestIfIndex := int32(0)
 

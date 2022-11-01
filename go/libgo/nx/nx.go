@@ -51,3 +51,18 @@ type Packet struct {
 	Addr net.Addr
 	Data []byte
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// GetIP ...
+func GetIP(addr net.Addr) net.IP {
+	if addr != nil {
+		switch addr := addr.(type) {
+		case *net.TCPAddr:
+			return addr.IP
+		case *net.UDPAddr:
+			return addr.IP
+		}
+	}
+	return net.IPv4zero
+}

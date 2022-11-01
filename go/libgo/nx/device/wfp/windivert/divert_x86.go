@@ -1,5 +1,4 @@
-//go:build windows && (386 || arm)
-// +build windows
+//go:build 386 || arm
 // +build 386 arm
 
 package windivert

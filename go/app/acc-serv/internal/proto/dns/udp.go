@@ -117,6 +117,8 @@ func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
 
 // runServLoop ...
 func runServLoop(ln net.PacketConn) error {
+	defer ln.Close()
+
 	// sessMap
 	sessMap := make(udpSessMap)
 	defer func() {
@@ -124,8 +126,6 @@ func runServLoop(ln net.PacketConn) error {
 			v.Close()
 		}
 	}()
-
-	defer ln.Close()
 
 	buf := make([]byte, 1024*8)
 

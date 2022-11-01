@@ -1,6 +1,3 @@
-//go:build windows
-// +build windows
-
 package filter
 
 import (
@@ -11,22 +8,16 @@ import (
 	"weproxy/acc/libgo/nx/device/wfp/filter/iptree"
 )
 
-// IPFilter is ...
+// IPFilter ...
 type IPFilter struct {
-	// RWMutex is ...
 	sync.RWMutex
-	// Tree is ...
-	Tree *iptree.Tree
-	// Rules is ...
+	Tree  *iptree.Tree
 	Rules map[string]bool
-	// Final is ...
 	Final bool
-
-	// // reader is ...
 	// reader *maxminddb.Reader
 }
 
-// NewIPFilter is ...
+// NewIPFilter ...
 func NewIPFilter() *IPFilter {
 	f := &IPFilter{
 		RWMutex: sync.RWMutex{},
@@ -35,7 +26,7 @@ func NewIPFilter() *IPFilter {
 	return f
 }
 
-// IgnorePrivate is ...
+// IgnorePrivate ...
 // ingore private address
 func (f *IPFilter) IgnorePrivate() {
 	for _, s := range []string{
@@ -58,7 +49,7 @@ func (f *IPFilter) IgnorePrivate() {
 	}
 }
 
-// Close is ...
+// Close ...
 func (f *IPFilter) Close() error {
 	// if f.reader != nil {
 	// 	return f.reader.Close()
@@ -66,7 +57,7 @@ func (f *IPFilter) Close() error {
 	return nil
 }
 
-// // SetGeoIP is ...
+// // SetGeoIP ...
 // func (f *IPFilter) SetGeoIP(s string, proxy, bypass []string, final bool) (err error) {
 // 	f.Lock()
 // 	defer f.Unlock()
@@ -88,7 +79,7 @@ func (f *IPFilter) Close() error {
 // 	return
 // }
 
-// Add is ...
+// Add ...
 func (f *IPFilter) Add(s string) error {
 	f.Lock()
 	err := f.UnsafeAdd(s)
@@ -96,7 +87,7 @@ func (f *IPFilter) Add(s string) error {
 	return err
 }
 
-// UnsafeAdd is ...
+// UnsafeAdd ...
 func (f *IPFilter) UnsafeAdd(s string) error {
 	ip := net.ParseIP(s)
 	if ip != nil {
@@ -111,19 +102,19 @@ func (f *IPFilter) UnsafeAdd(s string) error {
 	return f.addCIDR(ipNet)
 }
 
-// addIP is ...
+// addIP ...
 func (f *IPFilter) addIP(ip net.IP) error {
 	f.Tree.InplaceInsertIP(ip, nil)
 	return nil
 }
 
-// addCIDR is ...
+// addCIDR ...
 func (f *IPFilter) addCIDR(ip *net.IPNet) error {
 	f.Tree.InplaceInsertNet(ip, nil)
 	return nil
 }
 
-// Lookup is ...
+// Lookup ...
 func (f *IPFilter) Lookup(ip net.IP) bool {
 	f.RLock()
 	defer f.RUnlock()

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 
 	"weproxy/acc/libgo/logx"
 	"weproxy/acc/libgo/nx/socks"
@@ -29,17 +30,29 @@ func init() {
 // New ...
 func New(js json.RawMessage) (proto.Server, error) {
 	var j struct {
-		Listen string `json:"listen,omitempty"`
+		Listen string   `json:"listen,omitempty"`
+		Auth   []string `json:"auth,omitempty"`
 	}
 
 	if err := json.Unmarshal(js, &j); err != nil {
 		return nil, err
 	}
 	if len(j.Listen) == 0 {
-		return nil, errors.New("invalid addr")
+		return nil, errors.New("missing addr")
+	}
+	if len(j.Auth) == 0 {
+		return nil, errors.New("missing auth")
 	}
 
-	return &server_t{addr: j.Listen}, nil
+	auth := make(map[string]string)
+	for _, ss := range auth {
+		arr := strings.Split(ss, ":")
+		if len(arr) == 2 && len(arr[0]) > 0 && len(arr[1]) > 0 {
+			auth[arr[0]] = arr[1]
+		}
+	}
+
+	return &server_t{addr: j.Listen, auth: auth}, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +60,7 @@ func New(js json.RawMessage) (proto.Server, error) {
 // server_t ...
 type server_t struct {
 	addr string
+	auth map[string]string
 	ln   net.Listener
 }
 
@@ -73,7 +87,7 @@ func (m *server_t) Start() error {
 
 			logx.V("%v Accept() %v", TAG, c.RemoteAddr())
 
-			go handleConn(c)
+			go m.handleConn(c)
 		}
 	}()
 
@@ -89,13 +103,21 @@ func (m *server_t) Close() error {
 	return nil
 }
 
+// cehckUserPass ...
+func (m *server_t) cehckUserPass(user, pass string) error {
+	if v, ok := m.auth[user]; ok && v == pass {
+		return nil
+	}
+	return errors.New("invalid user/pass")
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleConn ...
-func handleConn(c net.Conn) error {
+func (m *server_t) handleConn(c net.Conn) error {
 	defer c.Close()
 
-	cmd, raddr, err := socks.ServerHandshake(c, checkUserPass)
+	cmd, raddr, err := socks.ServerHandshake(c, m.cehckUserPass)
 	if err != nil || raddr == nil {
 		logx.E("%v handshake(), err: %v", TAG, err)
 		return err
@@ -111,11 +133,4 @@ func handleConn(c net.Conn) error {
 	default:
 		return fmt.Errorf("unknow socks command: %d", cmd)
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// checkUserPass ...
-func checkUserPass(user, pass string) error {
-	return nil
 }

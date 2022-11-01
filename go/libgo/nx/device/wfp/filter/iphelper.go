@@ -1,5 +1,3 @@
-// +build windows
-
 package filter
 
 import (
@@ -18,7 +16,7 @@ var (
 	getBestInterfaceEx  = iphlpapi.MustFindProc("GetBestInterfaceEx")
 )
 
-// GetTCPTable is ...
+// GetTCPTable ...
 func GetTCPTable(buf []byte) ([]TCPRow, error) {
 	b, err := GetExtendedTcpTable(0, windows.AF_INET, 4 /* TCP_TABLE_OWNER_PID_CONNECTIONS */, buf)
 	if err != nil {
@@ -33,13 +31,13 @@ func GetTCPTable(buf []byte) ([]TCPRow, error) {
 	return *(*[]TCPRow)(unsafe.Pointer(h)), nil
 }
 
-// TCPTable is ...
+// TCPTable ...
 type TCPTable struct {
 	Len   uint32
 	Table [1]TCPRow
 }
 
-// TCPRow is ...
+// TCPRow ...
 type TCPRow struct {
 	State      uint32
 	LocalAddr  uint32
@@ -49,7 +47,7 @@ type TCPRow struct {
 	OwningPid  uint32
 }
 
-// GetTCP6Table is ...
+// GetTCP6Table ...
 func GetTCP6Table(buf []byte) ([]TCP6Row, error) {
 	b, err := GetExtendedTcpTable(0, windows.AF_INET6, 4 /* TCP_TABLE_OWNER_PID_CONNECTIONS */, buf)
 	if err != nil {
@@ -64,13 +62,13 @@ func GetTCP6Table(buf []byte) ([]TCP6Row, error) {
 	return *(*[]TCP6Row)(unsafe.Pointer(h)), nil
 }
 
-// TCP6Table is ...
+// TCP6Table ...
 type TCP6Table struct {
 	Len   uint32
 	Table [1]TCP6Row
 }
 
-// TCP6Row is ...
+// TCP6Row ...
 type TCP6Row struct {
 	LocalAddr     [4]uint32
 	LocalScopeId  uint32
@@ -82,7 +80,7 @@ type TCP6Row struct {
 	OwningPid     uint32
 }
 
-// GetExtendedTcpTable is ...
+// GetExtendedTcpTable ...
 func GetExtendedTcpTable(order uint32, ulAf uint32, tableClass uint32, buf []byte) ([]byte, error) {
 	pTcpTable := &buf[0]
 	dwSize := uint32(len(buf))
@@ -117,7 +115,7 @@ func GetExtendedTcpTable(order uint32, ulAf uint32, tableClass uint32, buf []byt
 	}
 }
 
-// GetUDPTable is ...
+// GetUDPTable ...
 func GetUDPTable(buf []byte) ([]UDPRow, error) {
 	b, err := GetExtendedUdpTable(0, windows.AF_INET, 1 /* UDP_TABLE_OWNER_PID */, buf)
 	if err != nil {
@@ -132,20 +130,20 @@ func GetUDPTable(buf []byte) ([]UDPRow, error) {
 	return *(*[]UDPRow)(unsafe.Pointer(h)), nil
 }
 
-// UDPTable is ...
+// UDPTable ...
 type UDPTable struct {
 	Len   uint32
 	Table [1]UDPRow
 }
 
-// UDPRow is ...
+// UDPRow ...
 type UDPRow struct {
 	LocalAddr uint32
 	LocalPort uint32
 	OwningPid uint32
 }
 
-// GetUDP6Table is ...
+// GetUDP6Table ...
 func GetUDP6Table(buf []byte) ([]UDP6Row, error) {
 	b, err := GetExtendedUdpTable(0, windows.AF_INET6, 1 /* UDP_TABLE_OWNER_PID */, buf)
 	if err != nil {
@@ -160,13 +158,13 @@ func GetUDP6Table(buf []byte) ([]UDP6Row, error) {
 	return *(*[]UDP6Row)(unsafe.Pointer(h)), nil
 }
 
-// UDP6Table is ...
+// UDP6Table ...
 type UDP6Table struct {
 	Len   uint32
 	Table [1]UDP6Row
 }
 
-// UDP6Row is ...
+// UDP6Row ...
 type UDP6Row struct {
 	LocalAddr    [4]uint32
 	LocalScopeId uint32
@@ -174,7 +172,7 @@ type UDP6Row struct {
 	OwningPid    uint32
 }
 
-// GetExtendedUdpTable is ...
+// GetExtendedUdpTable ...
 func GetExtendedUdpTable(order uint32, ulAf uint32, tableClass uint32, buf []byte) ([]byte, error) {
 	pUdpTable := &buf[0]
 	dwSize := uint32(len(buf))
@@ -209,7 +207,7 @@ func GetExtendedUdpTable(order uint32, ulAf uint32, tableClass uint32, buf []byt
 	}
 }
 
-// GetInterfaceIndex is ...
+// GetInterfaceIndex ...
 func GetInterfaceIndex(s string) (int, error) {
 	destAddr := windows.RawSockaddr{}
 
@@ -231,7 +229,7 @@ func GetInterfaceIndex(s string) (int, error) {
 	return GetBestInterfaceEx(&destAddr)
 }
 
-// GetBestInterfaceEx is ...
+// GetBestInterfaceEx ...
 func GetBestInterfaceEx(addr *windows.RawSockaddr) (int, error) {
 	dwBestIfIndex := int32(0)
 

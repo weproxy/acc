@@ -1,7 +1,7 @@
 {
     "iface": {
         "in": "",
-        "out": "jp1"
+        "out": ""
     },
     "server": [
         {
@@ -13,13 +13,13 @@
             "listen": ":19780",
             "encrypt":true,
             "auth": [
-                "USER831173:PASS331250181986"
+                "weproxy:wegood"
             ]
         },
         {
             "proto": "ss",
             "listen": ":19781",
-            "auth": "aes-256-cfb:123456aa!!"
+            "cipher": "aes-256-cfb:wegood"
         },
         {
             "proto": "qc",

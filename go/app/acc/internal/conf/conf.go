@@ -124,28 +124,31 @@ func (m *Conf) GetDNS() string {
 ////////////////////////////////////////////////////////////////////////////////
 
 var (
-	_confs = make(map[string]*Conf)
+	// each source (such as Xbox/PS/Switch) has its own rule config
+	_confs = make(map[string]*Conf) // srcIP --> *Conf
 )
 
+const _DEFAULT_KEY = "default"
+
 // MustGet ...
-func MustGet(key string) *Conf {
-	if c, ok := _confs[key]; ok {
+func MustGet(srcIP string) *Conf {
+	if c, ok := _confs[srcIP]; ok {
 		return c
-	} else if c, ok := _confs["default"]; ok {
+	} else if c, ok := _confs[_DEFAULT_KEY]; ok {
 		return c
-	} else if c, err := ParseBytes("default", _DEFAULT_CONF); err == nil {
+	} else if c, err := ParseBytes(_DEFAULT_KEY, _DEFAULT_CONF); err == nil {
 		return c
 	}
 	return &Conf{}
 }
 
 // Parse ...
-func Parse(key, js string) (*Conf, error) {
-	return ParseBytes(key, []byte(js))
+func Parse(srcIP, js string) (*Conf, error) {
+	return ParseBytes(srcIP, []byte(js))
 }
 
 // ParseBytes ...
-func ParseBytes(key string, js []byte) (*Conf, error) {
+func ParseBytes(srcIP string, js []byte) (*Conf, error) {
 	c := &Conf{}
 	err := json.Unmarshal(js, c)
 	if err != nil {
@@ -154,17 +157,17 @@ func ParseBytes(key string, js []byte) (*Conf, error) {
 	if err = c.fix(); err != nil {
 		return nil, err
 	}
-	_confs[key] = c
+	_confs[srcIP] = c
 	return c, nil
 }
 
 // ParseFile ...
-func ParseFile(key, jsfile string) (*Conf, error) {
+func ParseFile(srcIP, jsfile string) (*Conf, error) {
 	b, err := os.ReadFile(jsfile)
 	if err != nil {
 		return nil, err
 	}
-	return ParseBytes(key, b)
+	return ParseBytes(srcIP, b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,9 +192,9 @@ func (m *Conf) fix() error {
 }
 
 // GetDNSRule
-func (m *Conf) GetDNSRule(s string) (rule *Rule, index int) {
+func (m *Conf) GetDNSRule(target string) (rule *Rule, index int) {
 	for i, r := range m.DNS {
-		if r.IsMatch(s) {
+		if r.IsMatch(target) {
 			return r, i
 		}
 	}
@@ -199,11 +202,57 @@ func (m *Conf) GetDNSRule(s string) (rule *Rule, index int) {
 }
 
 // GetRule
-func (m *Conf) GetRule(s string) (rule *Rule, index int) {
+func (m *Conf) GetRule(target string) (rule *Rule, index int) {
 	for i, r := range m.Rules {
-		if r.IsMatch(s) {
+		if r.IsMatch(target) {
 			return r, i
 		}
 	}
 	return nil, -1
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// GetAuthS5 ...
+func (m *Conf) GetAuthS5() (user, pass string) {
+	arr := strings.Split(m.Server.Auth.S5, ":")
+	if len(arr) == 2 && len(arr[0]) > 0 && len(arr[1]) > 0 {
+		return arr[0], arr[1]
+	}
+	return
+}
+
+// GetAuthSS ...
+func (m *Conf) GetAuthSS() (cipher, pass string) {
+	arr := strings.Split(m.Server.Auth.SS, ":")
+	if len(arr) == 2 && len(arr[0]) > 0 && len(arr[1]) > 0 {
+		return arr[0], arr[1]
+	}
+	return
+}
+
+// GetAuthS5 ...
+func GetAuthS5(srcIP string) (user, pass string) {
+	if c, ok := _confs[srcIP]; ok {
+		user, pass = c.GetAuthS5()
+	}
+	if len(user) == 0 || len(pass) == 0 {
+		if c, ok := _confs[_DEFAULT_KEY]; ok {
+			user, pass = c.GetAuthS5()
+		}
+	}
+	return
+}
+
+// GetAuthSS ...
+func GetAuthSS(srcIP string) (cipher, pass string) {
+	if c, ok := _confs[srcIP]; ok {
+		cipher, pass = c.GetAuthSS()
+	}
+	if len(cipher) == 0 || len(pass) == 0 {
+		if c, ok := _confs[_DEFAULT_KEY]; ok {
+			cipher, pass = c.GetAuthSS()
+		}
+	}
+	return
 }

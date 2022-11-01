@@ -1,12 +1,11 @@
 //
-// weproxy@foxmail.com 2022/10/20
+// weproxy@foxmail.com 2022/11/01
 //
 
-package s5
+package ss
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"time"
 
@@ -33,20 +32,19 @@ type udpLocal_t struct {
 func (m *udpLocal_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 	// >>> REQ:
 	//
-	//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-	//	+-----+------+------+----------+----------+------+
-	//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+	//	| ATYP | DST.ADDR | DST.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
 
-	off := 3 + 1 + 4 + 2
+	off := 1 + 4 + 2
 	n, addr, err = m.PacketConn.ReadFrom(buf[off:])
 	if err != nil {
 		return
 	}
 	n += off
 
-	buf[0], buf[1], buf[2] = 0, 0, 0
 	saddr := socks.FromNetAddr(addr)
-	copy(buf[3:], saddr.B)
+	copy(buf, saddr.B)
 
 	return
 }
@@ -56,16 +54,16 @@ func (m *udpLocal_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 func (m *udpLocal_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
 	// <<< RSP:
 	//
-	//	| RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-	//	+-----+------+------+----------+----------+------+
-	//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+	//	| ATYP | SRC.ADDR | SRC.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
 
-	saddr, err := socks.ParseAddr(buf[3:])
+	saddr, err := socks.ParseAddr(buf)
 	if err != nil {
 		return
 	}
 
-	data := buf[3+len(saddr.B):]
+	data := buf[len(saddr.B):]
 
 	// dns cache store
 	dns.OnResponse(data)
@@ -79,37 +77,16 @@ func (m *udpLocal_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
 func (m *Handler) HandlePacket(pc netstk.PacketConn, head []byte) {
 	caddr, raddr := pc.LocalAddr(), pc.RemoteAddr()
 
-	tag := fmt.Sprintf("%s Assoc_%v %v-%v->%s", TAG, pc.ID(), caddr, m.serv, raddr)
-	sta := stats.NewTCPStats(stats.TypeS5, tag)
-
-	sta.Start("connecting...")
-	defer sta.Done("closed")
-
-	// dial server
-	rc, bound, err := m.dial(socks.CmdAssoc, caddr, raddr, sta)
-	if err != nil {
-		logx.E("%s err: %v", tag, err)
-		return
-	}
-	defer rc.Close()
-
-	// discard
-	go io.Copy(io.Discard, rc)
-
-	// handlePacket ...
-	m.handlePacket(pc, bound, head)
-}
-
-// handlePacket ...
-func (m *Handler) handlePacket(pc netstk.PacketConn, bound *socks.Addr, head []byte) {
-	caddr, raddr := pc.LocalAddr(), pc.RemoteAddr()
-	serv := bound.ToUDPAddr()
-
-	tag := fmt.Sprintf("%s UDP_%v %v->%v->%v", TAG, pc.ID(), caddr, serv, raddr)
+	tag := fmt.Sprintf("%s UDP_%v %v->%v->%v", TAG, pc.ID(), caddr, m.serv, raddr)
 	sta := stats.NewUDPStats(stats.TypeS5, tag)
 
 	sta.Start("connected")
 	defer sta.Done("closed")
+
+	_, err := m.getCipher(caddr)
+	if err != nil {
+		return
+	}
 
 	rc, err := net.ListenPacket("udp", ":0")
 	if err != nil {
@@ -119,7 +96,7 @@ func (m *Handler) handlePacket(pc netstk.PacketConn, bound *socks.Addr, head []b
 	defer rc.Close()
 
 	ln := &udpLocal_t{
-		PacketConn: pc,
+		PacketConn: m.cipher.NewPacketConn(pc, true),
 		raddr:      m.serv,
 	}
 

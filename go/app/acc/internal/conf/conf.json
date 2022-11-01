@@ -1,8 +1,8 @@
 {
     "server": {
         "auth": {
-            "s5": "",
-            "ss": ""
+            "s5": "weproxy:wegood",
+            "ss": "aes-256-cfb:wegood"
         },
         "dns": ["dns://direct"],
         "main": ["direct"],

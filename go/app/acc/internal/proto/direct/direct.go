@@ -7,7 +7,6 @@ package direct
 import (
 	"net"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"weproxy/acc/app/acc/internal/proto"
@@ -21,19 +20,17 @@ func init() {
 
 // New ...
 func New(serv string) (proto.Handler, error) {
-	var raddr net.Addr
+	saddr := serv
 	if strings.Contains(serv, "://") {
-		if url, err := url.Parse(serv); err == nil {
-			if host, port, err := net.SplitHostPort(url.Host); err == nil {
-				if ip := net.ParseIP(host); ip != nil {
-					var pn int
-					if n, err := strconv.Atoi(port); err == nil {
-						pn = n
-					}
-					raddr = &net.UDPAddr{IP: ip, Port: pn}
-				}
-			}
+		if url, err := url.Parse(serv); err != nil {
+			return nil, err
+		} else {
+			saddr = url.Host
 		}
+	}
+	raddr, err := net.ResolveUDPAddr("udp", saddr)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Handler{serv: raddr}, nil
@@ -43,7 +40,7 @@ func New(serv string) (proto.Handler, error) {
 
 // Handler implements proto.Handler
 type Handler struct {
-	serv net.Addr
+	serv *net.UDPAddr
 }
 
 // Close ...

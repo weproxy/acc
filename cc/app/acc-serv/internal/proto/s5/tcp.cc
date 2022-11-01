@@ -51,12 +51,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     opt.B2A.CopingFn = [sta](int n) { sta->AddSent(n); };
 
     // Relay c <--> rc
-    err = netio::Relay(c, rc, opt);
-    if (err) {
-        if (err != net::ErrClosed) {
-            LOGS_E(TAG << " relay " << tag << " , err: " << err);
-        }
-    }
+    netio::Relay(c, rc, opt);
 
     return err;
 }
@@ -100,13 +95,8 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
         return err;
     }
 
-    AUTO_R(_, er2, io::Copy(io::Discard, c));
-    if (er2) {
-        if (er2 != net::ErrClosed) {
-            LOGS_E(TAG << " err: " << er2);
-        }
-        return er2;
-    }
+    // discard
+    io::Copy(io::Discard, c);
 
     return nil;
 }

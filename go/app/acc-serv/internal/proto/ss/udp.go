@@ -2,7 +2,7 @@
 // weproxy@foxmail.com 2022/10/20
 //
 
-package s5
+package ss
 
 import (
 	"errors"
@@ -49,7 +49,7 @@ func (m *udpSess_t) Close() error {
 // Start ...
 func (m *udpSess_t) Start() {
 	tag := fmt.Sprintf("%s UDP_%v %v", TAG, nx.NewID(), m.caddr)
-	sta := stats.NewUDPStats(stats.TypeS5, tag)
+	sta := stats.NewUDPStats(stats.TypeSS, tag)
 
 	sta.Start("started")
 	m.sta = sta
@@ -99,16 +99,16 @@ type udpConn_t struct {
 //
 // <<< RSP:
 //
-//	| RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-//	+-----+------+------+----------+----------+------+
-//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+//	| ATYP | SRC.ADDR | SRC.PORT | DATA |
+//	+------+----------+----------+------+
+//	|  1   |    ...   |    2     |  ... |
 func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
 	if socks.AddrTypeIPv4 != m.typ && socks.AddrTypeIPv6 != m.typ {
 		return 0, nil, socks.ErrInvalidAddrType
 	}
 
 	// readFrom target server
-	pos := 3 + 1 + 2
+	pos := 1 + 2
 	if socks.AddrTypeIPv4 == m.typ {
 		pos += net.IPv4len
 	} else {
@@ -126,10 +126,9 @@ func (m *udpConn_t) ReadFrom(buf []byte) (int, net.Addr, error) {
 
 	// pack data
 	raddr := socks.FromNetAddr(addr)
-	copy(buf[3:], raddr.B)
-	buf[0], buf[1], buf[2] = 0, 0, 0 // RSV|FRAG
+	copy(buf, raddr.B)
 
-	return 3 + len(raddr.B) + n, addr, nil
+	return len(raddr.B) + n, addr, nil
 }
 
 // WriteTo override
@@ -178,16 +177,16 @@ func handleUDP(ln net.PacketConn) error {
 
 		// >>> REQ:
 		//
-		//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-		//	+-----+------+------+----------+----------+------+
-		//	|  2  |  1   |  1   |    ...   |    2     |  ... |
-		saddr, err := socks.ParseAddr(data[3:])
+		//	| ATYP | DST.ADDR | DST.PORT | DATA |
+		//	+------+----------+----------+------+
+		//	|  1   |    ...   |    2     |  ... |
+		saddr, err := socks.ParseAddr(data)
 		if err != nil {
 			continue
 		}
 
 		raddr := saddr.ToUDPAddr()
-		data = data[3+len(saddr.B):]
+		data = data[len(saddr.B):]
 
 		// dns cache query
 		if raddr.Port == 53 {
@@ -195,8 +194,7 @@ func handleUDP(ln net.PacketConn) error {
 			if erx == nil && ans != nil {
 				// dns cache answer
 				if b := ans.Bytes(); len(b) > 0 {
-					buf[0], buf[1], buf[2] = 0, 0, 0 // RSV|FRAG
-					off := 3 + len(saddr.B)
+					off := len(saddr.B)
 					copy(buf[off:], b)
 					ln.WriteTo(buf[:off+len(b)], caddr)
 					continue

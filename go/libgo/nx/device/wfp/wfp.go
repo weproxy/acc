@@ -112,7 +112,7 @@ func (m *Device) Write(p []byte, offset int) (n int, err error) {
 	return n, err
 }
 
-// loop is ...
+// loop ...
 func (m *Device) loop() (err error) {
 	t := time.NewTicker(time.Millisecond)
 	defer t.Stop()
@@ -313,7 +313,7 @@ func OpenDevice(ifname, filter string, allowApps []string) (dev *Device, err err
 	return
 }
 
-// getDefaultInterface is ...
+// getDefaultInterface ...
 func getDefaultInterface(ifname string) (uint32, uint32, error) {
 	const FILTER = "not loopback and outbound and tcp.DstPort = 53 and (ip.DstAddr = 8.8.8.8 or ipv6.DstAddr = 2001:4860:4860::8888)"
 

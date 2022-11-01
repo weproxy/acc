@@ -1,6 +1,3 @@
-//go:build windows
-// +build windows
-
 package windivert
 
 type CtlCode uint32

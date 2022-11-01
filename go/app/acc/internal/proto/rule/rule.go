@@ -10,24 +10,10 @@ import (
 	"weproxy/acc/app/acc/internal/conf"
 
 	"weproxy/acc/libgo/logx"
+	"weproxy/acc/libgo/nx"
 )
 
 const TAG = "[rule]"
-
-////////////////////////////////////////////////////////////////////////////////
-
-// getIP ...
-func getIP(addr net.Addr) string {
-	if addr != nil {
-		switch addr := addr.(type) {
-		case *net.TCPAddr:
-			return addr.IP.String()
-		case *net.UDPAddr:
-			return addr.IP.String()
-		}
-	}
-	return ""
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,13 +23,13 @@ func getIP(addr net.Addr) string {
 //	one of dstHost and dstAddr maybe is nil
 func GetTCPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string, err error) {
 	serv = func() string {
-		c := conf.MustGet(getIP(srcAddr))
+		c := conf.MustGet(nx.GetIP(srcAddr).String())
 
 		var r *conf.Rule
 		if len(dstHost) > 0 {
 			r, _ = c.GetRule(dstHost)
 		} else if dstAddr != nil {
-			r, _ = c.GetRule(getIP(dstAddr))
+			r, _ = c.GetRule(nx.GetIP(dstAddr).String())
 		}
 		if r != nil {
 			return r.GetServ()
@@ -72,13 +58,13 @@ func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string
 	}
 
 	serv = func() string {
-		c := conf.MustGet(getIP(srcAddr))
+		c := conf.MustGet(nx.GetIP(srcAddr).String())
 
 		var r *conf.Rule
 		if len(dstHost) > 0 {
 			r, _ = c.GetRule(dstHost)
 		} else if dstAddr != nil {
-			r, _ = c.GetRule(getIP(dstAddr))
+			r, _ = c.GetRule(nx.GetIP(dstAddr).String())
 		}
 		if r != nil {
 			return r.GetServ()
@@ -99,13 +85,13 @@ func GetUDPRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string
 //	one of dstHost and dstAddr maybe is nil
 func GetDNSRule(srcAddr net.Addr, dstHost string, dstAddr net.Addr) (serv string, err error) {
 	serv = func() string {
-		c := conf.MustGet(getIP(srcAddr))
+		c := conf.MustGet(nx.GetIP(srcAddr).String())
 
 		var r *conf.Rule
 		if len(dstHost) > 0 {
 			r, _ = c.GetDNSRule(dstHost)
 		} else if dstAddr != nil {
-			r, _ = c.GetDNSRule(getIP(dstAddr))
+			r, _ = c.GetDNSRule(nx.GetIP(dstAddr).String())
 		}
 		if r != nil {
 			return r.GetServ()

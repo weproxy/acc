@@ -32,7 +32,7 @@ const (
 	CWR = 1 << 7
 )
 
-// PacketFilter is ...
+// PacketFilter ...
 type PacketFilter struct {
 	AppFilter *filter.AppFilter
 	IPFilter  *filter.IPFilter
@@ -65,7 +65,7 @@ func NewPacketFilter() *PacketFilter {
 	return m
 }
 
-// CheckIPv4 is ...
+// CheckIPv4 ...
 func (d *PacketFilter) CheckIPv4(b []byte) bool {
 	switch b[9] {
 	case ProtoTCP:
@@ -141,7 +141,7 @@ func (d *PacketFilter) CheckIPv4(b []byte) bool {
 	return false
 }
 
-// checkTCP4ByPID is ...
+// checkTCP4ByPID ...
 func (d *PacketFilter) checkTCP4ByPID(b []byte) bool {
 	if d.AppFilter == nil {
 		return false
@@ -165,7 +165,7 @@ func (d *PacketFilter) checkTCP4ByPID(b []byte) bool {
 	return false
 }
 
-// checkUDP4ByPID is ...
+// checkUDP4ByPID ...
 func (d *PacketFilter) checkUDP4ByPID(b []byte) bool {
 	if d.AppFilter == nil {
 		return false
@@ -189,7 +189,7 @@ func (d *PacketFilter) checkUDP4ByPID(b []byte) bool {
 	return false
 }
 
-// CheckIPv6 is ...
+// CheckIPv6 ...
 func (d *PacketFilter) CheckIPv6(b []byte) bool {
 	switch b[6] {
 	case ProtoTCP:
@@ -264,7 +264,7 @@ func (d *PacketFilter) CheckIPv6(b []byte) bool {
 	return false
 }
 
-// checkTCP6ByPID is ...
+// checkTCP6ByPID ...
 func (d *PacketFilter) checkTCP6ByPID(b []byte) bool {
 	if d.AppFilter == nil {
 		return false
@@ -289,7 +289,7 @@ func (d *PacketFilter) checkTCP6ByPID(b []byte) bool {
 	return false
 }
 
-// checkUDP6ByPID is ...
+// checkUDP6ByPID ...
 func (d *PacketFilter) checkUDP6ByPID(b []byte) bool {
 	if d.AppFilter == nil {
 		return false

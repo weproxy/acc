@@ -110,7 +110,7 @@ func addOrDelAdapterIP(isAdd bool, ifc *net.Interface, ipnet net.IPNet) (err err
 	return err
 }
 
-// GetBestInterfaceIndex is ...
+// GetBestInterfaceIndex ...
 func GetBestInterfaceIndex(dstIP string) (ifIdx int, err error) {
 	ifname, _, err := GetGateway(dstIP)
 	if err != nil {
