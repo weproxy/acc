@@ -55,9 +55,9 @@ void out(std::ostream& s, T&&... t) {
 // logt ...
 template <typename... T>
 void logt(Level lvl, const char* file, int line, T&&... t) {
-    std::ostringstream s;
-    out(s, std::forward<T>(t)...);
-    logs(lvl, file, line, s.str().c_str());
+    std::ostringstream _ss_;
+    out(_ss_, std::forward<T>(t)...);
+    logs(lvl, file, line, _ss_.str().c_str());
 }
 
 }  // namespace xx
@@ -97,13 +97,13 @@ void P(X&&... x) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-#define _LOGS_T_(LEVEL, ...)                                    \
-    do {                                                        \
-        if (logx::xx::reach(LEVEL)) {                           \
-            std::ostringstream s;                               \
-            s << __VA_ARGS__;                                   \
-            logx::xx::logt(LEVEL, __FILE__, __LINE__, s.str()); \
-        }                                                       \
+#define _LOGS_T_(LEVEL, ...)                                       \
+    do {                                                           \
+        if (logx::xx::reach(LEVEL)) {                              \
+            std::ostringstream _ss_;                               \
+            _ss_ << __VA_ARGS__;                                   \
+            logx::xx::logt(LEVEL, __FILE__, __LINE__, _ss_.str()); \
+        }                                                          \
     } while (0)
 
 #define _LOGX_T_(LEVEL, ...)                                        \
