@@ -15,22 +15,17 @@ import (
 
 // Cipher ...
 type Cipher interface {
-	NewReadeCloser(io.ReadCloser) io.ReadCloser
+	NewReadCloser(io.ReadCloser) io.ReadCloser
 	NewWriteCloser(io.WriteCloser) io.WriteCloser
 	NewPacketConn(pc net.PacketConn, isLocal bool) net.PacketConn
 	NewConn(conn net.Conn) net.Conn
 }
 
-// CipherMatched ...
-func CipherMatched(cipher string) bool {
-	return aescfb.CipherMatched(cipher) /*|| aesgcm.CipherMatched(cipher)*/
-}
-
 // NewCipher ...
 func NewCipher(cipher, password string) (Cipher, error) {
-	if aescfb.CipherMatched(cipher) {
+	if aescfb.Match(cipher) {
 		return aescfb.NewCipher(cipher, password)
-		// } else if aesgcm.CipherMatched(cipher) {
+		// } else if aesgcm.Match(cipher) {
 		// 	return aesgcm.NewCipher(cipher, password)
 	}
 

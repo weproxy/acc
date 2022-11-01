@@ -17,7 +17,7 @@ import (
 // Cipher ...
 type Cipher []byte
 
-func (m Cipher) NewReadeCloser(r io.ReadCloser) io.ReadCloser   { return NewReader(r, m) }
+func (m Cipher) NewReadCloser(r io.ReadCloser) io.ReadCloser    { return NewReader(r, m) }
 func (m Cipher) NewWriteCloser(w io.WriteCloser) io.WriteCloser { return NewWriter(w, m) }
 func (m Cipher) NewPacketConn(c net.PacketConn, isLocal bool) net.PacketConn {
 	return NewPacketConn(c, m, isLocal)
@@ -26,8 +26,8 @@ func (m Cipher) NewConn(c net.Conn) net.Conn { return NewConn(c, m) }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-// CipherMatched ..
-func CipherMatched(cipher string) bool {
+// Match ..
+func Match(cipher string) bool {
 	switch strings.ToUpper(cipher) {
 	case "AES-256-CFB", "AES_256_CFB",
 		"AES-CFB-256", "AES_CFB_256",
@@ -42,7 +42,7 @@ func CipherMatched(cipher string) bool {
 
 // NewCipher ...
 func NewCipher(cipher, password string) (Cipher, error) {
-	if CipherMatched(cipher) {
+	if Match(cipher) {
 		return Cipher([]byte(kdf(password, 32))), nil
 	}
 

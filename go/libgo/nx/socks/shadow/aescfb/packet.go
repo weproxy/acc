@@ -18,8 +18,8 @@ import (
 // ErrShortPacket ...
 var ErrShortPacket = errors.New("short packet")
 
-// Pack ...
-func Pack(dst, pkt []byte, key Cipher) ([]byte, error) {
+// pack ...
+func pack(dst, pkt []byte, key Cipher) ([]byte, error) {
 	iv := dst[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
@@ -38,8 +38,8 @@ func Pack(dst, pkt []byte, key Cipher) ([]byte, error) {
 	return dst[:aes.BlockSize+len(pkt)], nil
 }
 
-// Unpack ...
-func Unpack(dst, pkt []byte, key Cipher) ([]byte, error) {
+// unpack ...
+func unpack(dst, pkt []byte, key Cipher) ([]byte, error) {
 	if len(pkt) < aes.BlockSize {
 		return nil, errors.New("ciphertext too short")
 	}
@@ -61,8 +61,8 @@ func Unpack(dst, pkt []byte, key Cipher) ([]byte, error) {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-// PacketRemote ...
-type PacketRemote struct {
+// packetConn ...
+type packetConn struct {
 	net.PacketConn
 	Cipher  Cipher
 	isLocal bool
@@ -70,11 +70,11 @@ type PacketRemote struct {
 
 // NewPacketConn ...
 func NewPacketConn(pc net.PacketConn, ciph Cipher, isLocal bool) net.PacketConn {
-	return &PacketRemote{PacketConn: pc, Cipher: ciph, isLocal: isLocal}
+	return &packetConn{PacketConn: pc, Cipher: ciph, isLocal: isLocal}
 }
 
 // ReadFrom ...
-func (m *PacketRemote) ReadFrom(b []byte) (int, net.Addr, error) {
+func (m *packetConn) ReadFrom(b []byte) (int, net.Addr, error) {
 	buf := make([]byte, len(b)+aes.BlockSize)
 
 	n, addr, err := m.PacketConn.ReadFrom(buf)
@@ -84,9 +84,9 @@ func (m *PacketRemote) ReadFrom(b []byte) (int, net.Addr, error) {
 
 	var bb []byte
 	if m.isLocal {
-		bb, err = Pack(b, buf[:n], m.Cipher)
+		bb, err = pack(b, buf[:n], m.Cipher)
 	} else {
-		bb, err = Unpack(b, buf[:n], m.Cipher)
+		bb, err = unpack(b, buf[:n], m.Cipher)
 	}
 	if err != nil {
 		return 0, nil, err
@@ -96,14 +96,14 @@ func (m *PacketRemote) ReadFrom(b []byte) (int, net.Addr, error) {
 }
 
 // WriteTo ...
-func (m *PacketRemote) WriteTo(b []byte, addr net.Addr) (n int, err error) {
+func (m *packetConn) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	buf := make([]byte, len(b)+aes.BlockSize)
 
 	var bb []byte
 	if m.isLocal {
-		bb, err = Unpack(buf, b, m.Cipher)
+		bb, err = unpack(buf, b, m.Cipher)
 	} else {
-		bb, err = Pack(buf, b, m.Cipher)
+		bb, err = pack(buf, b, m.Cipher)
 	}
 	if err != nil {
 		return 0, err
