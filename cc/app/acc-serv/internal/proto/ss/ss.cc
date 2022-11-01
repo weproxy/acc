@@ -12,15 +12,15 @@ namespace internal {
 namespace proto {
 namespace ss {
 
-extern error handleTCP(net::Conn c, net::Addr raddr);
-extern error handleUDP(net::PacketConn pc, net::Addr caddr, const bytez<> buf);
+extern void handleTCP(net::Conn c, net::Addr raddr);
+extern void handleUDP(net::PacketConn pc, net::Addr caddr, const bytez<> buf);
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
-static error handleConn(net::Conn c) {
+static void handleConn(net::Conn c) {
     DEFER(c->Close());
 
-    return handleTCP(c, nil);
+    handleTCP(c, nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

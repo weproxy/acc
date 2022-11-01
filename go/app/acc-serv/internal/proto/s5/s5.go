@@ -7,7 +7,6 @@ package s5
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"strings"
 
@@ -114,23 +113,23 @@ func (m *server_t) cehckUserPass(user, pass string) error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleConn ...
-func (m *server_t) handleConn(c net.Conn) error {
+func (m *server_t) handleConn(c net.Conn) {
 	defer c.Close()
 
 	cmd, raddr, err := socks.ServerHandshake(c, m.cehckUserPass)
 	if err != nil || raddr == nil {
 		logx.E("%v handshake(), err: %v", TAG, err)
-		return err
+		return
 	}
 
 	switch cmd {
 	case socks.CmdConnect:
-		return handleTCP(c, raddr.ToTCPAddr())
+		handleTCP(c, raddr.ToTCPAddr())
 	case socks.CmdAssoc:
-		return handleAssoc(c, raddr.ToUDPAddr())
+		handleAssoc(c, raddr.ToUDPAddr())
 	case socks.CmdBind:
-		return errors.New("not support socks command: bind")
+		logx.E("%v not support socks command: bind", TAG)
 	default:
-		return fmt.Errorf("unknow socks command: %d", cmd)
+		logx.E("%v unknow socks command: %d", TAG, cmd)
 	}
 }

@@ -145,7 +145,7 @@ func (m *udpConn_t) WriteTo(unpackedBuf []byte, raddr net.Addr) (int, error) {
 //
 //	caddr=1.2.3.4:100 -. raddr=8.8.8.8:53
 //	                  -. raddr=4.4.4.4:53
-func handleUDP(ln net.PacketConn) error {
+func handleUDP(ln net.PacketConn) {
 	defer ln.Close()
 
 	// sessMap
@@ -243,9 +243,7 @@ func handleUDP(ln net.PacketConn) error {
 		// writeTo target server
 		err = sess.WriteToRC(data, raddr)
 		if err != nil {
-			return err
+			break
 		}
 	}
-
-	return nil
 }

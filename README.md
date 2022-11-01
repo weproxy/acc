@@ -62,33 +62,6 @@ cmd=serv make run
 
 #### A socks5 server codes example
 
-* s5.h
-```c++
-//
-// weproxy@foxmail.com 2022/10/03
-//
-
-#pragma once
-
-#include "../proto.h"
-
-namespace internal {
-namespace proto {
-namespace s5 {
-
-////////////////////////////////////////////////////////////////////////////////
-// TAG ...
-constexpr const char* TAG = "[s5]";
-
-////////////////////////////////////////////////////////////////////////////////
-// New ...
-R<proto::Server, error> New(const json::J& j);
-
-}  // namespace s5
-}  // namespace proto
-}  // namespace internal
-```
-
 * s5.cc
 
 ```c++
@@ -217,34 +190,32 @@ static R<socks::Command, Ref<socks::Addr>, error> handshake(net::Conn c) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
-extern error handleTCP(net::Conn c, net::Addr raddr);
+extern void handleTCP(net::Conn c, net::Addr raddr);
 
 // handleAssoc ...
-extern error handleAssoc(net::Conn c, net::Addr raddr);
+extern void handleAssoc(net::Conn c, net::Addr raddr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
-static error handleConn(net::Conn c) {
+static void handleConn(net::Conn c) {
     DEFER(c->Close());
 
     AUTO_R(cmd, raddr, err, handshake(c));
     if (err || !raddr) {
         auto er = err ? err : socks::ErrInvalidAddrType;
         LOGS_E(TAG << " handshake(), err: " << er);
-        return er;
+        return;
     }
-
-    // LOGS_D(TAG << " handshake(), cmd=" << socks::ToString(cmd) << ", raddr=" << raddr);
 
     switch (cmd) {
         case socks::CmdConnect:
-            return handleTCP(c, raddr->ToNetAddr());
+            handleTCP(c, raddr->ToNetAddr());
         case socks::CmdAssoc:
-            return handleAssoc(c, raddr->ToNetAddr());
+            handleAssoc(c, raddr->ToNetAddr());
         case socks::CmdBind:
-            return errors::New("not support socks command: bind");
+            LOGS_E(TAG << " not support socks command: bind");
         default:
-            return fmt::Errorf("unknow socks command: %d", cmd);
+            LOGS_E(TAG << " unknow socks command: " << cmd);
     }
 }
 
@@ -347,7 +318,7 @@ using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
-error handleTCP(net::Conn c, net::Addr raddr) {
+void handleTCP(net::Conn c, net::Addr raddr) {
     auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
     auto sta = stats::NewTCPStats(stats::TypeS5, tag);
 
@@ -359,7 +330,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
         socks::WriteReply(c, socks::ReplyHostUnreachable);
-        return er1;
+        return;
     }
     DEFER(rc->Close());
 
@@ -372,7 +343,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         if (err != net::ErrClosed) {
             LOGS_E(TAG << " err: " << err);
         }
-        return err;
+        return;
     }
 
     netio::RelayOption opt(time::Second * 2);
@@ -380,64 +351,13 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     opt.B2A.CopingFn = [sta](int n) { sta->AddSent(n); };
 
     // Relay c <--> rc
-    err = netio::Relay(c, rc, opt);
-    if (err) {
-        if (err != net::ErrClosed) {
-            LOGS_E(TAG << " relay " << tag << " , err: " << err);
-        }
-    }
-
-    return err;
+    netio::Relay(c, rc, opt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// handleUDP ...
-extern error handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr);
-
 // handleAssoc ...
-error handleAssoc(net::Conn c, net::Addr raddr) {
-    auto caddr = c->RemoteAddr();
-
-    auto tag = GX_SS(TAG << " Assoc_" << nx::NewID() << " " << caddr << "->" << raddr);
-    auto sta = stats::NewTCPStats(stats::TypeS5, tag);
-
-    sta->Start("connected");
-    DEFER(sta->Done("closed"));
-
-    AUTO_R(ln, er1, net::ListenPacket(":0"));
-    if (er1) {
-        LOGS_E(TAG << " dial, err: " << er1);
-        socks::WriteReply(c, socks::ReplyHostUnreachable);
-        return er1;
-    }
-
-    // handleUDP
-    gx::go([ln, caddr, raddr] {
-        // raddr is not fixed, it maybe be changed after
-        handleUDP(ln, caddr, raddr);
-    });
-
-    // <<< REP:
-    //     | VER | CMD |  RSV  | ATYP | BND.ADDR | BND.PORT |
-    //     +-----+-----+-------+------+----------+----------+
-    //     |  1  |  1  | X'00' |  1   |    ...   |    2     |
-    auto err = socks::WriteReply(c, socks::ReplySuccess, 0, ln->LocalAddr());
-    if (err) {
-        if (err != net::ErrClosed) {
-            LOGS_E(TAG << " err: " << err);
-        }
-        return err;
-    }
-
-    AUTO_R(_, er2, io::Copy(io::Discard, c));
-    if (er2) {
-        if (er2 != net::ErrClosed) {
-            LOGS_E(TAG << " err: " << er2);
-        }
-        return er2;
-    }
-
-    return nil;
+void handleAssoc(net::Conn c, net::Addr raddr) {
+    // TODO ...
 }
 
 }  // namespace s5
@@ -552,24 +472,24 @@ func (m *server_t) Close() error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleConn ...
-func handleConn(c net.Conn) error {
+func handleConn(c net.Conn) {
     defer c.Close()
 
     cmd, raddr, err := handshake(c)
     if err != nil || raddr == nil {
         logx.E("%v handshake(), err: %v", TAG, err)
-        return err
+        return
     }
 
     switch cmd {
     case socks.CmdConnect:
-        return handleTCP(c, raddr.ToTCPAddr())
+        handleTCP(c, raddr.ToTCPAddr())
     case socks.CmdAssoc:
-        return handleAssoc(c, raddr.ToUDPAddr())
+        handleAssoc(c, raddr.ToUDPAddr())
     case socks.CmdBind:
-        return errors.New("not support socks command: bind")
+        logx.E("%v not support socks command: bind", TAG)
     default:
-        return fmt.Errorf("unknow socks command: %d", cmd)
+        logx.E("%v unknow socks command: %d", TAG, cmd)
     }
 }
 
@@ -700,7 +620,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleTCP ...
-func handleTCP(c net.Conn, raddr net.Addr) error {
+func handleTCP(c net.Conn, raddr net.Addr) {
     tag := fmt.Sprintf("%s TCP_%v %v->%v", TAG, nx.NewID(), c.RemoteAddr(), raddr)
     sta := stats.NewTCPStats(stats.TypeS5, tag)
 
@@ -712,7 +632,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
     if err != nil {
         logx.E("%s dial, err: %v", TAG, err)
         socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
-        return err
+        return
     }
     defer rc.Close()
 
@@ -725,7 +645,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
         if !errors.Is(err, net.ErrClosed) {
             logx.E("%s err: ", TAG, err)
         }
-        return err
+        return
     }
 
     opt := netio.RelayOption{}
@@ -733,22 +653,14 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
     opt.B2A.CopingFn = func(n int) { sta.AddSent(int64(n)) }
 
     // Relay c <--> rc
-    err = netio.Relay(c, rc, opt)
-    if err != nil {
-        if !errors.Is(err, net.ErrClosed) {
-            logx.E("%s relay %s, err: %v", TAG, tag, err)
-        }
-    }
-
-    return err
+    netio.Relay(c, rc, opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleAssoc ...
-func handleAssoc(c net.Conn, raddr net.Addr) error {
+func handleAssoc(c net.Conn, raddr net.Addr)  {
     // TODO ...
-    return nil
 }
 ```
 

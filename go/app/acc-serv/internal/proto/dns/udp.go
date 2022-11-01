@@ -116,7 +116,7 @@ func (m *udpConn_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
 // //////////////////////////////////////////////////////////////////////////////
 
 // runServLoop ...
-func runServLoop(ln net.PacketConn) error {
+func runServLoop(ln net.PacketConn) {
 	defer ln.Close()
 
 	// sessMap
@@ -205,9 +205,7 @@ func runServLoop(ln net.PacketConn) error {
 		// writeTo target server
 		err = sess.WriteToRC(data, raddr)
 		if err != nil {
-			return err
+			break
 		}
 	}
-
-	return nil
 }

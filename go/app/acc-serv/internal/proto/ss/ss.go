@@ -122,20 +122,22 @@ func (m *server_t) Close() error {
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleConn ...
-func (m *server_t) handleConn(c net.Conn) error {
+func (m *server_t) handleConn(c net.Conn) {
 	defer c.Close()
 
 	cipher, err := shadow.NewCipher(m.ciph, m.pass)
 	if err != nil {
-		return err
+		logx.E("%v handleConn(), err: %v", TAG, err)
+		return
 	}
 
 	cc := cipher.NewConn(c)
 
 	_, raddr, err := socks.ReadAddr(cc)
 	if err != nil {
-		return err
+		logx.E("%v handleConn(), err: %v", TAG, err)
+		return
 	}
 
-	return handleTCP(cc, raddr.ToTCPAddr())
+	handleTCP(cc, raddr.ToTCPAddr())
 }

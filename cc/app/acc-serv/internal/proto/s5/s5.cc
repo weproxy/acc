@@ -24,34 +24,34 @@ static error checkUserPass(const string& user, const string& pass) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
-extern error handleTCP(net::Conn c, net::Addr raddr);
+extern void handleTCP(net::Conn c, net::Addr raddr);
 
 // handleAssoc ...
-extern error handleAssoc(net::Conn c, net::Addr raddr);
+extern void handleAssoc(net::Conn c, net::Addr raddr);
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleConn ...
-static error handleConn(net::Conn c) {
+static void handleConn(net::Conn c) {
     DEFER(c->Close());
 
     AUTO_R(cmd, raddr, err, socks::ServerHandshake(c, checkUserPass));
     if (err || !raddr) {
         auto er = err ? err : socks::ErrInvalidAddrType;
         LOGS_E(TAG << " handshake(), err: " << er);
-        return er;
+        return;
     }
 
     // LOGS_D(TAG << " handshake(), cmd=" << socks::ToString(cmd) << ", raddr=" << raddr);
 
     switch (cmd) {
         case socks::Command::Connect:
-            return handleTCP(c, raddr->ToNetAddr());
+            handleTCP(c, raddr->ToNetAddr());
         case socks::Command::Assoc:
-            return handleAssoc(c, raddr->ToNetAddr());
+            handleAssoc(c, raddr->ToNetAddr());
         case socks::Command::Bind:
-            return errors::New("not support socks command: bind");
+            LOGS_E(TAG << " not support socks command: bind");
         default:
-            return fmt::Errorf("unknow socks command: %d", cmd);
+            LOGS_E(TAG << " unknow socks command: " << cmd);
     }
 }
 

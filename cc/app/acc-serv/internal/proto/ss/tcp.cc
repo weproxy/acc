@@ -17,7 +17,7 @@ using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
-error handleTCP(net::Conn c, net::Addr raddr) {
+void handleTCP(net::Conn c, net::Addr raddr) {
     auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
     auto sta = stats::NewTCPStats(stats::Type::S5, tag);
 
@@ -46,8 +46,6 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     //     }
     //     return er2;
     // }
-
-    return nil;
 }
 
 }  // namespace ss

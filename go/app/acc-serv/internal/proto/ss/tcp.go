@@ -17,7 +17,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleTCP ...
-func handleTCP(c net.Conn, raddr net.Addr) error {
+func handleTCP(c net.Conn, raddr net.Addr) {
 	defer c.Close()
 
 	tag := fmt.Sprintf("%s TCP_%v %v.%v", TAG, nx.NewID(), c.RemoteAddr(), raddr)
@@ -30,7 +30,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	rc, err := net.Dial("tcp", raddr.String())
 	if err != nil {
 		logx.E("%s dial, err: %v", TAG, err)
-		return err
+		return
 	}
 	rc.(*net.TCPConn).SetKeepAlive(true)
 	defer rc.Close()
@@ -41,6 +41,4 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 
 	// Relay c <--> rc
 	netio.Relay(c, rc, opt)
-
-	return err
 }

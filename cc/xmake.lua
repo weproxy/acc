@@ -53,6 +53,7 @@ APP = os.getenv("app") or "acc"
 CMD = os.getenv("cmd") or "cli"
 
 -- include dir
+add_includedirs("include/co")
 add_includedirs("libcc")
 add_includedirs("libgx")
 add_includedirs("libgx/3rd/coost/include")

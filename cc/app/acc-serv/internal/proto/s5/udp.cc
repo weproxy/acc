@@ -149,7 +149,7 @@ struct udpConn_t : public net::xx::packetConnWrap_t {
 //   caddr=1.2.3.4:100 --> raddr=8.8.8.8:53
 //                     --> raddr=4.4.4.4:53
 //
-error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
+void handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
     // sessMap
     auto sessMap = NewRef<udpSessMap>();
     DEFER({
@@ -245,11 +245,9 @@ error handleUDP(net::PacketConn ln, net::Addr caddr, net::Addr raddr) {
         // writeTo target server
         err = sess->WriteToRC(data, raddr);
         if (err) {
-            return err;
+            break;
         }
     }
-
-    return nil;
 }
 
 }  // namespace s5

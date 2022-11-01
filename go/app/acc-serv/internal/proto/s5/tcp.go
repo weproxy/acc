@@ -20,9 +20,7 @@ import (
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleTCP ...
-func handleTCP(c net.Conn, raddr net.Addr) error {
-	defer c.Close()
-
+func handleTCP(c net.Conn, raddr net.Addr) {
 	tag := fmt.Sprintf("%s TCP_%v %v.%v", TAG, nx.NewID(), c.RemoteAddr(), raddr)
 	sta := stats.NewTCPStats(stats.TypeS5, tag)
 
@@ -34,7 +32,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 	if err != nil {
 		logx.E("%s dial, err: %v", TAG, err)
 		socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
-		return err
+		return
 	}
 	rc.(*net.TCPConn).SetKeepAlive(true)
 	defer rc.Close()
@@ -48,7 +46,7 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s err: ", TAG, err)
 		}
-		return err
+		return
 	}
 
 	opt := netio.RelayOption{}
@@ -57,14 +55,12 @@ func handleTCP(c net.Conn, raddr net.Addr) error {
 
 	// Relay c <--> rc
 	netio.Relay(c, rc, opt)
-
-	return err
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // handleAssoc ...
-func handleAssoc(c net.Conn, raddr net.Addr) error {
+func handleAssoc(c net.Conn, raddr net.Addr) {
 	caddr := c.RemoteAddr()
 
 	tag := fmt.Sprintf("%s Assoc_%v %v.%v", TAG, nx.NewID(), caddr, raddr)
@@ -77,7 +73,7 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 	if err != nil {
 		logx.E("%s dial err: %v", tag, err)
 		socks.WriteReply(c, socks.ReplyHostUnreachable, 0, nil)
-		return err
+		return
 	}
 
 	// handleUDP
@@ -92,11 +88,9 @@ func handleAssoc(c net.Conn, raddr net.Addr) error {
 		if !errors.Is(err, net.ErrClosed) {
 			logx.E("%s err: %v", tag, err)
 		}
-		return err
+		return
 	}
 
 	// discard
 	io.Copy(io.Discard, c)
-
-	return nil
 }

@@ -18,7 +18,7 @@ using namespace nx;
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleTCP ...
-error handleTCP(net::Conn c, net::Addr raddr) {
+void handleTCP(net::Conn c, net::Addr raddr) {
     auto tag = GX_SS(TAG << " TCP_" << nx::NewID() << " " << c->RemoteAddr() << "->" << raddr);
     auto sta = stats::NewTCPStats(stats::Type::S5, tag);
 
@@ -30,7 +30,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
         socks::WriteReply(c, socks::Reply::HostUnreachable);
-        return er1;
+        return;
     }
     DEFER(rc->Close());
 
@@ -43,7 +43,7 @@ error handleTCP(net::Conn c, net::Addr raddr) {
         if (err != net::ErrClosed) {
             LOGS_E(TAG << " err: " << err);
         }
-        return err;
+        return;
     }
 
     netio::RelayOption opt(time::Second * 2);
@@ -52,16 +52,14 @@ error handleTCP(net::Conn c, net::Addr raddr) {
 
     // Relay c <--> rc
     netio::Relay(c, rc, opt);
-
-    return err;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // handleUDP ...
-extern error handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr);
+extern void handleUDP(net::PacketConn c, net::Addr caddr, net::Addr raddr);
 
 // handleAssoc ...
-error handleAssoc(net::Conn c, net::Addr raddr) {
+void handleAssoc(net::Conn c, net::Addr raddr) {
     auto caddr = c->RemoteAddr();
 
     auto tag = GX_SS(TAG << " Assoc_" << nx::NewID() << " " << caddr << "->" << raddr);
@@ -74,7 +72,7 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
     if (er1) {
         LOGS_E(TAG << " dial, err: " << er1);
         socks::WriteReply(c, socks::Reply::HostUnreachable);
-        return er1;
+        return;
     }
 
     // handleUDP
@@ -92,13 +90,11 @@ error handleAssoc(net::Conn c, net::Addr raddr) {
         if (err != net::ErrClosed) {
             LOGS_E(TAG << " err: " << err);
         }
-        return err;
+        return;
     }
 
     // discard
     io::Copy(io::Discard, c);
-
-    return nil;
 }
 
 }  // namespace s5
