@@ -23,18 +23,19 @@
         },
         {
             "proto": "qc",
-            "disabled": true,
+            "disabled": false,
             "listen": ":19782",
             "encrypt":true
         },
         {
             "proto": "kc",
-            "disabled": true,
+            "disabled": false,
             "listen": ":19783",
             "encrypt":true
         },
         {
             "proto": "htp",
+            "disabled": true,
             "listen": ":19784"
         }
     ]
