@@ -9,10 +9,10 @@ import (
 // openTunDevice ...
 func openTunDevice(c *conf) (io.ReadWriteCloser, error) {
 	cfg := water.Config{
-		Name:       c.name,
-		Persist:    c.persist,
 		DeviceType: water.TUN,
 	}
+	cfg.PlatformSpecificParams.Name = c.name
+	cfg.PlatformSpecificParams.Persist = c.persist
 
 	dev, err := water.New(cfg)
 	if err != nil {

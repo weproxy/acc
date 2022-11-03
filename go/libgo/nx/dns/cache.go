@@ -6,12 +6,14 @@ package dns
 
 import (
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
 	"golang.org/x/net/dns/dnsmessage"
 
 	"weproxy/acc/libgo/logx"
+	"weproxy/acc/libgo/nx/stats"
 )
 
 // cacheEntry ...
@@ -46,12 +48,16 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 
 	q := &msg.Questions[0]
 
+	name := strings.TrimSuffix(q.Name.String(), ".")
+	stats.DNS.AddQuery(name)
+
 	logx.I("[dns] cache.Query %v%v", q.Name, q.Type)
 
 	// check if fake provide
 	answer, _ = MakeFakeAnswerMsg(msg, nil)
 	if answer != nil && answer.Msg != nil {
 		logx.W("[dns] cache.FakeAnswer %v%v <- %s", q.Name, q.Type, toAnswerString(answer.Msg.Answers))
+		stats.DNS.AddFaked(name)
 		return answer, nil
 	}
 
@@ -68,6 +74,8 @@ func (m *cacheMap) load(msg *dnsmessage.Message) (answer *Answer, err error) {
 		delete(m.mem, key)
 		return
 	}
+
+	stats.DNS.AddCacheHit(name)
 
 	amsg := &dnsmessage.Message{}
 	*amsg = *entry.msg
@@ -90,6 +98,9 @@ func (m *cacheMap) store(msg *dnsmessage.Message) (err error) {
 	}
 
 	q := &msg.Questions[0]
+
+	name := strings.TrimSuffix(q.Name.String(), ".")
+	stats.DNS.AddSucceeded(name)
 
 	key := makeCacheKey(q)
 	exp := time.Now().Add(time.Second * 300)

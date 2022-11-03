@@ -33,20 +33,19 @@ type udpLocal_t struct {
 func (m *udpLocal_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 	// >>> REQ:
 	//
-	//	| RSV | FRAG | ATYP | DST.ADDR | DST.PORT | DATA |
-	//	+-----+------+------+----------+----------+------+
-	//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+	//	| ATYP | DST.ADDR | DST.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
 
-	off := 3 + 1 + 4 + 2
+	off := 1 + 4 + 2
 	n, addr, err = m.PacketConn.ReadFrom(buf[off:])
 	if err != nil {
 		return
 	}
 	n += off
 
-	buf[0], buf[1], buf[2] = 0, 0, 0
 	saddr := socks.FromNetAddr(addr)
-	copy(buf[3:], saddr.B)
+	copy(buf, saddr.B)
 
 	return
 }
@@ -56,16 +55,16 @@ func (m *udpLocal_t) ReadFrom(buf []byte) (n int, addr net.Addr, err error) {
 func (m *udpLocal_t) WriteTo(buf []byte, addr net.Addr) (n int, err error) {
 	// <<< RSP:
 	//
-	//	| RSV | FRAG | ATYP | SRC.ADDR | SRC.PORT | DATA |
-	//	+-----+------+------+----------+----------+------+
-	//	|  2  |  1   |  1   |    ...   |    2     |  ... |
+	//	| ATYP | SRC.ADDR | SRC.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
 
-	saddr, err := socks.ParseAddr(buf[3:])
+	saddr, err := socks.ParseAddr(buf)
 	if err != nil {
 		return
 	}
 
-	data := buf[3+len(saddr.B):]
+	data := buf[len(saddr.B):]
 
 	// dns cache store
 	dns.OnResponse(data)

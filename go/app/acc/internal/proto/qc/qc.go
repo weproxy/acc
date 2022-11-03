@@ -12,6 +12,7 @@ import (
 
 	"github.com/lucas-clemente/quic-go"
 
+	"weproxy/acc/libgo/nx/socks"
 	"weproxy/acc/libgo/nx/stats"
 
 	"weproxy/acc/app/acc/internal/proto"
@@ -93,8 +94,15 @@ func (m *Handler) dial(flag uint8, raddr net.Addr, sta *stats.Stats) (rc net.Con
 
 	sta.LogI("connected")
 
-	buf := [4]byte{flag, 0, 0, 0}
-	_, err = rc.Write(buf[:])
+	// >>> REQ:
+	//
+	//	| HEAD | ATYP | DST.ADDR | DST.PORT |
+	//	+------+------+----------+----------+
+	//	|  4   |   1  |    ...   |    2     |
+	saddr := socks.FromNetAddr(raddr)
+	buf := append([]byte(nil), []byte{flag, 0, 0, 0}...)
+	buf = append(buf, saddr.B...)
+	_, err = rc.Write(buf)
 	if err != nil {
 		rc.Close()
 		return nil, err

@@ -6,6 +6,8 @@ package util
 
 import (
 	"errors"
+	"encoding/binary"
+	"bytes"
 	"fmt"
 	"net"
 	"os"

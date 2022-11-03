@@ -185,7 +185,7 @@ struct dnsT {
         return *this;
     }
 
-    dnsT& add(aint64& all, aint64& distinct, int bit, const string& name) { return *this; }
+    dnsT& add(aint64& all, aint64& distinct, int bit, const string& name);
 
     dnsT& AddSucceeded(const string& name) { return add(all.succeeded, distinct.succeeded, _dnsFlagSucceeded, name); }
     dnsT& AddFailed(const string& name) { return add(all.failed, distinct.failed, _dnsFlagFailed, name); }

@@ -155,9 +155,15 @@ func (m *server_t) handleConn(ctx context.Context, qc quic.Connection) {
 	c := &quicConn{c: qc, Stream: s}
 	defer c.Close()
 
-	var buf [16]byte
+	var buf [4]byte
 
-	_, err = io.ReadFull(c, buf[:4])
+	// >>> REQ:
+	//
+	//	| HEAD | ATYP | DST.ADDR | DST.PORT |
+	//	+------+------+----------+----------+
+	//	|  4   |   1  |    ...   |    2     |
+
+	_, err = io.ReadFull(c, buf[:])
 	if err != nil {
 		logx.E("%v handleConn(), ReadHead err: %v", TAG, err)
 		return

@@ -91,9 +91,15 @@ func (m *server_t) Close() error {
 func (m *server_t) handleConn(c net.Conn) {
 	defer c.Close()
 
-	var buf [16]byte
+	// >>> REQ:
+	//
+	//	| HEAD | ATYP | DST.ADDR | DST.PORT |
+	//	+------+------+----------+----------+
+	//	|  4   |   1  |    ...   |    2     |
 
-	_, err := io.ReadFull(c, buf[:4])
+	var buf [4]byte
+
+	_, err := io.ReadFull(c, buf[:])
 	if err != nil {
 		logx.E("%v handleConn(), ReadHead err: %v", TAG, err)
 		return

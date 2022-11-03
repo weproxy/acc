@@ -7,6 +7,7 @@
 #include "gx/sync/sync.h"
 #include "gx/time/time.h"
 #include "logx/logx.h"
+#include "nx/stats/stats.h"
 
 namespace nx {
 namespace dns {
@@ -63,11 +64,15 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
     auto& m = *this;
     auto& q = msg->Questions[0];
 
+    auto name = strings::TrimSuffix(q.Name.String(), ".");
+    stats::xx::_DNS.AddQuery(name);
+
     LOGS_I("[dns] cache.Query " << q.Name << q.Type);
 
     // check if fake provide
     AUTO_R(answer, err, MakeFakeAnswer(msg.get(), nil));
     if (!err && answer && answer->Msg) {
+        stats::xx::_DNS.AddFaked(name);
         LOGS_W("[dns] cache.FakeAnswer " << q.Name << q.Type << " <- " << answer->Msg->Answers);
         return {answer, nil};
     }
@@ -85,6 +90,8 @@ R<Ref<Answer>, error> cacheMap::load(Ref<Message> msg) {
         delmap(m.mem, key);
         return {nil, nil};
     }
+
+    stats::xx::_DNS.AddCacheHit(name);
 
     auto amsg = NewRef<Message>();
     *amsg = *entry->msg;
@@ -107,6 +114,9 @@ error cacheMap::store(Ref<Message> msg) {
 
     auto& m = *this;
     auto& q = msg->Questions[0];
+
+    auto name = strings::TrimSuffix(q.Name.String(), ".");
+    stats::xx::_DNS.AddSucceeded(name);
 
     auto key = makeCacheKey(q);
     auto exp = time::Now().Add(time::Second * 300);

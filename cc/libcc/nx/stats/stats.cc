@@ -49,6 +49,23 @@ void dnsT::calc() {
                << all.dropped << ", fake=" << distinct.faked << "/" << all.faked);
 }
 
+dnsT& dnsT::add(aint64& all, aint64& distinct, int bit, const string& name) { 
+	if (len(name) == 0) {
+		return *this;
+	}
+
+    this->dirty = true;
+
+    all += 1;
+
+    auto it = names.find(name);
+    if (it == names.end()) {
+        distinct += 1;
+    }
+
+    return *this; 
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 void connT::calc() {

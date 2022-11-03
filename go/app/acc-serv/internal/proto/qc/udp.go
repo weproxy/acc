@@ -23,6 +23,12 @@ type udpLocal_t struct {
 
 // ReadFrom source client
 func (m *udpLocal_t) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	// >>> REQ:
+	//
+	//	| ATYP | DST.ADDR | DST.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
+
 _retry:
 	n, err = m.Conn.Read(p)
 	if err != nil {
@@ -59,6 +65,12 @@ func (m *udpLocal_t) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 
 // writeTo source client
 func (m *udpLocal_t) writeTo(isCacheAnswer bool, b []byte, addr net.Addr) (n int, err error) {
+	// <<< RSP:
+	//
+	//	| ATYP | SRC.ADDR | SRC.PORT | DATA |
+	//	+------+----------+----------+------+
+	//	|  1   |    ...   |    2     |  ... |
+
 	srcAddr := socks.FromNetAddr(addr)
 
 	if !isCacheAnswer {
