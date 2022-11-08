@@ -10,12 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/takama/daemon"
-
-	"weproxy/acc/libgo/biz"
 )
 
 // AddTo ...
-func AddTo(rootCmd *cobra.Command) {
+func AddTo(rootCmd *cobra.Command, appName, appDesc string) {
 	var subCmds = map[string]struct {
 		Run   func(d daemon.Daemon) (string, error)
 		Short string
@@ -44,7 +42,7 @@ func AddTo(rootCmd *cobra.Command) {
 						typ = daemon.GlobalDaemon
 					}
 
-					d, err := daemon.New(biz.Build.Name, biz.Build.Desc, typ)
+					d, err := daemon.New(appName, appDesc, typ)
 					if err == nil && d != nil {
 						if ret, err := it.Run(d); err != nil {
 							fmt.Println("error:", err)
@@ -65,16 +63,16 @@ func AddTo(rootCmd *cobra.Command) {
 }
 
 // New ...
-func New() *cobra.Command {
+func New(appName, appDesc string) *cobra.Command {
 	var svcCmd = &cobra.Command{
-		Use:   "service",
-		Short: "service install|remove|start|stop|status",
+		Use:   appName,
+		Short: appName + " install|remove|start|stop|status",
 	}
 	svcCmd.Run = func(cmd *cobra.Command, args []string) {
 		svcCmd.Help()
 	}
 
-	AddTo(svcCmd)
+	AddTo(svcCmd, appName, appDesc)
 
 	return svcCmd
 }

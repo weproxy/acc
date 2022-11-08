@@ -23,9 +23,9 @@ pub const TARGET_CPU_PPC: u32 = 0;
 pub const TARGET_CPU_PPC64: u32 = 0;
 pub const TARGET_CPU_68K: u32 = 0;
 pub const TARGET_CPU_X86: u32 = 0;
-pub const TARGET_CPU_X86_64: u32 = 1;
+pub const TARGET_CPU_X86_64: u32 = 0;
 pub const TARGET_CPU_ARM: u32 = 0;
-pub const TARGET_CPU_ARM64: u32 = 0;
+pub const TARGET_CPU_ARM64: u32 = 1;
 pub const TARGET_CPU_MIPS: u32 = 0;
 pub const TARGET_CPU_SPARC: u32 = 0;
 pub const TARGET_CPU_ALPHA: u32 = 0;
@@ -35,15 +35,13 @@ pub const TARGET_RT_LITTLE_ENDIAN: u32 = 1;
 pub const TARGET_RT_BIG_ENDIAN: u32 = 0;
 pub const TARGET_RT_64_BIT: u32 = 1;
 pub const __WORDSIZE: u32 = 64;
-pub const __DARWIN_ONLY_64_BIT_INO_T: u32 = 0;
+pub const __DARWIN_ONLY_64_BIT_INO_T: u32 = 1;
 pub const __DARWIN_ONLY_UNIX_CONFORMANCE: u32 = 1;
-pub const __DARWIN_ONLY_VERS_1050: u32 = 0;
+pub const __DARWIN_ONLY_VERS_1050: u32 = 1;
 pub const __DARWIN_UNIX03: u32 = 1;
 pub const __DARWIN_64_BIT_INO_T: u32 = 1;
 pub const __DARWIN_VERS_1050: u32 = 1;
 pub const __DARWIN_NON_CANCELABLE: u32 = 0;
-pub const __DARWIN_SUF_64_BIT_INO_T: &[u8; 9usize] = b"$INODE64\0";
-pub const __DARWIN_SUF_1050: &[u8; 6usize] = b"$1050\0";
 pub const __DARWIN_SUF_EXTSN: &[u8; 14usize] = b"$DARWIN_EXTSN\0";
 pub const __DARWIN_C_ANSI: u32 = 4096;
 pub const __DARWIN_C_FULL: u32 = 900000;
@@ -51,8 +49,11 @@ pub const __DARWIN_C_LEVEL: u32 = 900000;
 pub const __STDC_WANT_LIB_EXT1__: u32 = 1;
 pub const __DARWIN_NO_LONG_LONG: u32 = 0;
 pub const _DARWIN_FEATURE_64_BIT_INODE: u32 = 1;
+pub const _DARWIN_FEATURE_ONLY_64_BIT_INODE: u32 = 1;
+pub const _DARWIN_FEATURE_ONLY_VERS_1050: u32 = 1;
 pub const _DARWIN_FEATURE_ONLY_UNIX_CONFORMANCE: u32 = 1;
 pub const _DARWIN_FEATURE_UNIX_CONFORMANCE: u32 = 3;
+pub const __has_ptrcheck: u32 = 0;
 pub const __PTHREAD_SIZE__: u32 = 8176;
 pub const __PTHREAD_ATTR_SIZE__: u32 = 56;
 pub const __PTHREAD_MUTEXATTR_SIZE__: u32 = 8;
@@ -109,6 +110,12 @@ pub const SIG_ATOMIC_MIN: i32 = -2147483648;
 pub const SIG_ATOMIC_MAX: u32 = 2147483647;
 pub const __GNUC_VA_LIST: u32 = 1;
 pub const __API_TO_BE_DEPRECATED: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_MACOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_IOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_TVOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_WATCHOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_MACCATALYST: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_DRIVERKIT: u32 = 100000;
 pub const __MAC_10_0: u32 = 1000;
 pub const __MAC_10_1: u32 = 1010;
 pub const __MAC_10_2: u32 = 1020;
@@ -150,6 +157,9 @@ pub const __MAC_11_5: u32 = 110500;
 pub const __MAC_11_6: u32 = 110600;
 pub const __MAC_12_0: u32 = 120000;
 pub const __MAC_12_1: u32 = 120100;
+pub const __MAC_12_2: u32 = 120200;
+pub const __MAC_12_3: u32 = 120300;
+pub const __MAC_13_0: u32 = 130000;
 pub const __IPHONE_2_0: u32 = 20000;
 pub const __IPHONE_2_1: u32 = 20100;
 pub const __IPHONE_2_2: u32 = 20200;
@@ -208,6 +218,10 @@ pub const __IPHONE_14_8: u32 = 140800;
 pub const __IPHONE_15_0: u32 = 150000;
 pub const __IPHONE_15_1: u32 = 150100;
 pub const __IPHONE_15_2: u32 = 150200;
+pub const __IPHONE_15_3: u32 = 150300;
+pub const __IPHONE_15_4: u32 = 150400;
+pub const __IPHONE_16_0: u32 = 160000;
+pub const __IPHONE_16_1: u32 = 160100;
 pub const __TVOS_9_0: u32 = 90000;
 pub const __TVOS_9_1: u32 = 90100;
 pub const __TVOS_9_2: u32 = 90200;
@@ -239,6 +253,10 @@ pub const __TVOS_14_7: u32 = 140700;
 pub const __TVOS_15_0: u32 = 150000;
 pub const __TVOS_15_1: u32 = 150100;
 pub const __TVOS_15_2: u32 = 150200;
+pub const __TVOS_15_3: u32 = 150300;
+pub const __TVOS_15_4: u32 = 150400;
+pub const __TVOS_16_0: u32 = 160000;
+pub const __TVOS_16_1: u32 = 160100;
 pub const __WATCHOS_1_0: u32 = 10000;
 pub const __WATCHOS_2_0: u32 = 20000;
 pub const __WATCHOS_2_1: u32 = 20100;
@@ -268,6 +286,10 @@ pub const __WATCHOS_7_6: u32 = 70600;
 pub const __WATCHOS_8_0: u32 = 80000;
 pub const __WATCHOS_8_1: u32 = 80100;
 pub const __WATCHOS_8_3: u32 = 80300;
+pub const __WATCHOS_8_4: u32 = 80400;
+pub const __WATCHOS_8_5: u32 = 80500;
+pub const __WATCHOS_9_0: u32 = 90000;
+pub const __WATCHOS_9_1: u32 = 90100;
 pub const MAC_OS_X_VERSION_10_0: u32 = 1000;
 pub const MAC_OS_X_VERSION_10_1: u32 = 1010;
 pub const MAC_OS_X_VERSION_10_2: u32 = 1020;
@@ -302,10 +324,11 @@ pub const MAC_OS_X_VERSION_10_15_1: u32 = 101501;
 pub const MAC_OS_X_VERSION_10_16: u32 = 101600;
 pub const MAC_OS_VERSION_11_0: u32 = 110000;
 pub const MAC_OS_VERSION_12_0: u32 = 120000;
+pub const MAC_OS_VERSION_13_0: u32 = 130000;
 pub const __DRIVERKIT_19_0: u32 = 190000;
 pub const __DRIVERKIT_20_0: u32 = 200000;
 pub const __DRIVERKIT_21_0: u32 = 210000;
-pub const __MAC_OS_X_VERSION_MAX_ALLOWED: u32 = 120100;
+pub const __MAC_OS_X_VERSION_MAX_ALLOWED: u32 = 130000;
 pub const __ENABLE_LEGACY_MAC_AVAILABILITY: u32 = 1;
 pub const ASL_API_VERSION: u32 = 20150225;
 pub const ASL_LEVEL_EMERG: u32 = 0;
@@ -554,7 +577,7 @@ pub type uintmax_t = ::std::os::raw::c_ulong;
 pub type size_t = ::std::os::raw::c_ulong;
 pub type rsize_t = ::std::os::raw::c_ulong;
 pub type wchar_t = ::std::os::raw::c_int;
-pub type max_align_t = u128;
+pub type max_align_t = f64;
 pub type va_list = __builtin_va_list;
 pub type __gnuc_va_list = __builtin_va_list;
 #[repr(C)]
@@ -683,7 +706,7 @@ extern "C" {
         msg: asl_object_t,
         level: ::std::os::raw::c_int,
         format: *const ::std::os::raw::c_char,
-        ap: *mut __va_list_tag,
+        ap: va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -809,12 +832,4 @@ extern "C" {
         direction: i32,
     ) -> asl_object_t;
 }
-pub type __builtin_va_list = [__va_list_tag; 1usize];
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __va_list_tag {
-    pub gp_offset: ::std::os::raw::c_uint,
-    pub fp_offset: ::std::os::raw::c_uint,
-    pub overflow_arg_area: *mut ::std::os::raw::c_void,
-    pub reg_save_area: *mut ::std::os::raw::c_void,
-}
+pub type __builtin_va_list = *mut ::std::os::raw::c_char;

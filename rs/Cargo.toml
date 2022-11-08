@@ -1,6 +1,6 @@
 [workspace]
 members = ["app/acc", "app/acc-serv", "app/acc-turn", "librs"]
-default-members = ["app/acc-serv"]
+default-members = ["app/acc"]
 
 [profile.release]
 opt-level = 3

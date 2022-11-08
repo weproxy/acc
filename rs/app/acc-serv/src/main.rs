@@ -7,8 +7,10 @@ mod conf;
 mod core;
 mod proto;
 
+use log::*;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    librs::logx::init_default()?;
+    // librs::logx::init_default()?;
 
     let threads = match num_cpus::get() {
         0 | 1 => 2,

@@ -40,6 +40,7 @@ reqwest = {version = "0.11", features = ["blocking", "json"]}
 socket2 = "0.4"
 thiserror = "1.0"
 tokio = {version = "1.17", features = ["full"]}
+smoltcp = "0.8.0"
 
 # log
 chrono = "0.4"

@@ -7,6 +7,7 @@
 #include "gx/net/net.h"
 #include "gx/net/url/url.h"
 #include "logx/logx.h"
+#include "nx/dns/dns.h"
 #include "rule/rule.h"
 
 namespace internal {
@@ -60,58 +61,91 @@ R<Handler, error> GetHandler(const string& servURL) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// handleTCP ...
-static error handleTCP(net::Conn c, net::Addr raddr) {
-    string servName;
 
-    // HTTP/HTTPS
-    if (raddr->Port == 80 || raddr->Port == 443) {
-        // AUTO_R(host, err, sni::GetServerName(c));
+// dnsSetFakeProvideFn ...
+static error dnsSetFakeProvideFn() {
+    // _fakes
+    static auto _fakes = makemap<string /*domain*/, stringz<> /*ips*/>();
+
+    // load fakes...
+    auto err = []() -> error {
+        // TODO...
+        _fakes[string("fake.weproxy.test")] = {"1.2.3.4", "5.6.7.8"};
+        return nil;
+    }();
+    if (err) {
+        LOGS_E(TAG << " load dns fakes, err: " << err);
+        return err;
     }
 
-    AUTO_R(servURL, er1, rule::GetTCPRule(servName, raddr));
-    if (er1) {
-        return er1;
-    }
+    // SetFakeProvideFn ...
+    nx::dns::SetFakeProvideFn([](const string& domain, nx::dns::Type typ) -> stringz<> {
+        AUTO_R(ss, ok, _fakes(domain));
+        if (ok) {
+            return ss;
+        }
+        return {};
+    });
 
-    AUTO_R(h, er2, GetHandler(servURL));
-    if (er2) {
-        return er2;
-    }
-
-    return h->Handle(c, raddr);
+    return nil;
 }
 
-// handleUDP ...
-static error handleUDP(net::PacketConn c, net::Addr raddr) {
-    string servName;
-
-    // DNS ..
-    if (raddr->Port == 53) {
-        // AUTO_R(host, err, dns::GetServerName(c));
-    }
-
-    AUTO_R(servURL, er1, rule::GetUDPRule(servName, raddr));
-    if (er1) {
-        return er1;
-    }
-
-    AUTO_R(h, er2, GetHandler(servURL));
-    if (er2) {
-        return er2;
-    }
-
-    return h->HandlePacket(c, raddr);
-}
-
+////////////////////////////////////////////////////////////////////////////////
 // stackHandler_t ...
 struct stackHandler_t : public handler_t {
     // Handle ...
-    virtual error Handle(net::Conn c, net::Addr raddr) override { return handleTCP(c, raddr); }
+    virtual void Handle(net::Conn c, net::Addr raddr) override {
+        DEFER(c->Close());
+
+        string servName;
+
+        // HTTP/HTTPS
+        if (raddr->Port == 80 || raddr->Port == 443) {
+            // AUTO_R(host, err, sni::GetServerName(c));
+        }
+
+        AUTO_R(servURL, er1, rule::GetTCPRule(servName, raddr));
+        if (er1) {
+            LOGS_D(TAG << " Handle(), err: " << er1);
+            return;
+        }
+
+        AUTO_R(h, er2, GetHandler(servURL));
+        if (er2) {
+            LOGS_D(TAG << " Handle(), err: " << er2);
+            return;
+        }
+
+        h->Handle(c, raddr);
+    }
 
     // HandlePacket ...
-    virtual error HandlePacket(net::PacketConn c, net::Addr raddr) override { return handleUDP(c, raddr); }
+    virtual void HandlePacket(net::PacketConn pc, net::Addr raddr) override {
+        DEFER(pc->Close());
 
+        string servName;
+
+        // DNS ..
+        if (raddr->Port == 53) {
+            // AUTO_R(host, err, dns::GetServerName(c));
+        }
+
+        AUTO_R(servURL, er1, rule::GetUDPRule(servName, raddr));
+        if (er1) {
+            LOGS_D(TAG << " HandlePacket(), err: " << er1);
+            return;
+        }
+
+        AUTO_R(h, er2, GetHandler(servURL));
+        if (er2) {
+            LOGS_D(TAG << " HandlePacket(), err: " << er2);
+            return;
+        }
+
+        h->HandlePacket(pc, raddr);
+    }
+
+    // Close ...
     virtual error Close() override { return nil; }
 };
 
@@ -119,7 +153,13 @@ struct stackHandler_t : public handler_t {
 // Init ..
 error Init() {
     LOGS_D(TAG << " Init()");
+
+    // dns SetFakeProvideFn ...
+    dnsSetFakeProvideFn();
+
+    // stack SetHandler
     nx::stack::SetHandler(NewRef<stackHandler_t>());
+
     return nil;
 }
 

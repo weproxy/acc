@@ -131,9 +131,9 @@ pub const TARGET_CPU_PPC: u32 = 0;
 pub const TARGET_CPU_PPC64: u32 = 0;
 pub const TARGET_CPU_68K: u32 = 0;
 pub const TARGET_CPU_X86: u32 = 0;
-pub const TARGET_CPU_X86_64: u32 = 1;
+pub const TARGET_CPU_X86_64: u32 = 0;
 pub const TARGET_CPU_ARM: u32 = 0;
-pub const TARGET_CPU_ARM64: u32 = 0;
+pub const TARGET_CPU_ARM64: u32 = 1;
 pub const TARGET_CPU_MIPS: u32 = 0;
 pub const TARGET_CPU_SPARC: u32 = 0;
 pub const TARGET_CPU_ALPHA: u32 = 0;
@@ -164,15 +164,13 @@ pub const LWIP_PERF: u32 = 0;
 pub const LITTLE_ENDIAN: u32 = 1234;
 pub const BIG_ENDIAN: u32 = 4321;
 pub const LWIP_TIMEVAL_PRIVATE: u32 = 0;
-pub const __DARWIN_ONLY_64_BIT_INO_T: u32 = 0;
+pub const __DARWIN_ONLY_64_BIT_INO_T: u32 = 1;
 pub const __DARWIN_ONLY_UNIX_CONFORMANCE: u32 = 1;
-pub const __DARWIN_ONLY_VERS_1050: u32 = 0;
+pub const __DARWIN_ONLY_VERS_1050: u32 = 1;
 pub const __DARWIN_UNIX03: u32 = 1;
 pub const __DARWIN_64_BIT_INO_T: u32 = 1;
 pub const __DARWIN_VERS_1050: u32 = 1;
 pub const __DARWIN_NON_CANCELABLE: u32 = 0;
-pub const __DARWIN_SUF_64_BIT_INO_T: &[u8; 9usize] = b"$INODE64\0";
-pub const __DARWIN_SUF_1050: &[u8; 6usize] = b"$1050\0";
 pub const __DARWIN_SUF_EXTSN: &[u8; 14usize] = b"$DARWIN_EXTSN\0";
 pub const __DARWIN_C_ANSI: u32 = 4096;
 pub const __DARWIN_C_FULL: u32 = 900000;
@@ -180,8 +178,11 @@ pub const __DARWIN_C_LEVEL: u32 = 900000;
 pub const __STDC_WANT_LIB_EXT1__: u32 = 1;
 pub const __DARWIN_NO_LONG_LONG: u32 = 0;
 pub const _DARWIN_FEATURE_64_BIT_INODE: u32 = 1;
+pub const _DARWIN_FEATURE_ONLY_64_BIT_INODE: u32 = 1;
+pub const _DARWIN_FEATURE_ONLY_VERS_1050: u32 = 1;
 pub const _DARWIN_FEATURE_ONLY_UNIX_CONFORMANCE: u32 = 1;
 pub const _DARWIN_FEATURE_UNIX_CONFORMANCE: u32 = 3;
+pub const __has_ptrcheck: u32 = 0;
 pub const __PTHREAD_SIZE__: u32 = 8176;
 pub const __PTHREAD_ATTR_SIZE__: u32 = 56;
 pub const __PTHREAD_MUTEXATTR_SIZE__: u32 = 8;
@@ -192,6 +193,12 @@ pub const __PTHREAD_ONCE_SIZE__: u32 = 8;
 pub const __PTHREAD_RWLOCK_SIZE__: u32 = 192;
 pub const __PTHREAD_RWLOCKATTR_SIZE__: u32 = 16;
 pub const __API_TO_BE_DEPRECATED: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_MACOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_IOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_TVOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_WATCHOS: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_MACCATALYST: u32 = 100000;
+pub const __API_TO_BE_DEPRECATED_DRIVERKIT: u32 = 100000;
 pub const __MAC_10_0: u32 = 1000;
 pub const __MAC_10_1: u32 = 1010;
 pub const __MAC_10_2: u32 = 1020;
@@ -233,6 +240,9 @@ pub const __MAC_11_5: u32 = 110500;
 pub const __MAC_11_6: u32 = 110600;
 pub const __MAC_12_0: u32 = 120000;
 pub const __MAC_12_1: u32 = 120100;
+pub const __MAC_12_2: u32 = 120200;
+pub const __MAC_12_3: u32 = 120300;
+pub const __MAC_13_0: u32 = 130000;
 pub const __IPHONE_2_0: u32 = 20000;
 pub const __IPHONE_2_1: u32 = 20100;
 pub const __IPHONE_2_2: u32 = 20200;
@@ -291,6 +301,10 @@ pub const __IPHONE_14_8: u32 = 140800;
 pub const __IPHONE_15_0: u32 = 150000;
 pub const __IPHONE_15_1: u32 = 150100;
 pub const __IPHONE_15_2: u32 = 150200;
+pub const __IPHONE_15_3: u32 = 150300;
+pub const __IPHONE_15_4: u32 = 150400;
+pub const __IPHONE_16_0: u32 = 160000;
+pub const __IPHONE_16_1: u32 = 160100;
 pub const __TVOS_9_0: u32 = 90000;
 pub const __TVOS_9_1: u32 = 90100;
 pub const __TVOS_9_2: u32 = 90200;
@@ -322,6 +336,10 @@ pub const __TVOS_14_7: u32 = 140700;
 pub const __TVOS_15_0: u32 = 150000;
 pub const __TVOS_15_1: u32 = 150100;
 pub const __TVOS_15_2: u32 = 150200;
+pub const __TVOS_15_3: u32 = 150300;
+pub const __TVOS_15_4: u32 = 150400;
+pub const __TVOS_16_0: u32 = 160000;
+pub const __TVOS_16_1: u32 = 160100;
 pub const __WATCHOS_1_0: u32 = 10000;
 pub const __WATCHOS_2_0: u32 = 20000;
 pub const __WATCHOS_2_1: u32 = 20100;
@@ -351,6 +369,10 @@ pub const __WATCHOS_7_6: u32 = 70600;
 pub const __WATCHOS_8_0: u32 = 80000;
 pub const __WATCHOS_8_1: u32 = 80100;
 pub const __WATCHOS_8_3: u32 = 80300;
+pub const __WATCHOS_8_4: u32 = 80400;
+pub const __WATCHOS_8_5: u32 = 80500;
+pub const __WATCHOS_9_0: u32 = 90000;
+pub const __WATCHOS_9_1: u32 = 90100;
 pub const MAC_OS_X_VERSION_10_0: u32 = 1000;
 pub const MAC_OS_X_VERSION_10_1: u32 = 1010;
 pub const MAC_OS_X_VERSION_10_2: u32 = 1020;
@@ -385,10 +407,11 @@ pub const MAC_OS_X_VERSION_10_15_1: u32 = 101501;
 pub const MAC_OS_X_VERSION_10_16: u32 = 101600;
 pub const MAC_OS_VERSION_11_0: u32 = 110000;
 pub const MAC_OS_VERSION_12_0: u32 = 120000;
+pub const MAC_OS_VERSION_13_0: u32 = 130000;
 pub const __DRIVERKIT_19_0: u32 = 190000;
 pub const __DRIVERKIT_20_0: u32 = 200000;
 pub const __DRIVERKIT_21_0: u32 = 210000;
-pub const __MAC_OS_X_VERSION_MAX_ALLOWED: u32 = 120100;
+pub const __MAC_OS_X_VERSION_MAX_ALLOWED: u32 = 130000;
 pub const __ENABLE_LEGACY_MAC_AVAILABILITY: u32 = 1;
 pub const __DARWIN_FD_SETSIZE: u32 = 1024;
 pub const __DARWIN_NBBY: u32 = 8;
@@ -405,7 +428,6 @@ pub const DST_EET: u32 = 5;
 pub const DST_CAN: u32 = 6;
 pub const __DARWIN_WCHAR_MIN: i32 = -2147483648;
 pub const _FORTIFY_SOURCE: u32 = 2;
-pub const CLOCKS_PER_SEC: u32 = 1000000;
 pub const TIME_UTC: u32 = 1;
 pub const _QUAD_HIGHWORD: u32 = 1;
 pub const _QUAD_LOWWORD: u32 = 0;
@@ -415,10 +437,58 @@ pub const __DARWIN_PDP_ENDIAN: u32 = 3412;
 pub const __DARWIN_BYTE_ORDER: u32 = 1234;
 pub const PDP_ENDIAN: u32 = 3412;
 pub const BYTE_ORDER: u32 = 1234;
+pub const __WORDSIZE: u32 = 64;
+pub const INT8_MAX: u32 = 127;
+pub const INT16_MAX: u32 = 32767;
+pub const INT32_MAX: u32 = 2147483647;
+pub const INT64_MAX: u64 = 9223372036854775807;
+pub const INT8_MIN: i32 = -128;
+pub const INT16_MIN: i32 = -32768;
+pub const INT32_MIN: i32 = -2147483648;
+pub const INT64_MIN: i64 = -9223372036854775808;
+pub const UINT8_MAX: u32 = 255;
+pub const UINT16_MAX: u32 = 65535;
+pub const UINT32_MAX: u32 = 4294967295;
+pub const UINT64_MAX: i32 = -1;
+pub const INT_LEAST8_MIN: i32 = -128;
+pub const INT_LEAST16_MIN: i32 = -32768;
+pub const INT_LEAST32_MIN: i32 = -2147483648;
+pub const INT_LEAST64_MIN: i64 = -9223372036854775808;
+pub const INT_LEAST8_MAX: u32 = 127;
+pub const INT_LEAST16_MAX: u32 = 32767;
+pub const INT_LEAST32_MAX: u32 = 2147483647;
+pub const INT_LEAST64_MAX: u64 = 9223372036854775807;
+pub const UINT_LEAST8_MAX: u32 = 255;
+pub const UINT_LEAST16_MAX: u32 = 65535;
+pub const UINT_LEAST32_MAX: u32 = 4294967295;
+pub const UINT_LEAST64_MAX: i32 = -1;
+pub const INT_FAST8_MIN: i32 = -128;
+pub const INT_FAST16_MIN: i32 = -32768;
+pub const INT_FAST32_MIN: i32 = -2147483648;
+pub const INT_FAST64_MIN: i64 = -9223372036854775808;
+pub const INT_FAST8_MAX: u32 = 127;
+pub const INT_FAST16_MAX: u32 = 32767;
+pub const INT_FAST32_MAX: u32 = 2147483647;
+pub const INT_FAST64_MAX: u64 = 9223372036854775807;
+pub const UINT_FAST8_MAX: u32 = 255;
+pub const UINT_FAST16_MAX: u32 = 65535;
+pub const UINT_FAST32_MAX: u32 = 4294967295;
+pub const UINT_FAST64_MAX: i32 = -1;
+pub const INTPTR_MAX: u64 = 9223372036854775807;
+pub const INTPTR_MIN: i64 = -9223372036854775808;
+pub const UINTPTR_MAX: i32 = -1;
+pub const SIZE_MAX: i32 = -1;
+pub const RSIZE_MAX: i32 = -1;
+pub const WINT_MIN: i32 = -2147483648;
+pub const WINT_MAX: u32 = 2147483647;
+pub const SIG_ATOMIC_MIN: i32 = -2147483648;
+pub const SIG_ATOMIC_MAX: u32 = 2147483647;
 pub const NBBY: u32 = 8;
 pub const RENAME_SECLUDE: u32 = 1;
 pub const RENAME_SWAP: u32 = 2;
 pub const RENAME_EXCL: u32 = 4;
+pub const RENAME_RESERVED1: u32 = 8;
+pub const RENAME_NOFOLLOW_ANY: u32 = 16;
 pub const __SLBF: u32 = 1;
 pub const __SNBF: u32 = 2;
 pub const __SRD: u32 = 4;
@@ -452,7 +522,7 @@ pub const L_ctermid: u32 = 1024;
 pub const _USE_FORTIFY_LEVEL: u32 = 2;
 pub const __DARWIN_NSIG: u32 = 32;
 pub const NSIG: u32 = 32;
-pub const _I386_SIGNAL_H_: u32 = 1;
+pub const _ARM_SIGNAL_: u32 = 1;
 pub const SIGHUP: u32 = 1;
 pub const SIGINT: u32 = 2;
 pub const SIGQUIT: u32 = 3;
@@ -485,17 +555,7 @@ pub const SIGWINCH: u32 = 28;
 pub const SIGINFO: u32 = 29;
 pub const SIGUSR1: u32 = 30;
 pub const SIGUSR2: u32 = 31;
-pub const FP_PREC_24B: u32 = 0;
-pub const FP_PREC_53B: u32 = 2;
-pub const FP_PREC_64B: u32 = 3;
-pub const FP_RND_NEAR: u32 = 0;
-pub const FP_RND_DOWN: u32 = 1;
-pub const FP_RND_UP: u32 = 2;
-pub const FP_CHOP: u32 = 3;
-pub const FP_STATE_BYTES: u32 = 512;
-pub const _X86_INSTRUCTION_STATE_MAX_INSN_BYTES: u32 = 2380;
-pub const _X86_INSTRUCTION_STATE_CACHELINE_SIZE: u32 = 64;
-pub const __LASTBRANCH_MAX: u32 = 32;
+pub const __DARWIN_OPAQUE_ARM_THREAD_STATE64: u32 = 0;
 pub const SIGEV_NONE: u32 = 0;
 pub const SIGEV_SIGNAL: u32 = 1;
 pub const SIGEV_THREAD: u32 = 3;
@@ -567,52 +627,6 @@ pub const SV_RESETHAND: u32 = 4;
 pub const SV_NODEFER: u32 = 16;
 pub const SV_NOCLDSTOP: u32 = 8;
 pub const SV_SIGINFO: u32 = 64;
-pub const __WORDSIZE: u32 = 64;
-pub const INT8_MAX: u32 = 127;
-pub const INT16_MAX: u32 = 32767;
-pub const INT32_MAX: u32 = 2147483647;
-pub const INT64_MAX: u64 = 9223372036854775807;
-pub const INT8_MIN: i32 = -128;
-pub const INT16_MIN: i32 = -32768;
-pub const INT32_MIN: i32 = -2147483648;
-pub const INT64_MIN: i64 = -9223372036854775808;
-pub const UINT8_MAX: u32 = 255;
-pub const UINT16_MAX: u32 = 65535;
-pub const UINT32_MAX: u32 = 4294967295;
-pub const UINT64_MAX: i32 = -1;
-pub const INT_LEAST8_MIN: i32 = -128;
-pub const INT_LEAST16_MIN: i32 = -32768;
-pub const INT_LEAST32_MIN: i32 = -2147483648;
-pub const INT_LEAST64_MIN: i64 = -9223372036854775808;
-pub const INT_LEAST8_MAX: u32 = 127;
-pub const INT_LEAST16_MAX: u32 = 32767;
-pub const INT_LEAST32_MAX: u32 = 2147483647;
-pub const INT_LEAST64_MAX: u64 = 9223372036854775807;
-pub const UINT_LEAST8_MAX: u32 = 255;
-pub const UINT_LEAST16_MAX: u32 = 65535;
-pub const UINT_LEAST32_MAX: u32 = 4294967295;
-pub const UINT_LEAST64_MAX: i32 = -1;
-pub const INT_FAST8_MIN: i32 = -128;
-pub const INT_FAST16_MIN: i32 = -32768;
-pub const INT_FAST32_MIN: i32 = -2147483648;
-pub const INT_FAST64_MIN: i64 = -9223372036854775808;
-pub const INT_FAST8_MAX: u32 = 127;
-pub const INT_FAST16_MAX: u32 = 32767;
-pub const INT_FAST32_MAX: u32 = 2147483647;
-pub const INT_FAST64_MAX: u64 = 9223372036854775807;
-pub const UINT_FAST8_MAX: u32 = 255;
-pub const UINT_FAST16_MAX: u32 = 65535;
-pub const UINT_FAST32_MAX: u32 = 4294967295;
-pub const UINT_FAST64_MAX: i32 = -1;
-pub const INTPTR_MAX: u64 = 9223372036854775807;
-pub const INTPTR_MIN: i64 = -9223372036854775808;
-pub const UINTPTR_MAX: i32 = -1;
-pub const SIZE_MAX: i32 = -1;
-pub const RSIZE_MAX: i32 = -1;
-pub const WINT_MIN: i32 = -2147483648;
-pub const WINT_MAX: u32 = 2147483647;
-pub const SIG_ATOMIC_MIN: i32 = -2147483648;
-pub const SIG_ATOMIC_MAX: u32 = 2147483647;
 pub const PRIO_PROCESS: u32 = 0;
 pub const PRIO_PGRP: u32 = 1;
 pub const PRIO_USER: u32 = 2;
@@ -630,7 +644,8 @@ pub const RUSAGE_INFO_V2: u32 = 2;
 pub const RUSAGE_INFO_V3: u32 = 3;
 pub const RUSAGE_INFO_V4: u32 = 4;
 pub const RUSAGE_INFO_V5: u32 = 5;
-pub const RUSAGE_INFO_CURRENT: u32 = 5;
+pub const RUSAGE_INFO_V6: u32 = 6;
+pub const RUSAGE_INFO_CURRENT: u32 = 6;
 pub const RU_PROC_RUNS_RESLIDE: u32 = 1;
 pub const RLIMIT_CPU: u32 = 0;
 pub const RLIMIT_FSIZE: u32 = 1;
@@ -664,6 +679,7 @@ pub const IOPOL_TYPE_VFS_IGNORE_CONTENT_PROTECTION: u32 = 6;
 pub const IOPOL_TYPE_VFS_IGNORE_PERMISSIONS: u32 = 7;
 pub const IOPOL_TYPE_VFS_SKIP_MTIME_UPDATE: u32 = 8;
 pub const IOPOL_TYPE_VFS_ALLOW_LOW_SPACE_WRITES: u32 = 9;
+pub const IOPOL_TYPE_VFS_DISALLOW_RW_FOR_O_EVTONLY: u32 = 10;
 pub const IOPOL_SCOPE_PROCESS: u32 = 0;
 pub const IOPOL_SCOPE_THREAD: u32 = 1;
 pub const IOPOL_SCOPE_DARWIN_BG: u32 = 2;
@@ -692,6 +708,8 @@ pub const IOPOL_VFS_SKIP_MTIME_UPDATE_OFF: u32 = 0;
 pub const IOPOL_VFS_SKIP_MTIME_UPDATE_ON: u32 = 1;
 pub const IOPOL_VFS_ALLOW_LOW_SPACE_WRITES_OFF: u32 = 0;
 pub const IOPOL_VFS_ALLOW_LOW_SPACE_WRITES_ON: u32 = 1;
+pub const IOPOL_VFS_DISALLOW_RW_FOR_O_EVTONLY_DEFAULT: u32 = 0;
+pub const IOPOL_VFS_DISALLOW_RW_FOR_O_EVTONLY_ON: u32 = 1;
 pub const WNOHANG: u32 = 1;
 pub const WUNTRACED: u32 = 2;
 pub const WCOREFLAG: u32 = 128;
@@ -965,7 +983,7 @@ pub const _POSIX_THREAD_KEYS_MAX: u32 = 128;
 pub const _POSIX_THREAD_THREADS_MAX: u32 = 64;
 pub const PTHREAD_DESTRUCTOR_ITERATIONS: u32 = 4;
 pub const PTHREAD_KEYS_MAX: u32 = 512;
-pub const PTHREAD_STACK_MIN: u32 = 8192;
+pub const PTHREAD_STACK_MIN: u32 = 16384;
 pub const _POSIX_HOST_NAME_MAX: u32 = 255;
 pub const _POSIX_LOGIN_NAME_MAX: u32 = 9;
 pub const _POSIX_SS_REPL_MAX: u32 = 4;
@@ -2090,7 +2108,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[link_name = "\u{1}_select$1050"]
     pub fn select(
         arg1: ::std::os::raw::c_int,
         arg2: *mut fd_set,
@@ -2111,6 +2128,39 @@ extern "C" {
         arg1: *const ::std::os::raw::c_char,
         arg2: *const timeval,
     ) -> ::std::os::raw::c_int;
+}
+pub type int_least8_t = i8;
+pub type int_least16_t = i16;
+pub type int_least32_t = i32;
+pub type int_least64_t = i64;
+pub type uint_least8_t = u8;
+pub type uint_least16_t = u16;
+pub type uint_least32_t = u32;
+pub type uint_least64_t = u64;
+pub type int_fast8_t = i8;
+pub type int_fast16_t = i16;
+pub type int_fast32_t = i32;
+pub type int_fast64_t = i64;
+pub type uint_fast8_t = u8;
+pub type uint_fast16_t = u16;
+pub type uint_fast32_t = u32;
+pub type uint_fast64_t = u64;
+pub type intmax_t = ::std::os::raw::c_long;
+pub type uintmax_t = ::std::os::raw::c_ulong;
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct _OSUnalignedU16 {
+    pub __val: u16,
+}
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct _OSUnalignedU32 {
+    pub __val: u32,
+}
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct _OSUnalignedU64 {
+    pub __val: u64,
 }
 pub type u_char = ::std::os::raw::c_uchar;
 pub type u_short = ::std::os::raw::c_ushort;
@@ -2423,20 +2473,20 @@ extern "C" {
     pub fn vfprintf(
         arg1: *mut FILE,
         arg2: *const ::std::os::raw::c_char,
-        arg3: *mut __va_list_tag,
+        arg3: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn vprintf(
         arg1: *const ::std::os::raw::c_char,
-        arg2: *mut __va_list_tag,
+        arg2: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn vsprintf(
         arg1: *mut ::std::os::raw::c_char,
         arg2: *const ::std::os::raw::c_char,
-        arg3: *mut __va_list_tag,
+        arg3: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2464,7 +2514,7 @@ extern "C" {
     pub fn __svfscanf(
         arg1: *mut FILE,
         arg2: *const ::std::os::raw::c_char,
-        arg3: *mut __va_list_tag,
+        arg3: va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2525,13 +2575,13 @@ extern "C" {
     pub fn vfscanf(
         __stream: *mut FILE,
         __format: *const ::std::os::raw::c_char,
-        arg1: *mut __va_list_tag,
+        arg1: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn vscanf(
         __format: *const ::std::os::raw::c_char,
-        arg1: *mut __va_list_tag,
+        arg1: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2539,14 +2589,14 @@ extern "C" {
         __str: *mut ::std::os::raw::c_char,
         __size: ::std::os::raw::c_ulong,
         __format: *const ::std::os::raw::c_char,
-        arg1: *mut __va_list_tag,
+        arg1: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn vsscanf(
         __str: *const ::std::os::raw::c_char,
         __format: *const ::std::os::raw::c_char,
-        arg1: *mut __va_list_tag,
+        arg1: __builtin_va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2560,7 +2610,7 @@ extern "C" {
     pub fn vdprintf(
         arg1: ::std::os::raw::c_int,
         arg2: *const ::std::os::raw::c_char,
-        arg3: *mut __va_list_tag,
+        arg3: va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2633,7 +2683,7 @@ extern "C" {
     pub fn vasprintf(
         arg1: *mut *mut ::std::os::raw::c_char,
         arg2: *const ::std::os::raw::c_char,
-        arg3: *mut __va_list_tag,
+        arg3: va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2690,7 +2740,7 @@ extern "C" {
         arg2: ::std::os::raw::c_int,
         arg3: size_t,
         arg4: *const ::std::os::raw::c_char,
-        arg5: *mut __va_list_tag,
+        arg5: va_list,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -2700,7 +2750,7 @@ extern "C" {
         arg3: ::std::os::raw::c_int,
         arg4: size_t,
         arg5: *const ::std::os::raw::c_char,
-        arg6: *mut __va_list_tag,
+        arg6: va_list,
     ) -> ::std::os::raw::c_int;
 }
 pub const idtype_t_P_ALL: idtype_t = 0;
@@ -2710,1099 +2760,110 @@ pub type idtype_t = ::std::os::raw::c_uint;
 pub type sig_atomic_t = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_i386_thread_state {
-    pub __eax: ::std::os::raw::c_uint,
-    pub __ebx: ::std::os::raw::c_uint,
-    pub __ecx: ::std::os::raw::c_uint,
-    pub __edx: ::std::os::raw::c_uint,
-    pub __edi: ::std::os::raw::c_uint,
-    pub __esi: ::std::os::raw::c_uint,
-    pub __ebp: ::std::os::raw::c_uint,
-    pub __esp: ::std::os::raw::c_uint,
-    pub __ss: ::std::os::raw::c_uint,
-    pub __eflags: ::std::os::raw::c_uint,
-    pub __eip: ::std::os::raw::c_uint,
-    pub __cs: ::std::os::raw::c_uint,
-    pub __ds: ::std::os::raw::c_uint,
-    pub __es: ::std::os::raw::c_uint,
-    pub __fs: ::std::os::raw::c_uint,
-    pub __gs: ::std::os::raw::c_uint,
-}
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_fp_control {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl __darwin_fp_control {
-    #[inline]
-    pub fn __invalid(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___invalid(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __denorm(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___denorm(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __zdiv(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___zdiv(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __ovrfl(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___ovrfl(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __undfl(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___undfl(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __precis(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___precis(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __pc(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 2u8) as u16) }
-    }
-    #[inline]
-    pub fn set___pc(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(8usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __rc(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(10usize, 2u8) as u16) }
-    }
-    #[inline]
-    pub fn set___rc(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(10usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __invalid: ::std::os::raw::c_ushort,
-        __denorm: ::std::os::raw::c_ushort,
-        __zdiv: ::std::os::raw::c_ushort,
-        __ovrfl: ::std::os::raw::c_ushort,
-        __undfl: ::std::os::raw::c_ushort,
-        __precis: ::std::os::raw::c_ushort,
-        __pc: ::std::os::raw::c_ushort,
-        __rc: ::std::os::raw::c_ushort,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let __invalid: u16 = unsafe { ::std::mem::transmute(__invalid) };
-            __invalid as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let __denorm: u16 = unsafe { ::std::mem::transmute(__denorm) };
-            __denorm as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let __zdiv: u16 = unsafe { ::std::mem::transmute(__zdiv) };
-            __zdiv as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let __ovrfl: u16 = unsafe { ::std::mem::transmute(__ovrfl) };
-            __ovrfl as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let __undfl: u16 = unsafe { ::std::mem::transmute(__undfl) };
-            __undfl as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let __precis: u16 = unsafe { ::std::mem::transmute(__precis) };
-            __precis as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 2u8, {
-            let __pc: u16 = unsafe { ::std::mem::transmute(__pc) };
-            __pc as u64
-        });
-        __bindgen_bitfield_unit.set(10usize, 2u8, {
-            let __rc: u16 = unsafe { ::std::mem::transmute(__rc) };
-            __rc as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-pub type __darwin_fp_control_t = __darwin_fp_control;
-#[repr(C)]
-#[repr(align(2))]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_fp_status {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 2usize]>,
-}
-impl __darwin_fp_status {
-    #[inline]
-    pub fn __invalid(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___invalid(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __denorm(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___denorm(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __zdiv(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___zdiv(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __ovrfl(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___ovrfl(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __undfl(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___undfl(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __precis(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___precis(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __stkflt(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___stkflt(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __errsumm(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___errsumm(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __c0(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___c0(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(8usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __c1(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___c1(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(9usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __c2(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___c2(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(10usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __tos(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(11usize, 3u8) as u16) }
-    }
-    #[inline]
-    pub fn set___tos(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(11usize, 3u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __c3(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(14usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___c3(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(14usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __busy(&self) -> ::std::os::raw::c_ushort {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(15usize, 1u8) as u16) }
-    }
-    #[inline]
-    pub fn set___busy(&mut self, val: ::std::os::raw::c_ushort) {
-        unsafe {
-            let val: u16 = ::std::mem::transmute(val);
-            self._bitfield_1.set(15usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __invalid: ::std::os::raw::c_ushort,
-        __denorm: ::std::os::raw::c_ushort,
-        __zdiv: ::std::os::raw::c_ushort,
-        __ovrfl: ::std::os::raw::c_ushort,
-        __undfl: ::std::os::raw::c_ushort,
-        __precis: ::std::os::raw::c_ushort,
-        __stkflt: ::std::os::raw::c_ushort,
-        __errsumm: ::std::os::raw::c_ushort,
-        __c0: ::std::os::raw::c_ushort,
-        __c1: ::std::os::raw::c_ushort,
-        __c2: ::std::os::raw::c_ushort,
-        __tos: ::std::os::raw::c_ushort,
-        __c3: ::std::os::raw::c_ushort,
-        __busy: ::std::os::raw::c_ushort,
-    ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let __invalid: u16 = unsafe { ::std::mem::transmute(__invalid) };
-            __invalid as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let __denorm: u16 = unsafe { ::std::mem::transmute(__denorm) };
-            __denorm as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let __zdiv: u16 = unsafe { ::std::mem::transmute(__zdiv) };
-            __zdiv as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let __ovrfl: u16 = unsafe { ::std::mem::transmute(__ovrfl) };
-            __ovrfl as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let __undfl: u16 = unsafe { ::std::mem::transmute(__undfl) };
-            __undfl as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let __precis: u16 = unsafe { ::std::mem::transmute(__precis) };
-            __precis as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let __stkflt: u16 = unsafe { ::std::mem::transmute(__stkflt) };
-            __stkflt as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let __errsumm: u16 = unsafe { ::std::mem::transmute(__errsumm) };
-            __errsumm as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 1u8, {
-            let __c0: u16 = unsafe { ::std::mem::transmute(__c0) };
-            __c0 as u64
-        });
-        __bindgen_bitfield_unit.set(9usize, 1u8, {
-            let __c1: u16 = unsafe { ::std::mem::transmute(__c1) };
-            __c1 as u64
-        });
-        __bindgen_bitfield_unit.set(10usize, 1u8, {
-            let __c2: u16 = unsafe { ::std::mem::transmute(__c2) };
-            __c2 as u64
-        });
-        __bindgen_bitfield_unit.set(11usize, 3u8, {
-            let __tos: u16 = unsafe { ::std::mem::transmute(__tos) };
-            __tos as u64
-        });
-        __bindgen_bitfield_unit.set(14usize, 1u8, {
-            let __c3: u16 = unsafe { ::std::mem::transmute(__c3) };
-            __c3 as u64
-        });
-        __bindgen_bitfield_unit.set(15usize, 1u8, {
-            let __busy: u16 = unsafe { ::std::mem::transmute(__busy) };
-            __busy as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-pub type __darwin_fp_status_t = __darwin_fp_status;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mmst_reg {
-    pub __mmst_reg: [::std::os::raw::c_char; 10usize],
-    pub __mmst_rsrv: [::std::os::raw::c_char; 6usize],
+pub struct __darwin_arm_exception_state {
+    pub __exception: __uint32_t,
+    pub __fsr: __uint32_t,
+    pub __far: __uint32_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_xmm_reg {
-    pub __xmm_reg: [::std::os::raw::c_char; 16usize],
+pub struct __darwin_arm_exception_state64 {
+    pub __far: __uint64_t,
+    pub __esr: __uint32_t,
+    pub __exception: __uint32_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_ymm_reg {
-    pub __ymm_reg: [::std::os::raw::c_char; 32usize],
+pub struct __darwin_arm_thread_state {
+    pub __r: [__uint32_t; 13usize],
+    pub __sp: __uint32_t,
+    pub __lr: __uint32_t,
+    pub __pc: __uint32_t,
+    pub __cpsr: __uint32_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_zmm_reg {
-    pub __zmm_reg: [::std::os::raw::c_char; 64usize],
+pub struct __darwin_arm_thread_state64 {
+    pub __x: [__uint64_t; 29usize],
+    pub __fp: __uint64_t,
+    pub __lr: __uint64_t,
+    pub __sp: __uint64_t,
+    pub __pc: __uint64_t,
+    pub __cpsr: __uint32_t,
+    pub __pad: __uint32_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_opmask_reg {
-    pub __opmask_reg: [::std::os::raw::c_char; 8usize],
+pub struct __darwin_arm_vfp_state {
+    pub __r: [__uint32_t; 64usize],
+    pub __fpscr: __uint32_t,
+}
+#[repr(C)]
+#[repr(align(16))]
+#[derive(Debug, Copy, Clone)]
+pub struct __darwin_arm_neon_state64 {
+    pub __v: [__uint128_t; 32usize],
+    pub __fpsr: __uint32_t,
+    pub __fpcr: __uint32_t,
+}
+#[repr(C)]
+#[repr(align(16))]
+#[derive(Debug, Copy, Clone)]
+pub struct __darwin_arm_neon_state {
+    pub __v: [__uint128_t; 16usize],
+    pub __fpsr: __uint32_t,
+    pub __fpcr: __uint32_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_i386_float_state {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 224usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_i386_avx_state {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 224usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
-    pub __avx_reserved1: [::std::os::raw::c_char; 64usize],
-    pub __fpu_ymmh0: __darwin_xmm_reg,
-    pub __fpu_ymmh1: __darwin_xmm_reg,
-    pub __fpu_ymmh2: __darwin_xmm_reg,
-    pub __fpu_ymmh3: __darwin_xmm_reg,
-    pub __fpu_ymmh4: __darwin_xmm_reg,
-    pub __fpu_ymmh5: __darwin_xmm_reg,
-    pub __fpu_ymmh6: __darwin_xmm_reg,
-    pub __fpu_ymmh7: __darwin_xmm_reg,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_i386_avx512_state {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 224usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
-    pub __avx_reserved1: [::std::os::raw::c_char; 64usize],
-    pub __fpu_ymmh0: __darwin_xmm_reg,
-    pub __fpu_ymmh1: __darwin_xmm_reg,
-    pub __fpu_ymmh2: __darwin_xmm_reg,
-    pub __fpu_ymmh3: __darwin_xmm_reg,
-    pub __fpu_ymmh4: __darwin_xmm_reg,
-    pub __fpu_ymmh5: __darwin_xmm_reg,
-    pub __fpu_ymmh6: __darwin_xmm_reg,
-    pub __fpu_ymmh7: __darwin_xmm_reg,
-    pub __fpu_k0: __darwin_opmask_reg,
-    pub __fpu_k1: __darwin_opmask_reg,
-    pub __fpu_k2: __darwin_opmask_reg,
-    pub __fpu_k3: __darwin_opmask_reg,
-    pub __fpu_k4: __darwin_opmask_reg,
-    pub __fpu_k5: __darwin_opmask_reg,
-    pub __fpu_k6: __darwin_opmask_reg,
-    pub __fpu_k7: __darwin_opmask_reg,
-    pub __fpu_zmmh0: __darwin_ymm_reg,
-    pub __fpu_zmmh1: __darwin_ymm_reg,
-    pub __fpu_zmmh2: __darwin_ymm_reg,
-    pub __fpu_zmmh3: __darwin_ymm_reg,
-    pub __fpu_zmmh4: __darwin_ymm_reg,
-    pub __fpu_zmmh5: __darwin_ymm_reg,
-    pub __fpu_zmmh6: __darwin_ymm_reg,
-    pub __fpu_zmmh7: __darwin_ymm_reg,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_i386_exception_state {
-    pub __trapno: __uint16_t,
-    pub __cpu: __uint16_t,
-    pub __err: __uint32_t,
-    pub __faultvaddr: __uint32_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_debug_state32 {
-    pub __dr0: ::std::os::raw::c_uint,
-    pub __dr1: ::std::os::raw::c_uint,
-    pub __dr2: ::std::os::raw::c_uint,
-    pub __dr3: ::std::os::raw::c_uint,
-    pub __dr4: ::std::os::raw::c_uint,
-    pub __dr5: ::std::os::raw::c_uint,
-    pub __dr6: ::std::os::raw::c_uint,
-    pub __dr7: ::std::os::raw::c_uint,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __x86_instruction_state {
-    pub __insn_stream_valid_bytes: ::std::os::raw::c_int,
-    pub __insn_offset: ::std::os::raw::c_int,
-    pub __out_of_synch: ::std::os::raw::c_int,
-    pub __insn_bytes: [__uint8_t; 2380usize],
-    pub __insn_cacheline: [__uint8_t; 64usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __last_branch_record {
-    pub __from_ip: __uint64_t,
-    pub __to_ip: __uint64_t,
-    pub _bitfield_align_1: [u16; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-    pub __bindgen_padding_0: u32,
-}
-impl __last_branch_record {
-    #[inline]
-    pub fn __mispredict(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___mispredict(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __tsx_abort(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___tsx_abort(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __in_tsx(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___in_tsx(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __cycle_count(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 16u8) as u32) }
-    }
-    #[inline]
-    pub fn set___cycle_count(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(3usize, 16u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __reserved(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(19usize, 13u8) as u32) }
-    }
-    #[inline]
-    pub fn set___reserved(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(19usize, 13u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __mispredict: __uint32_t,
-        __tsx_abort: __uint32_t,
-        __in_tsx: __uint32_t,
-        __cycle_count: __uint32_t,
-        __reserved: __uint32_t,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let __mispredict: u32 = unsafe { ::std::mem::transmute(__mispredict) };
-            __mispredict as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let __tsx_abort: u32 = unsafe { ::std::mem::transmute(__tsx_abort) };
-            __tsx_abort as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let __in_tsx: u32 = unsafe { ::std::mem::transmute(__in_tsx) };
-            __in_tsx as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 16u8, {
-            let __cycle_count: u32 = unsafe { ::std::mem::transmute(__cycle_count) };
-            __cycle_count as u64
-        });
-        __bindgen_bitfield_unit.set(19usize, 13u8, {
-            let __reserved: u32 = unsafe { ::std::mem::transmute(__reserved) };
-            __reserved as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __last_branch_state {
-    pub __lbr_count: ::std::os::raw::c_int,
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-    pub __lbrs: [__last_branch_record; 32usize],
-}
-impl __last_branch_state {
-    #[inline]
-    pub fn __lbr_supported_tsx(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___lbr_supported_tsx(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __lbr_supported_cycle_count(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___lbr_supported_cycle_count(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __reserved(&self) -> __uint32_t {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 30u8) as u32) }
-    }
-    #[inline]
-    pub fn set___reserved(&mut self, val: __uint32_t) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(2usize, 30u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __lbr_supported_tsx: __uint32_t,
-        __lbr_supported_cycle_count: __uint32_t,
-        __reserved: __uint32_t,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let __lbr_supported_tsx: u32 = unsafe { ::std::mem::transmute(__lbr_supported_tsx) };
-            __lbr_supported_tsx as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let __lbr_supported_cycle_count: u32 =
-                unsafe { ::std::mem::transmute(__lbr_supported_cycle_count) };
-            __lbr_supported_cycle_count as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 30u8, {
-            let __reserved: u32 = unsafe { ::std::mem::transmute(__reserved) };
-            __reserved as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __x86_pagein_state {
+pub struct __arm_pagein_state {
     pub __pagein_error: ::std::os::raw::c_int,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_thread_state64 {
-    pub __rax: __uint64_t,
-    pub __rbx: __uint64_t,
-    pub __rcx: __uint64_t,
-    pub __rdx: __uint64_t,
-    pub __rdi: __uint64_t,
-    pub __rsi: __uint64_t,
-    pub __rbp: __uint64_t,
-    pub __rsp: __uint64_t,
-    pub __r8: __uint64_t,
-    pub __r9: __uint64_t,
-    pub __r10: __uint64_t,
-    pub __r11: __uint64_t,
-    pub __r12: __uint64_t,
-    pub __r13: __uint64_t,
-    pub __r14: __uint64_t,
-    pub __r15: __uint64_t,
-    pub __rip: __uint64_t,
-    pub __rflags: __uint64_t,
-    pub __cs: __uint64_t,
-    pub __fs: __uint64_t,
-    pub __gs: __uint64_t,
+pub struct __arm_legacy_debug_state {
+    pub __bvr: [__uint32_t; 16usize],
+    pub __bcr: [__uint32_t; 16usize],
+    pub __wvr: [__uint32_t; 16usize],
+    pub __wcr: [__uint32_t; 16usize],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_thread_full_state64 {
-    pub __ss64: __darwin_x86_thread_state64,
-    pub __ds: __uint64_t,
-    pub __es: __uint64_t,
-    pub __ss: __uint64_t,
-    pub __gsbase: __uint64_t,
+pub struct __darwin_arm_debug_state32 {
+    pub __bvr: [__uint32_t; 16usize],
+    pub __bcr: [__uint32_t; 16usize],
+    pub __wvr: [__uint32_t; 16usize],
+    pub __wcr: [__uint32_t; 16usize],
+    pub __mdscr_el1: __uint64_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_float_state64 {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_xmm8: __darwin_xmm_reg,
-    pub __fpu_xmm9: __darwin_xmm_reg,
-    pub __fpu_xmm10: __darwin_xmm_reg,
-    pub __fpu_xmm11: __darwin_xmm_reg,
-    pub __fpu_xmm12: __darwin_xmm_reg,
-    pub __fpu_xmm13: __darwin_xmm_reg,
-    pub __fpu_xmm14: __darwin_xmm_reg,
-    pub __fpu_xmm15: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 96usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
+pub struct __darwin_arm_debug_state64 {
+    pub __bvr: [__uint64_t; 16usize],
+    pub __bcr: [__uint64_t; 16usize],
+    pub __wvr: [__uint64_t; 16usize],
+    pub __wcr: [__uint64_t; 16usize],
+    pub __mdscr_el1: __uint64_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_avx_state64 {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_xmm8: __darwin_xmm_reg,
-    pub __fpu_xmm9: __darwin_xmm_reg,
-    pub __fpu_xmm10: __darwin_xmm_reg,
-    pub __fpu_xmm11: __darwin_xmm_reg,
-    pub __fpu_xmm12: __darwin_xmm_reg,
-    pub __fpu_xmm13: __darwin_xmm_reg,
-    pub __fpu_xmm14: __darwin_xmm_reg,
-    pub __fpu_xmm15: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 96usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
-    pub __avx_reserved1: [::std::os::raw::c_char; 64usize],
-    pub __fpu_ymmh0: __darwin_xmm_reg,
-    pub __fpu_ymmh1: __darwin_xmm_reg,
-    pub __fpu_ymmh2: __darwin_xmm_reg,
-    pub __fpu_ymmh3: __darwin_xmm_reg,
-    pub __fpu_ymmh4: __darwin_xmm_reg,
-    pub __fpu_ymmh5: __darwin_xmm_reg,
-    pub __fpu_ymmh6: __darwin_xmm_reg,
-    pub __fpu_ymmh7: __darwin_xmm_reg,
-    pub __fpu_ymmh8: __darwin_xmm_reg,
-    pub __fpu_ymmh9: __darwin_xmm_reg,
-    pub __fpu_ymmh10: __darwin_xmm_reg,
-    pub __fpu_ymmh11: __darwin_xmm_reg,
-    pub __fpu_ymmh12: __darwin_xmm_reg,
-    pub __fpu_ymmh13: __darwin_xmm_reg,
-    pub __fpu_ymmh14: __darwin_xmm_reg,
-    pub __fpu_ymmh15: __darwin_xmm_reg,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_avx512_state64 {
-    pub __fpu_reserved: [::std::os::raw::c_int; 2usize],
-    pub __fpu_fcw: __darwin_fp_control,
-    pub __fpu_fsw: __darwin_fp_status,
-    pub __fpu_ftw: __uint8_t,
-    pub __fpu_rsrv1: __uint8_t,
-    pub __fpu_fop: __uint16_t,
-    pub __fpu_ip: __uint32_t,
-    pub __fpu_cs: __uint16_t,
-    pub __fpu_rsrv2: __uint16_t,
-    pub __fpu_dp: __uint32_t,
-    pub __fpu_ds: __uint16_t,
-    pub __fpu_rsrv3: __uint16_t,
-    pub __fpu_mxcsr: __uint32_t,
-    pub __fpu_mxcsrmask: __uint32_t,
-    pub __fpu_stmm0: __darwin_mmst_reg,
-    pub __fpu_stmm1: __darwin_mmst_reg,
-    pub __fpu_stmm2: __darwin_mmst_reg,
-    pub __fpu_stmm3: __darwin_mmst_reg,
-    pub __fpu_stmm4: __darwin_mmst_reg,
-    pub __fpu_stmm5: __darwin_mmst_reg,
-    pub __fpu_stmm6: __darwin_mmst_reg,
-    pub __fpu_stmm7: __darwin_mmst_reg,
-    pub __fpu_xmm0: __darwin_xmm_reg,
-    pub __fpu_xmm1: __darwin_xmm_reg,
-    pub __fpu_xmm2: __darwin_xmm_reg,
-    pub __fpu_xmm3: __darwin_xmm_reg,
-    pub __fpu_xmm4: __darwin_xmm_reg,
-    pub __fpu_xmm5: __darwin_xmm_reg,
-    pub __fpu_xmm6: __darwin_xmm_reg,
-    pub __fpu_xmm7: __darwin_xmm_reg,
-    pub __fpu_xmm8: __darwin_xmm_reg,
-    pub __fpu_xmm9: __darwin_xmm_reg,
-    pub __fpu_xmm10: __darwin_xmm_reg,
-    pub __fpu_xmm11: __darwin_xmm_reg,
-    pub __fpu_xmm12: __darwin_xmm_reg,
-    pub __fpu_xmm13: __darwin_xmm_reg,
-    pub __fpu_xmm14: __darwin_xmm_reg,
-    pub __fpu_xmm15: __darwin_xmm_reg,
-    pub __fpu_rsrv4: [::std::os::raw::c_char; 96usize],
-    pub __fpu_reserved1: ::std::os::raw::c_int,
-    pub __avx_reserved1: [::std::os::raw::c_char; 64usize],
-    pub __fpu_ymmh0: __darwin_xmm_reg,
-    pub __fpu_ymmh1: __darwin_xmm_reg,
-    pub __fpu_ymmh2: __darwin_xmm_reg,
-    pub __fpu_ymmh3: __darwin_xmm_reg,
-    pub __fpu_ymmh4: __darwin_xmm_reg,
-    pub __fpu_ymmh5: __darwin_xmm_reg,
-    pub __fpu_ymmh6: __darwin_xmm_reg,
-    pub __fpu_ymmh7: __darwin_xmm_reg,
-    pub __fpu_ymmh8: __darwin_xmm_reg,
-    pub __fpu_ymmh9: __darwin_xmm_reg,
-    pub __fpu_ymmh10: __darwin_xmm_reg,
-    pub __fpu_ymmh11: __darwin_xmm_reg,
-    pub __fpu_ymmh12: __darwin_xmm_reg,
-    pub __fpu_ymmh13: __darwin_xmm_reg,
-    pub __fpu_ymmh14: __darwin_xmm_reg,
-    pub __fpu_ymmh15: __darwin_xmm_reg,
-    pub __fpu_k0: __darwin_opmask_reg,
-    pub __fpu_k1: __darwin_opmask_reg,
-    pub __fpu_k2: __darwin_opmask_reg,
-    pub __fpu_k3: __darwin_opmask_reg,
-    pub __fpu_k4: __darwin_opmask_reg,
-    pub __fpu_k5: __darwin_opmask_reg,
-    pub __fpu_k6: __darwin_opmask_reg,
-    pub __fpu_k7: __darwin_opmask_reg,
-    pub __fpu_zmmh0: __darwin_ymm_reg,
-    pub __fpu_zmmh1: __darwin_ymm_reg,
-    pub __fpu_zmmh2: __darwin_ymm_reg,
-    pub __fpu_zmmh3: __darwin_ymm_reg,
-    pub __fpu_zmmh4: __darwin_ymm_reg,
-    pub __fpu_zmmh5: __darwin_ymm_reg,
-    pub __fpu_zmmh6: __darwin_ymm_reg,
-    pub __fpu_zmmh7: __darwin_ymm_reg,
-    pub __fpu_zmmh8: __darwin_ymm_reg,
-    pub __fpu_zmmh9: __darwin_ymm_reg,
-    pub __fpu_zmmh10: __darwin_ymm_reg,
-    pub __fpu_zmmh11: __darwin_ymm_reg,
-    pub __fpu_zmmh12: __darwin_ymm_reg,
-    pub __fpu_zmmh13: __darwin_ymm_reg,
-    pub __fpu_zmmh14: __darwin_ymm_reg,
-    pub __fpu_zmmh15: __darwin_ymm_reg,
-    pub __fpu_zmm16: __darwin_zmm_reg,
-    pub __fpu_zmm17: __darwin_zmm_reg,
-    pub __fpu_zmm18: __darwin_zmm_reg,
-    pub __fpu_zmm19: __darwin_zmm_reg,
-    pub __fpu_zmm20: __darwin_zmm_reg,
-    pub __fpu_zmm21: __darwin_zmm_reg,
-    pub __fpu_zmm22: __darwin_zmm_reg,
-    pub __fpu_zmm23: __darwin_zmm_reg,
-    pub __fpu_zmm24: __darwin_zmm_reg,
-    pub __fpu_zmm25: __darwin_zmm_reg,
-    pub __fpu_zmm26: __darwin_zmm_reg,
-    pub __fpu_zmm27: __darwin_zmm_reg,
-    pub __fpu_zmm28: __darwin_zmm_reg,
-    pub __fpu_zmm29: __darwin_zmm_reg,
-    pub __fpu_zmm30: __darwin_zmm_reg,
-    pub __fpu_zmm31: __darwin_zmm_reg,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_exception_state64 {
-    pub __trapno: __uint16_t,
-    pub __cpu: __uint16_t,
-    pub __err: __uint32_t,
-    pub __faultvaddr: __uint64_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_debug_state64 {
-    pub __dr0: __uint64_t,
-    pub __dr1: __uint64_t,
-    pub __dr2: __uint64_t,
-    pub __dr3: __uint64_t,
-    pub __dr4: __uint64_t,
-    pub __dr5: __uint64_t,
-    pub __dr6: __uint64_t,
-    pub __dr7: __uint64_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_x86_cpmu_state64 {
+pub struct __darwin_arm_cpmu_state64 {
     pub __ctrs: [__uint64_t; 16usize],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __darwin_mcontext32 {
-    pub __es: __darwin_i386_exception_state,
-    pub __ss: __darwin_i386_thread_state,
-    pub __fs: __darwin_i386_float_state,
+    pub __es: __darwin_arm_exception_state,
+    pub __ss: __darwin_arm_thread_state,
+    pub __fs: __darwin_arm_vfp_state,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx32 {
-    pub __es: __darwin_i386_exception_state,
-    pub __ss: __darwin_i386_thread_state,
-    pub __fs: __darwin_i386_avx_state,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx512_32 {
-    pub __es: __darwin_i386_exception_state,
-    pub __ss: __darwin_i386_thread_state,
-    pub __fs: __darwin_i386_avx512_state,
-}
-#[repr(C)]
+#[repr(align(16))]
 #[derive(Debug, Copy, Clone)]
 pub struct __darwin_mcontext64 {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_state64,
-    pub __fs: __darwin_x86_float_state64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext64_full {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_full_state64,
-    pub __fs: __darwin_x86_float_state64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx64 {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_state64,
-    pub __fs: __darwin_x86_avx_state64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx64_full {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_full_state64,
-    pub __fs: __darwin_x86_avx_state64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx512_64 {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_state64,
-    pub __fs: __darwin_x86_avx512_state64,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __darwin_mcontext_avx512_64_full {
-    pub __es: __darwin_x86_exception_state64,
-    pub __ss: __darwin_x86_thread_full_state64,
-    pub __fs: __darwin_x86_avx512_state64,
+    pub __es: __darwin_arm_exception_state64,
+    pub __ss: __darwin_arm_thread_state64,
+    pub __ns: __darwin_arm_neon_state64,
 }
 pub type mcontext_t = *mut __darwin_mcontext64;
 #[repr(C)]
@@ -3915,24 +2976,6 @@ extern "C" {
         ),
     >;
 }
-pub type int_least8_t = i8;
-pub type int_least16_t = i16;
-pub type int_least32_t = i32;
-pub type int_least64_t = i64;
-pub type uint_least8_t = u8;
-pub type uint_least16_t = u16;
-pub type uint_least32_t = u32;
-pub type uint_least64_t = u64;
-pub type int_fast8_t = i8;
-pub type int_fast16_t = i16;
-pub type int_fast32_t = i32;
-pub type int_fast64_t = i64;
-pub type uint_fast8_t = u8;
-pub type uint_fast16_t = u16;
-pub type uint_fast32_t = u32;
-pub type uint_fast64_t = u64;
-pub type intmax_t = ::std::os::raw::c_long;
-pub type uintmax_t = ::std::os::raw::c_ulong;
 pub type rlim_t = __uint64_t;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -4127,7 +3170,55 @@ pub struct rusage_info_v5 {
     pub ri_runnable_time: u64,
     pub ri_flags: u64,
 }
-pub type rusage_info_current = rusage_info_v5;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rusage_info_v6 {
+    pub ri_uuid: [u8; 16usize],
+    pub ri_user_time: u64,
+    pub ri_system_time: u64,
+    pub ri_pkg_idle_wkups: u64,
+    pub ri_interrupt_wkups: u64,
+    pub ri_pageins: u64,
+    pub ri_wired_size: u64,
+    pub ri_resident_size: u64,
+    pub ri_phys_footprint: u64,
+    pub ri_proc_start_abstime: u64,
+    pub ri_proc_exit_abstime: u64,
+    pub ri_child_user_time: u64,
+    pub ri_child_system_time: u64,
+    pub ri_child_pkg_idle_wkups: u64,
+    pub ri_child_interrupt_wkups: u64,
+    pub ri_child_pageins: u64,
+    pub ri_child_elapsed_abstime: u64,
+    pub ri_diskio_bytesread: u64,
+    pub ri_diskio_byteswritten: u64,
+    pub ri_cpu_time_qos_default: u64,
+    pub ri_cpu_time_qos_maintenance: u64,
+    pub ri_cpu_time_qos_background: u64,
+    pub ri_cpu_time_qos_utility: u64,
+    pub ri_cpu_time_qos_legacy: u64,
+    pub ri_cpu_time_qos_user_initiated: u64,
+    pub ri_cpu_time_qos_user_interactive: u64,
+    pub ri_billed_system_time: u64,
+    pub ri_serviced_system_time: u64,
+    pub ri_logical_writes: u64,
+    pub ri_lifetime_max_phys_footprint: u64,
+    pub ri_instructions: u64,
+    pub ri_cycles: u64,
+    pub ri_billed_energy: u64,
+    pub ri_serviced_energy: u64,
+    pub ri_interval_max_phys_footprint: u64,
+    pub ri_runnable_time: u64,
+    pub ri_flags: u64,
+    pub ri_user_ptime: u64,
+    pub ri_system_ptime: u64,
+    pub ri_pinstructions: u64,
+    pub ri_pcycles: u64,
+    pub ri_energy_nj: u64,
+    pub ri_penergy_nj: u64,
+    pub ri_reserved: [u64; 14usize],
+}
+pub type rusage_info_current = rusage_info_v6;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rlimit {
@@ -4403,7 +3494,10 @@ extern "C" {
     pub fn valloc(arg1: size_t) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    pub fn aligned_alloc(__alignment: size_t, __size: size_t) -> *mut ::std::os::raw::c_void;
+    pub fn aligned_alloc(
+        __alignment: ::std::os::raw::c_ulong,
+        __size: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
     pub fn posix_memalign(
@@ -4527,7 +3621,7 @@ extern "C" {
     pub fn strtold(
         arg1: *const ::std::os::raw::c_char,
         arg2: *mut *mut ::std::os::raw::c_char,
-    ) -> u128;
+    ) -> f64;
 }
 extern "C" {
     pub fn strtoll(
@@ -4783,7 +3877,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[link_name = "\u{1}_daemon$1050"]
     pub fn daemon(
         arg1: ::std::os::raw::c_int,
         arg2: ::std::os::raw::c_int,
@@ -4972,7 +4065,7 @@ extern "C" {
 extern "C" {
     pub static mut suboptarg: *mut ::std::os::raw::c_char;
 }
-pub type max_align_t = u128;
+pub type max_align_t = f64;
 pub type u8_t = u8;
 pub type s8_t = i8;
 pub type u16_t = u16;
@@ -5057,6 +4150,13 @@ extern "C" {
         arg5: size_t,
         arg6: u32,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn freadlink(
+        arg1: ::std::os::raw::c_int,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: size_t,
+    ) -> ssize_t;
 }
 extern "C" {
     pub fn faccessat(
@@ -5461,7 +4561,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[link_name = "\u{1}_pselect$1050"]
     pub fn pselect(
         arg1: ::std::os::raw::c_int,
         arg2: *mut fd_set,
@@ -7664,15 +6763,8 @@ extern "C" {
 extern "C" {
     pub fn udp_netif_ip_addr_changed(old_addr: *const ip_addr_t, new_addr: *const ip_addr_t);
 }
-pub type __builtin_va_list = [__va_list_tag; 1usize];
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct __va_list_tag {
-    pub gp_offset: ::std::os::raw::c_uint,
-    pub fp_offset: ::std::os::raw::c_uint,
-    pub overflow_arg_area: *mut ::std::os::raw::c_void,
-    pub reg_save_area: *mut ::std::os::raw::c_void,
-}
+pub type __builtin_va_list = *mut ::std::os::raw::c_char;
+pub type __uint128_t = u128;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct tcp_seg {

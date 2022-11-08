@@ -10,7 +10,7 @@ path = "src/main.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-librs = {path = "../../librs"}
+# librs = {path = "../../librs"}
 anyhow = "1.0"
 lazy_static = "1.4.0"
 tokio = {version = "1.17", features = ["full"]}

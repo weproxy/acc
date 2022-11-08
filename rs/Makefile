@@ -13,10 +13,12 @@ pre: check
 config: check
 
 build: pre config
-	cargo build --no-default-features
+#	cargo build --no-default-features
+	cargo build
 
 run: build
-	cargo run --no-default-features
+#	cargo run --no-default-features
+	cargo run --bin acc-cli
 
 surun: build
 	sudo ./target/debug/acc-cli
